@@ -69,13 +69,39 @@ function addFullscreenButton(state) {
   root.querySelector(".layers").appendChild(button);
 }
 
+// The site the views focus on: the Custom Site (key "custom") if there is one, else the selected Catalog Site.
+function focusSite(data) {
+  if (data.custom) {
+    return { key: "custom", name: "Custom Site", kind: "custom", lat: data.custom.lat, lon: data.custom.lon,
+             description: "A location you picked." };
+  }
+  return data.sites.find(s => s.key === data.selected) || null;
+}
+
 // Full screen hides the app's panel, so the view shows the selected site itself.
 function updateInfo(state, data) {
-  const selected = data.sites.find(s => s.key === data.selected), info = state.root.querySelector(".info");
+  const selected = focusSite(data), info = state.root.querySelector(".info");
   info.classList.toggle("has-site", !!selected);
   info.querySelector(".info-name").textContent = selected ? selected.name : "";
   info.querySelector(".info-text").textContent = selected
     ? `${selected.lat.toFixed(4)}°, ${selected.lon.toFixed(4)}° E · ${selected.description}` : "";
+}
+
+// Asks before analyzing a clicked point as a Custom Site (task A5): the live computation takes about 30 s, so a stray
+// click must not start one. Analyze sends the "point" event; `close` removes the balloon and the provisional marker.
+function analyzeBalloon(state, lat, lon, close) {
+  lon = ((lon + 540) % 360) - 180;
+  const el = document.createElement("div");
+  el.className = "analyze";
+  el.innerHTML = `<b>Analyze this point?</b><div>${lat.toFixed(2)}°, ${lon.toFixed(2)}° E · `
+    + `${lat <= -80 ? "computed live, about 30 s" : "no terrain data here (outside 80°S), so a smooth horizon is used"}`
+    + '</div><div class="analyze-buttons"><button class="primary">Analyze</button><button>Cancel</button></div>';
+  const [analyze, cancel] = el.querySelectorAll("button");
+  analyze.onclick = () => { close(); state.setTriggerValue("point", { lat, lon }); };
+  cancel.onclick = close;
+  el.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  setTimeout(() => analyze.focus({ preventScroll: true }));
+  return el;
 }
 
 // Update every view that exists, creating the one shown if needed. The hidden view keeps its data current but

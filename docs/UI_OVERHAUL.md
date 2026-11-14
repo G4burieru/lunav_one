@@ -48,12 +48,18 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
     151740]), {opacity: 0.7})`.
   - The color ramp (one amber hue, darker means less Sun) is in the JSON for the B7 legend, and the caveat text is
     `texts.SUN_LAYER`.
-- **For A3 and A5** (helpers in `src/panels/common.py`):
+- **Done: A5 and B5.** A click on the globe or the map, away from a site, shows the "Analyze this point?" balloon
+  with a provisional marker (a pulsing ring on the globe, a dashed ring on the map). Analyze sends `point`, and
+  `on_view_point` in `app.py` opens the Custom Site's Site Card. The Custom Site is drawn on both views with the key
+  `"custom"` (`focusSite()` in `view.js`), the map centers on it, and `view_request` treats it like a site: polar
+  points open the map.
+- **For A3** (helpers in `src/panels/common.py`):
   - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
     `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
     and uses 2027-01-01 00:00 until the bar sends one.
-  - On a confirmed `point`, call `select_custom(lat, lon)`. The Custom Site is in `st.session_state["custom"]`; pass
-    it to `moon_view` as `custom` to draw it.
+  - In `app.py` the keyword arguments of `moon_view` are defaults that a panel's `render()` overrides. A Custom
+    Site's Site Card returns `time` with the Catalog Sites' states, the Custom Site's states under `"custom"`, and
+    its instant.
 
 ## Decisions
 

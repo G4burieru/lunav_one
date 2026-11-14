@@ -34,9 +34,10 @@ const polarMap = (() => {
     region_center: '<circle cx="12" cy="12" r="9.5"/>',
     actual_landing: '<path d="M3 3H21V21H3Z"/>',
     approximate_reference: '<path d="M12 2 22.5 21H1.5Z"/>',
+    custom: '<circle cx="12" cy="12" r="6"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',  // a picked point
   };
   const KINDS = { studied_point: "studied point", region_center: "region center", actual_landing: "historical landing",
-                  approximate_reference: "approximate reference" };
+                  approximate_reference: "approximate reference", custom: "custom site" };
 
   function load() {
     if (window.L?.Proj) return Promise.resolve();
@@ -69,14 +70,15 @@ const polarMap = (() => {
       .forEach(b => b.classList.toggle("active", b.dataset.layer === name));
   }
 
-  // Redraw the Catalog Site markers when the sites or the selection change.
+  // Redraw the site markers (Catalog Sites and the Custom Site) when the sites or the selection change.
   function drawSites(state, data) {
-    const m = state.map, signature = JSON.stringify([data.selected, data.sites]);
+    const m = state.map, signature = JSON.stringify([data.selected, data.custom, data.sites]);
     if (signature === m.signature) return;
     m.signature = signature;
     m.sites.clearLayers();
-    data.sites.filter(s => s.lat <= MAP_LAT).forEach(site => {
-      const selected = site.key === data.selected, size = selected ? 26 : 18;
+    const custom = data.custom ? [focusSite(data)] : [];
+    [...data.sites, ...custom].filter(s => s.lat <= MAP_LAT).forEach(site => {
+      const selected = site.key === data.selected || site.key === "custom", size = selected ? 26 : 18;
       const marker = L.marker([site.lat, site.lon], {
         icon: L.divIcon({ className: `site-marker${selected ? " selected" : ""}`, iconSize: [size, size],
           html: `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${SHAPES[site.kind] || SHAPES.region_center}`
@@ -85,7 +87,7 @@ const polarMap = (() => {
       });
       marker.bindTooltip(escapeHtml(site.name), { direction: "top", offset: [0, -size / 2], permanent: selected,
                                                    className: "site-label" });
-      const choose = () => state.setTriggerValue("site", site.key);
+      const choose = () => site.key !== "custom" && state.setTriggerValue("site", site.key);
       marker.on("click", choose);
       marker.on("add", () => {  // Leaflet makes markers focusable buttons; give them a name and Enter or Space
         const el = marker.getElement();
@@ -134,6 +136,7 @@ const polarMap = (() => {
       bases: Object.fromEntries(Object.entries(BASES).map(([name, layers]) => [name, L.layerGroup(layers.map(tiles))])),
     };
 
+    map.on("click", e => askToAnalyze(state, e.latlng));  // marker clicks do not reach the map
     const buttons = state.root.querySelector('.choices[data-for="map"]');
     Object.keys(BASES).forEach(name => {
       const b = document.createElement("button");
@@ -147,22 +150,33 @@ const polarMap = (() => {
     el.addEventListener("wheel", () => { state.map.userMoved = true; }, { passive: true });
   }
 
+  // A click on the map (not on a site) offers to analyze that point, with a dashed ring as provisional marker.
+  function askToAnalyze(state, latlng) {
+    const map = state.map.leaflet;
+    const ring = L.circleMarker(latlng, { radius: 9, color: "#e66b27", weight: 2, dashArray: "4 3", fill: false,
+                                          interactive: false }).addTo(map);
+    const popup = L.popup({ className: "analyze-popup", closeButton: false, offset: [0, -8] }).setLatLng(latlng);
+    popup.setContent(analyzeBalloon(state, latlng.lat, latlng.lng, () => map.closePopup(popup)));
+    popup.on("remove", () => ring.remove());
+    popup.openOn(map);
+  }
+
   function update(state, data, active) {
     const m = state.map;
     drawSites(state, data);
-    if (!active) { m.shown = false; return; }
-    const site = data.sites.find(s => s.key === data.selected && s.lat <= MAP_LAT) || null;
-    const key = site ? site.key : "";
+    if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
+    const focus = focusSite(data), site = focus && focus.lat <= MAP_LAT ? focus : null;
+    const key = site ? `${site.key}:${site.lat},${site.lon}` : "";
     if (!m.shown) {  // just switched to the map: start from the overview the first time, then fly to the site
       m.shown = true;
       m.leaflet.invalidateSize();
       const first = !m.placed;
       m.placed = true;
       if (first) centerOn(state, null, false);
-      m.centeredOn = key;
+      [m.centeredOn, m.centeredSite] = [key, site];
       if (site || !first) centerOn(state, site, true);
     } else if (m.centeredOn !== key) {
-      m.centeredOn = key;
+      [m.centeredOn, m.centeredSite] = [key, site];
       centerOn(state, site, true);
     }
   }
@@ -171,9 +185,7 @@ const polarMap = (() => {
   function layout(state) {
     const m = state.map;
     m.leaflet.invalidateSize({ pan: false });
-    if (m.shown && !m.userMoved) {
-      centerOn(state, state.data.sites.find(s => s.key === m.centeredOn) || null, true);
-    }
+    if (m.shown && !m.userMoved) centerOn(state, m.centeredSite || null, true);
   }
 
   const destroy = state => state.map.leaflet.remove();
