@@ -1,0 +1,19 @@
+.moon-view { position: relative; width: 100%; height: var(--view-height, 100vh); background: #000005;
+  overflow: hidden; font-family: sans-serif; color: #e8e8e8; }
+.globe { position: absolute; inset: 0; }
+.overlay { position: absolute; pointer-events: none; text-shadow: 0 1px 3px #000; }
+.hint { bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; opacity: 0.75; text-align: center; }
+.layers { top: 14px; right: 14px; pointer-events: auto; display: flex; gap: 4px; }
+.layers button { background: rgba(20, 22, 30, 0.75); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; cursor: pointer; }
+.layers button.active { background: #e66b27; border-color: #e66b27; color: #fff; }
+.layers button.fullscreen { margin-left: 8px; }
+.status { bottom: 14px; left: 18px; font-size: 0.8rem; opacity: 0.8; }
+.credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
+/* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
+.moon-view:fullscreen { height: 100vh; }
+.info { display: none; bottom: 40px; left: 18px; max-width: min(460px, 60%); background: rgba(10, 12, 18, 0.72);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 0.5rem; padding: 10px 14px; text-shadow: none; }
+.moon-view:fullscreen .info.has-site { display: block; }
+.info-name { font-weight: 600; font-size: 1.05rem; }
+.info-text { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; line-height: 1.35; }
