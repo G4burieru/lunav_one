@@ -27,7 +27,13 @@ def test_invalid_manual_coordinates(lat, lon):
         plot_south_pole_map(lat=lat, lon=lon)
 
 
-def test_map_exports_without_network_assets(tmp_path):
+def test_map_exports_without_network_assets(tmp_path, monkeypatch):
+    import socket
+
+    def network_unavailable(*args, **kwargs):
+        raise AssertionError("Standalone map must not access the network")
+
+    monkeypatch.setattr(socket.socket, "connect", network_unavailable)
     output = tmp_path / "map.html"
     plot_south_pole_map().write_html(output, include_plotlyjs=True)
     html = output.read_text(encoding="utf-8")
@@ -56,3 +62,29 @@ def test_hover_and_symbols_distinguish_points_regions_and_landings():
     assert rows["Malapert Massif"][0][3] == "region_center"
     assert rows["Malapert Massif"][1] == "circle"
     assert "Pending" in rows["Malapert Massif"][0][5]
+
+
+def test_symbol_key_and_scientific_hover_are_readable():
+    fig = plot_south_pole_map("Shackleton Crater (Rim)")
+    notes = " ".join(note.text for note in fig.layout.annotations)
+    for label in ("Studied point", "Region center", "Historical landing", "Selected location"):
+        assert label in notes
+    assert "Symbols do not indicate landing safety" in notes
+    assert "Apollo 11 is outside" in notes
+    row = next(row for name, row in zip(fig.data[0].text, fig.data[0].customdata)
+               if name == "Shackleton Rim S1")
+    assert row[6] == "89.68660° S"
+    assert row[7] == "162.81000° W"
+    assert "Table 2" in row[8]
+    assert "Pending" in row[5]
+    for heading in ("Type:", "Context", "Coordinate meaning", "Source", "Validation"):
+        assert heading in fig.data[0].hovertemplate
+
+
+def test_custom_catalog_without_scientific_metadata_still_works():
+    fig = plot_south_pole_map({"Example": {"lat": -85.0, "lon": 20.0,
+                                           "description": "Example <text>"}}, -85.0, 20.0)
+    row = fig.data[0].customdata[0]
+    assert row[2] == "Example &lt;text&gt;"
+    assert row[9] == "Unspecified"
+    assert row[7] == "20.00000° E"
