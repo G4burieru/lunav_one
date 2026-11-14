@@ -22,11 +22,11 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Site Card | 2027–2028 averages, Longest Night, Longest Earth Absence, metric ranks, source context |
 | Site Card tabs | Overview, Sun & Earth (28-day charts), Seasons (monthly summaries) |
 | Site Planner | Where, Surface Asset, When, Results; Asset Height, Elevation Mask and countdowns |
-| Site Neighborhood | Selectable Plotly heatmap for covered Catalog Sites at 2 m; not an in-map overlay yet |
+| Site Neighborhood | Selectable cells on the polar map for Catalog Sites at or south of 80°S, at 2 m Asset Height |
 | Custom Site | Coordinate search or confirmed point selection on globe/map; live calculation where needed |
 | Offline alternative | src/site_map.py exports a schematic Plotly map, separate from the Moon View |
 | Data pipeline | Eight sites pre-computed hourly for 2027–2028 at 2 m, automatic regeneration workflow |
-| Time playback and map overlays | Planned integration; no working time-bar playback or Layers panel in this checkout |
+| Time playback and additional layers | No working time-bar playback or Layers panel in this checkout; Planner neighborhood cells are implemented |
 | Full scientific/operational validation | Not completed |
 
 The Explorer's Site Card summary always covers 2027–2028 at 2 m. The selected-instant
@@ -88,7 +88,8 @@ lunav_one/
 │   │   ├── about.py
 │   │   ├── common.py           # Shared helpers and cached data
 │   │   └── texts.py            # Scientific explanatory copy
-│   ├── charts.py                # Conditions, monthly and neighborhood charts
+│   ├── charts.py                # Conditions and monthly charts
+│   ├── colors.py                # Shared Sunlight / Earth Visibility color ramps
 │   ├── horizons_api.py          # JPL observer ephemerides
 │   ├── terrain.py               # LOLA access and Terrain Horizon
 │   ├── conditions.py            # Conditions and Site Neighborhood summaries
@@ -260,9 +261,10 @@ science panels work. The standalone Plotly export is the recording fallback;
 it is not a local copy of the real imagery or the full application.
 
 `docs/UI_OVERHAUL.md` is a plan as well as a status record. The current rail opens
-Catalog, Plan and About. Time-bar playback, in-map Site Neighborhood cells,
-full in-view navigation and NASA Sunlight/Earth visibility layer controls require
-verification after their integration. Prepared data, helper functions and legend
+Catalog, Plan and About. The Site Planner already draws selectable Site
+Neighborhood cells on the polar map. Time-bar playback, full in-view navigation
+and additional NASA Sunlight/Earth visibility layer controls require verification
+after their integration. Prepared data, helper functions and legend
 text do not by themselves make these controls available. No side-by-side comparison
 table is present in the current interface; the catalog is sortable by metric.
 
@@ -282,8 +284,16 @@ nearby coordinates use the nearest supported point. Other heights and dates can
 require live requests. Custom Sites outside the south-pole DEM use the Ideal
 Horizon if no pre-computed neighborhood is available, with a warning.
 
-Monthly charts are in Site Card → Seasons; Site Planner retains the Plotly
-Site Neighborhood heatmap until in-map integration is complete. Reference-frame compatibility has been checked; a complete
+Monthly charts are in Site Card → Seasons. For a polar Catalog Site at 2 m,
+Site Planner colors the map's neighborhood cells by Sunlight or Earth Visibility
+for the chosen Analysis Window and Elevation Mask. Clicking a cell moves the
+Surface Asset and updates its results. Best cell selects the highest value for
+the current metric; ties use the first maximum in the data. It is not an overall
+landing recommendation. A dashed outline marks that cell and a solid outline
+marks the selected one; Back to the site restores the catalog position. The
+neighborhood is not shown for Custom Sites, nonpolar sites or other heights.
+The former Plotly neighborhood chart has been removed; src/site_map.py remains
+the separate schematic Plotly export for offline use. Reference-frame compatibility has been checked; a complete
 uncertainty, vehicle-safety or operational assessment has not been performed. The literature
 comparison is a consistency check using related LOLA-derived inputs, not an
 independent validation. This is an educational prototype, not a mission safety

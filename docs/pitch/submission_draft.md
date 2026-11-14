@@ -40,8 +40,12 @@ table has been replaced by the sorted catalog cards and ranks.
 Plan here opens Where, Surface Asset, When and Results. Users choose a Catalog
 Site or Custom Site, Asset Height, Elevation Mask and Analysis Window. Results
 include Sunset/Earthset countdowns, equivalent full-Sun hours and Earth-view
-percentages. At the supported 2 m height, the existing Plotly Site Neighborhood
-heatmap lets users select a nearby cell. Custom Sites can also be created from
+percentages. For Catalog Sites at or south of 80°S and at 2 m Asset Height,
+Site Neighborhood cells are drawn directly on the polar map, colored by Sunlight
+or Earth Visibility for the chosen window and mask. Clicking a cell moves the
+Surface Asset and updates its analysis. Best cell selects the highest modeled
+value for the chosen metric; Back to the site restores the catalog position.
+Neither selects a certified landing location. Custom Sites can also be created from
 coordinate search or an analyzed click on the globe/map.
 
 Eight Catalog Sites have source references and coordinate meanings. Four
@@ -105,11 +109,13 @@ The intended benefit is educational: let people inspect terrain, compare clearly
 defined environmental metrics and understand uncertainty. User-study or
 operational impact has not been measured.
 
-The current branch does not yet render the planned playback time bar, a Layers
-panel or in-map Site Neighborhood cells. The Site Card uses the first Explorer
-instant unless an instant event is provided; the Planner retains its own slider
-and Plotly heatmap. Those features need a final pass after the team's merge;
-they are not presented here as completed functionality. Browser/CDN/imagery
+The Site Neighborhood is now integrated into the polar map; the former Plotly
+neighborhood chart is removed. The separate schematic Plotly map remains an
+offline export. The current branch does not yet render the planned playback
+time bar or a Layers panel. The Site Card uses the first Explorer instant unless
+an instant event is provided; the Planner retains its own Instant slider. These
+remaining controls need a final pass after the team's merge and are not
+presented here as completed functionality. Browser/CDN/imagery
 availability and the hosted build must be checked before recording.
 
 ## Publication details
