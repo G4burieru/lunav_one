@@ -1,10 +1,25 @@
 """Schematic lunar south-pole map and offline preview. Owner: Renata."""
 import math
+from html import escape
+from textwrap import wrap
 from collections.abc import Mapping
 
 import plotly.graph_objects as go
 
 from src.sites import LUNAR_SITES
+
+
+SITE_TYPES = {
+    "studied_point": ("Studied point", "diamond"),
+    "region_center": ("Region center", "circle"),
+    "actual_landing": ("Historical landing", "square"),
+    "approximate_reference": ("Approximate reference", "triangle-up"),
+}
+
+
+def _hover_text(value):
+    """Wrap source text for narrow displays and escape HTML from custom catalogs."""
+    return "<br>".join(escape(line) for line in wrap(str(value), width=65))
 
 
 def plot_south_pole_map(selected_site=None, lat=None, lon=None):
@@ -33,21 +48,26 @@ def plot_south_pole_map(selected_site=None, lat=None, lon=None):
         theta=[site["lon"] for site in polar.values()],
         text=[site.get("name", name) for name, site in polar.items()],
         customdata=[[
-            site["lat"], site["lon"], site["description"],
+            site["lat"], site["lon"], _hover_text(site["description"]),
             site.get("coordinate_kind", "unspecified"),
-            site.get("coordinate_meaning", "Coordinate meaning not provided"),
-            site.get("topographic_validation", "Validation status not provided"),
+            _hover_text(site.get("coordinate_meaning", "Coordinate meaning not provided")),
+            _hover_text(site.get("topographic_validation", "Validation status not provided")),
+            f"{abs(site['lat']):.5f}° {'S' if site['lat'] < 0 else 'N'}",
+            f"{abs(site['lon']):.5f}° {'W' if site['lon'] < 0 else 'E'}",
+            _hover_text(site.get("source_location", "Source location not provided")),
+            SITE_TYPES.get(site.get("coordinate_kind"), ("Unspecified", "circle"))[0],
         ] for site in polar.values()],
         mode="markers+text", textposition="top center", name="Catalog Sites",
         marker=dict(size=10, color="#4ba3d3", symbol=[
-            {"studied_point": "diamond", "region_center": "circle",
-             "actual_landing": "square"}.get(site.get("coordinate_kind"), "circle")
+            SITE_TYPES.get(site.get("coordinate_kind"), ("Unspecified", "circle"))[1]
             for site in polar.values()
         ]),
-        hovertemplate=("<b>%{text}</b><br>Latitude: %{customdata[0]:.5f}°"
-                       "<br>Longitude: %{customdata[1]:.5f}° E"
-                       "<br>%{customdata[2]}<br>Type: %{customdata[3]}"
-                       "<br>%{customdata[4]}<br>%{customdata[5]}<extra></extra>"),
+        hovertemplate=("<b>%{text}</b><br>%{customdata[6]} · %{customdata[7]}"
+                       "<br><b>Type:</b> %{customdata[9]}"
+                       "<br><b>Context</b><br>%{customdata[2]}"
+                       "<br><b>Coordinate meaning</b><br>%{customdata[4]}"
+                       "<br><b>Source</b><br>%{customdata[8]}"
+                       "<br><b>Validation</b><br>%{customdata[5]}<extra></extra>"),
     ))
     if lat is not None and lat <= -80:
         fig.add_trace(go.Scatterpolar(
@@ -59,8 +79,9 @@ def plot_south_pole_map(selected_site=None, lat=None, lon=None):
         fig.add_annotation(text="Selected location is outside the south-pole map (90–80° S).",
                            x=0.5, y=1.1, xref="paper", yref="paper", showarrow=False)
     fig.update_layout(
-        title="Lunar south pole · schematic Catalog Site map", height=650,
-        margin=dict(t=100, b=80),
+        title="Lunar south pole · schematic Catalog Site map", height=720,
+        margin=dict(t=110, b=150),
+        showlegend=False,
         polar=dict(
             radialaxis=dict(range=[0, 10], tickvals=[0, 2, 4, 6, 8, 10],
                             ticktext=["90° S", "88° S", "86° S", "84° S", "82° S", "80° S"]),
@@ -68,8 +89,14 @@ def plot_south_pole_map(selected_site=None, lat=None, lon=None):
                              ticktext=["0°", "90° E", "180°", "90° W"]),
         ),
         annotations=list(fig.layout.annotations) + [dict(
-            text="Angular distance from pole · no imagery, relief or visibility calculation",
-            x=0.5, y=-0.13, xref="paper", yref="paper", showarrow=False)],
+            text=("<b>Symbol key</b>: ◆ Studied point · ● Region center<br>"
+                  "■ Historical landing · ▲ Approximate reference · × Selected location"),
+            x=0.5, y=-0.12, xref="paper", yref="paper", showarrow=False,
+            align="center", font=dict(size=12)), dict(
+            text=("Angular distance from pole · no imagery, relief or visibility calculation<br>"
+                  "Apollo 11 is outside this map · Symbols do not indicate landing safety"),
+            x=0.5, y=-0.27, xref="paper", yref="paper", showarrow=False,
+            align="center", font=dict(size=11))],
     )
     return fig
 
