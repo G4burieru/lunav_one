@@ -27,7 +27,11 @@ def test_invalid_manual_coordinates(lat, lon):
         plot_south_pole_map(lat=lat, lon=lon)
 
 
-def test_map_exports_without_network_assets(tmp_path, monkeypatch):
+@pytest.mark.parametrize("selection", [
+    {}, {"selected_site": "Shackleton Crater (Rim)"},
+    {"lat": -85.0, "lon": -20.0}, {"lat": -85.0, "lon": 20.0},
+])
+def test_map_exports_without_network_assets(tmp_path, monkeypatch, selection):
     import socket
 
     def network_unavailable(*args, **kwargs):
@@ -35,7 +39,7 @@ def test_map_exports_without_network_assets(tmp_path, monkeypatch):
 
     monkeypatch.setattr(socket.socket, "connect", network_unavailable)
     output = tmp_path / "map.html"
-    plot_south_pole_map().write_html(output, include_plotlyjs=True)
+    plot_south_pole_map(**selection).write_html(output, include_plotlyjs=True)
     html = output.read_text(encoding="utf-8")
     assert "Catalog Sites" in html
     assert '<script src=' not in html
@@ -88,3 +92,21 @@ def test_custom_catalog_without_scientific_metadata_still_works():
     assert row[2] == "Example &lt;text&gt;"
     assert row[9] == "Unspecified"
     assert row[7] == "20.00000° E"
+
+
+@pytest.mark.parametrize("selection,expected_lon,expected_label", [
+    ({"selected_site": "Shackleton Crater (Rim)"}, -162.81, "162.81000° W"),
+    ({"selected_site": "Faustini Crater (Rim)"}, 90.0, "90.00000° E"),
+    ({"lat": -85.0, "lon": -20.0}, -20.0, "20.00000° W"),
+    ({"lat": -85.0, "lon": 20.0}, 20.0, "20.00000° E"),
+    ({"lat": -85.0, "lon": 0.0}, 0.0, "0.00000° E"),
+    ({"lat": -85.0, "lon": -180.0}, -180.0, "180.00000° W"),
+    ({"lat": -85.0, "lon": 180.0}, 180.0, "180.00000° E"),
+])
+def test_selected_marker_longitude_uses_correct_hemisphere(selection, expected_lon, expected_label):
+    selected = plot_south_pole_map(**selection).data[1]
+    assert list(selected.theta) == [expected_lon]  # Presentation must not move the marker.
+    row = selected.customdata[0]
+    hover = selected.hovertemplate.replace("%{customdata[2]}", row[2])
+    assert f"Longitude: {expected_label}<extra>" in hover
+    assert "° E" not in hover if expected_lon < 0 else "° W" not in hover
