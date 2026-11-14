@@ -10,6 +10,7 @@ const globeView = (() => {
   };
   const BUMP = ["LRO_LOLA_DEM_Global_128ppd_v04", "png", 2];  // LOLA elevation (grayscale) for bump shading
   const SELECTED_COLOR = "#e66b27", SITE_COLOR = "#4ba3d3";
+  const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const tooltip = s => `<b>${escapeHtml(s.name)}</b><br>${s.lat.toFixed(4)}°, ${s.lon.toFixed(4)}° E`;
 
@@ -75,6 +76,27 @@ const globeView = (() => {
     camera.updateProjectionMatrix();
   }
 
+  // The globe turns slowly when the app opens and stops for good at the first interaction: dragging or zooming
+  // it, or any click or key press on the page (the panels too). It never turns when the system asks for reduced
+  // motion. Clicks inside the view reach `document` too: pointer and key events cross the shadow root.
+  function spinUntilFirstInteraction(state) {
+    state.spinning = !REDUCED_MOTION.matches;
+    if (!state.spinning) return;
+    const controls = state.globe.controls(), events = ["pointerdown", "keydown"];
+    const stop = () => {
+      state.spinning = controls.autoRotate = false;
+      state.stopWatching();
+    };
+    state.stopWatching = () => {
+      events.forEach(type => document.removeEventListener(type, stop, true));
+      controls.removeEventListener("start", stop);  // OrbitControls: a drag or wheel zoom begins
+      REDUCED_MOTION.removeEventListener("change", stop);
+    };
+    events.forEach(type => document.addEventListener(type, stop, true));
+    controls.addEventListener("start", stop);
+    REDUCED_MOTION.addEventListener("change", stop);
+  }
+
   // Camera for a site; polar sites are seen from just off the pole (OrbitControls misbehaves exactly at it).
   function cameraFor(site) {
     if (!site) return { lat: -55, lng: 0, altitude: 1.8 };  // whole Moon, tilted toward the south pole
@@ -89,7 +111,7 @@ const globeView = (() => {
       return;
     }
     if (state.globePaused) { state.globePaused = false; globe.resumeAnimation(); }
-    globe.controls().autoRotate = !selected;
+    globe.controls().autoRotate = state.spinning && !selected;
     if (state.cameraKey !== (data.selected || "")) {
       state.cameraKey = data.selected || "";
       globe.pointOfView(cameraFor(selected), state.globeShown ? 1500 : 0);
@@ -115,6 +137,7 @@ const globeView = (() => {
       .onLabelClick(s => state.setTriggerValue("site", s.key));
     globe.controls().autoRotateSpeed = 0.35;
     state.globe = globe;
+    spinUntilFirstInteraction(state);
 
     const [bumpLayer, bumpExt, bumpLevel] = BUMP;
     mosaic(bumpLayer, bumpExt, bumpLevel).then(url => {
@@ -132,7 +155,10 @@ const globeView = (() => {
     setLayer(state, Object.keys(LAYERS)[0]);
   }
 
-  const destroy = state => state.globe._destructor?.();
+  function destroy(state) {
+    state.stopWatching?.();
+    state.globe._destructor?.();
+  }
 
   return { load, loadError: "Could not load globe.gl from the CDN.", exists: state => !!state.globe, create, update,
            layout, destroy };

@@ -9,7 +9,7 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
 
 ## Status
 
-- **Done: T0a, T0b, A1 and A2.** The app is one screen with the rail and the panels, and the globe lives in
+- **Done: T0a, T0b, A1, A2 and A4.** The app is one screen with the rail and the panels, and the globe lives in
   `src/moon_view/`. `tests/test_app.py` opens every panel. The `.js` and `.css` files are read on every run, so
   pressing R in the app shows edits without a restart. Adding a file to `_JS_FILES` needs a restart.
 - **A2 result:** the south polar map is `src/moon_view/polar_map.js`. It replaces the Plotly south pole map, which
@@ -27,6 +27,9 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   - A click on a marker, or Enter or Space on a focused marker, sends `site`. The map centers the selected site in
     the area to the right of the panel. It centers again when the panel changes width, unless the user has moved
     the map.
+- **A4 result:** the globe stops turning for good at the first drag or zoom on it, or at the first click or key
+  press anywhere on the page. Key presses count too, so keyboard users can stop the motion. With reduced motion it
+  never turns.
 - **A1 result:** Leaflet and Proj4Leaflet work inside the component's shadow DOM, so `isolate_styles` stays on. The
   Moon Trek NAC tiles line up with the sites (Shackleton Rim S1 sits on the crater rim), and clicks on a site or on
   the map reach Python. Notes for A2:
