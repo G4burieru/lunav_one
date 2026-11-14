@@ -23,41 +23,59 @@ and `100 * mean(illumination_fraction > 0)` for any-Sun visibility.
 
 ## Reproduced project values
 
-Calculated locally from the committed catalog data introduced by main through
-fb8d2d4, using `get_conditions` at each site's exact coordinates, Asset Height
+Calculated locally from the regenerated catalog data in PR #12 (main merge
+889cd7e, including the corrected DEM read window), using `get_conditions` at each site's exact coordinates, Asset Height
 2 m, and the half-open interval [2027-01-01, 2029-01-01). All eight calls returned
 `source = pre-computed`. Each returned 17,544 hourly samples (731 days, including
 leap year 2028). No live network or DEM regeneration was required.
 
-| Point | Project average (%) | Difference from paper (percentage points) | Project any-Sun visibility (%) |
-|---|---:|---:|---:|
-| Connecting Ridge C1 | 89.94 | +1.94 | 93.61 |
-| Connecting Ridge C2 | 75.43 | -2.67 | 80.65 |
-| Shackleton Rim S1 | 85.64 | +0.14 | 89.60 |
-| Shackleton Rim S2 | 69.77 | -12.33 | 76.05 |
+| Point | Project average (%) | Difference from paper (percentage points) | Project any-Sun visibility (%) | Earth Visibility (%) |
+|---|---:|---:|---:|---:|
+| Connecting Ridge C1 | 88.35 | +0.35 | 92.37 | 54.30 |
+| Connecting Ridge C2 | 79.01 | +0.91 | 82.79 | 55.22 |
+| Shackleton Rim S1 | 85.90 | +0.40 | 89.71 | 49.97 |
+| Shackleton Rim S2 | 80.99 | -1.11 | 87.57 | 52.88 |
+
+Earth Visibility uses Earth's center above the Terrain Horizon and an Elevation
+Mask of 0°. It is not a radio-link availability calculation and is not a metric
+validated against Table 2. Values are rounded only for presentation.
 
 These are combined two-year averages, not claims about each year individually.
-Malapert regional center (21.56%), Faustini Rim A regional center (26.43%) and
-Haworth regional center (15.76%) also reproduce the approximate project values
-Gabriel reported. They do not have matching points in Table 2 and must not be
+The recalculated means for the other polar sites are Malapert regional center
+15.41%, Faustini Rim A regional center 26.32%, and Haworth regional center 12.64%.
+Apollo 11 remains 49.74% (global 118 m DEM). They do not have matching points in Table 2 and must not be
 presented as validated by that table.
 
 ## Interpretation for the pitch
 
-C1 and S1 show close numerical agreement; C2 differs by a few percentage points.
-S2 has a substantial discrepancy that must remain visible in any summary.
-There is no defined scientific acceptance tolerance for this comparison.
+All four mean Illumination Fraction estimates differ from the published values
+by less than 1.2 percentage points. This is a descriptive result, not a predefined
+scientific acceptance tolerance or proof of full model accuracy.
 
-The study uses 20 m terrain sampling; the polar project data uses an 80 m DEM.
-The time windows also differ. Both use LOLA-derived terrain, so agreement is not
-independent of the underlying source data. Differences in horizon construction,
-coordinate-frame realization and local terrain sampling require investigation;
-we have not established which explains the S2 result. Do not attribute that
-result to a specific cause or accept it solely on an order-of-magnitude basis.
+The corrected DEM read window in PR #12 includes terrain that could previously
+be omitted between roughly 7 and 10 km in some directions. After regeneration,
+C1 changed from 89.72% (+1.72 percentage points) to 88.35% (+0.35). These final
+values supersede the earlier PR #9 figures.
 
-Suggested pitch wording: “We compared four modeled illumination estimates with
-published values. Several are close, while one discrepancy remains under
-investigation. This is a preliminary consistency check, not full validation.”
+The previous 80 m-only result for Shackleton S2 was 69.77%, a difference of
+-12.33 percentage points. With 20 m terrain within the first 10 km, combined
+with 80 m terrain from 10–50 km and a 320 m overview from 50–150 km, it is 80.99%, a difference of -1.11 percentage
+points. The coordinates, 2 m Asset Height and comparison interval are unchanged.
+This improvement is consistent with near-field terrain resolution contributing
+to the earlier discrepancy. It does not establish resolution as the sole cause
+or certify the modeled point. The paper uses a 20 m DTM; our combined-resolution
+calculation is not an exact reproduction of that method.
+
+The time windows differ (2017–2037 versus 2027–2028), and both calculations use
+LOLA-derived terrain. Agreement is therefore not independent of the underlying
+source data. Horizon construction, reference-frame realization and the remaining
+differences still warrant scientific review. No permanent illumination, landing
+safety, measured energy yield or radio-link performance is established.
+
+Suggested pitch wording: “With finer local terrain, our four mean illumination
+estimates are within 1.2 percentage points of published values. This supports
+consistency with the literature, rather than independent validation, because the
+periods differ and both calculations use LOLA-derived terrain.”
 
 ## Reproduction without remote requests
 
@@ -67,10 +85,10 @@ existing data files and does not modify the science modules or catalog:
 ```python
 from unittest.mock import patch
 from src.conditions import get_conditions
+from src.metrics import earth_visible_hours
 from src.sites import LUNAR_SITES
 
-names = ["Connecting Ridge C1", "Connecting Ridge C2",
-         "Shackleton Crater (Rim)", "Shackleton Rim S2"]
+names = list(LUNAR_SITES)  # Include the regional centers before quoting their values.
 with patch("requests.sessions.Session.request", side_effect=RuntimeError("Network disabled")):
     for name in names:
         site = LUNAR_SITES[name]
@@ -78,8 +96,9 @@ with patch("requests.sessions.Session.request", side_effect=RuntimeError("Networ
         assert df.attrs["source"] == "pre-computed"
         assert len(df) == 17544
         f = df["illumination_fraction"]
-        print(name, 100 * f.mean(), 100 * (f > 0).mean())
+        earth_pct = 100 * earth_visible_hours(df, elevation_mask=0.0) / len(df)
+        print(name, 100 * f.mean(), 100 * (f > 0).mean(), earth_pct)
 ```
 
 Before publication, ask Gabriel to review the comparison method, source-frame
-alignment and S2 discrepancy. Do not change coordinates to force agreement.
+alignment and remaining differences. Do not change coordinates to force agreement.

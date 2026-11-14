@@ -24,20 +24,23 @@ provides the scientific background for this problem.
 ## Our solution and current implementation
 
 The Streamlit interface lets users choose a Catalog Site or enter coordinates,
-select a date and analysis duration, and request hourly Sun/Earth elevations from
-NASA JPL Horizons. Plotly charts show those elevations relative to 0°. A
+select a date and analysis duration, and view hourly Sun/Earth conditions. NASA JPL Horizons supplies ephemerides;
+Plotly charts compare elevations against the Terrain Horizon. Covered Catalog
+Site scenarios use pre-computed data; other supported cases are calculated live. A
 schematic south-pole map distinguishes study points and regional centers and
 can be exported as a self-contained HTML file without querying Horizons.
 
 Eight Catalog Sites retain coordinate provenance and validation status. Four
 priority points come from Gläser et al.'s illumination study at a 2 m Asset
 Height. Their published results are context, not computed outputs or a safety
-ranking from our tool. The coordinates await checks against the project DEM.
+ranking from our tool. Project terrain has been calculated at these coordinates; the literature
+comparison is preliminary and does not complete topographic validation.
 
-Separate science modules implement Terrain Horizon calculations, Illumination
-Fraction and terrain-aware countdowns with an Ideal Horizon fallback. These calculations are covered
-by automated tests but are not yet integrated into the main interface's charts
-and indicators. Synthetic tests check computational behavior; they do not
+The interface integrates Terrain Horizon, Illumination Fraction and terrain-aware
+countdowns, with an identified Ideal Horizon fallback where terrain is unavailable.
+The polar terrain model uses 20 m sampling within 10 km, 80 m from 10–50 km,
+and a 320 m overview from 50–150 km, with the corrected DEM read window.
+These calculations are covered by automated tests. Synthetic tests check computational behavior; they do not
 constitute validation of real Catalog Site terrain.
 
 ## Technologies and source use
@@ -63,11 +66,12 @@ validated landing point, solar geometry from usable power, and Earth Visibility
 from a working communications link. This benefit has not yet been measured in
 user studies or operational use.
 
-Planned Explorer and Site Planner modes will organize learning and Surface Asset
-analysis. Pre-computed catalog data and an automatic regeneration workflow are
-now present. Next steps include DEM/frame validation, investigation of the
-Shackleton S2 discrepancy, terrain-aware chart integration and scenario comparisons. These are
-planned capabilities, not completed features.
+Explorer now provides Catalog Site context, time-series analysis and a comparison
+table for covered dates. Site Planner accepts Custom Sites, Asset Height and
+Elevation Mask. Pre-computed data and automatic regeneration are present.
+Monthly and Site Neighborhood summaries exist in the science modules; displaying
+them in the interface remains future work. Further scientific and reference-frame
+review is still required.
 
 The current prototype does not certify landing safety, locate ice deposits,
 calculate electrical power or validate radio links. It does not identify an
@@ -78,10 +82,13 @@ selection for any current mission.
 
 [Comparison with published results](illumination_comparison.md) checks mean
 Illumination Fraction for four study points using committed 2027–2028 data.
-C1 and Shackleton S1 are close to the literature values; S2 differs substantially.
-This supports further investigation, not a completed independent validation.
-The literature and prototype share LOLA-derived terrain and use different DEM
-resolutions and time windows. Do not omit S2 when presenting the comparison.
+With finer local terrain, all four average illumination values differ from the
+paper by less than 1.2 percentage points. S2 improved from a -12.33 to a -1.11
+percentage-point difference, consistent with terrain resolution contributing to
+the earlier discrepancy. This is a consistency check, not independent validation:
+the time windows differ and both calculations use LOLA-derived terrain. The
+project combines 20 m, 80 m and 320 m terrain at different distances rather than exactly
+reproducing the study's 20 m method.
 
 ## Publication details to complete
 
