@@ -1,120 +1,117 @@
-# Three-minute demo — Moon View interface
+# Three-minute demo — time-aware Moon View
 
-D2 draft for the current branch, not every feature in UI_OVERHAUL.md. Rehearse the
-spoken paragraphs at about 130 words per minute, allowing time for transitions.
-Bracketed instructions and the checklist are not narration. Use the deployed
-[application](https://lunavone.streamlit.app/) only after checking its build
-against the branch used for this script.
+Draft checked against PRs #28 and #29, present in main 3c9e9fd. Rehearse the
+spoken paragraphs at about 130 words per minute, allowing screen transitions.
+Bracketed directions and checklists are not narration. Confirm that the
+[hosted application](https://lunavone.streamlit.app/) has the same build before recording.
 
 ## Prepare before recording
 
-- Start `python -m streamlit run app.py` and open the Catalog panel. Let globe
-  libraries, NASA textures and cached Catalog Site summaries load.
-- Confirm Globe / South pole map switches, Photos / Relief layers and site selection
-  in the browser. Python smoke tests do not test browser tile loading or interaction.
-- Rehearse Connecting Ridge C1, then Plan here. Keep 2 m Asset Height, 0° Elevation
-  Mask, 2027-01-01 and 14 Earth days; avoid a slow live-height change during narration.
-- Prepare the offline alternative: `python -m src.site_map --site 'Connecting Ridge C1'`.
-  Open `lunar_south_pole.html` in a browser. It embeds Plotly and needs no Horizons,
-  tiles or CDN after export. It cannot demonstrate real imagery or the full interface.
+- Start `python -m streamlit run app.py` and let NASA imagery and catalog data load.
+- Start in Globe; its slow initial rotation stops on the first interaction and
+  stays off. Reduced-motion settings may prevent rotation from starting.
+- Rehearse Connecting Ridge C1. Find two instants with visibly different Sun/Earth
+  marker states. Record the UTC labels for rehearsal; do not invent a transition.
+- Test Play, Pause and dragging. Markers update during playback; release the
+  slider or pause to update the Site Card. Its 2027–2028 grid stays fixed.
+- Use Plan here with a Catalog Site at 2 m Asset Height, 0° Elevation Mask and a
+  covered 14-day window, such as 2027-01-01. Keep the map's pre-computed neighborhood
+  as the main demonstration; do not request a live neighborhood or change height.
+- Export the offline fallback: `python -m src.site_map --site 'Connecting Ridge C1'`.
+  Open `lunar_south_pole.html` in advance. It embeds Plotly but contains neither
+  NASA imagery nor the Moon View's time controls or analysis panels.
 
-## 0:00–0:20 — Why this matters
+## 0:00–0:20 — The problem
 
-[Show the globe with the Catalog panel open; drag gently to show the 3D view.]
+[Show the globe; begin narration before the first interaction.]
 
 “Near the lunar south pole, the Sun stays low and nearby terrain can hide both
-sunlight and Earth. A regional name alone does not tell us what a surface asset
-will see. Lunav One makes those differences easier to explore, while keeping the
-scientific assumptions visible.”
+sunlight and Earth. A regional name alone cannot tell us what a surface asset
+will see. Lunav One connects geographic context with modeled conditions and
+explains what those numbers can, and cannot, tell us.”
 
-## 0:20–0:50 — From globe to real polar imagery
+## 0:20–0:45 — A documented location on real imagery
 
-[Search for Connecting Ridge C1 and select it. The polar site opens the map.
-Briefly switch Photos / Relief, then return to Photos.]
+[Search for Connecting Ridge C1 and select it. The site opens the polar map.
+Show Photos briefly, then the Site Card's coordinate context.]
 
-“This Moon View combines a three-dimensional globe with a south polar map using
-real NASA imagery. Photos show LROC mosaics; Relief shows LOLA shaded terrain.
-Selecting Connecting Ridge C1 takes us to its surroundings. These images provide
-geographic context: they are not a live view of today's shadows or proof of a
-safe landing.”
+“The Moon View combines a three-dimensional Moon with a polar map using real
+NASA imagery. Selecting Connecting Ridge C1 takes us to a documented study
+point. A diamond means a studied point, a circle a regional center, and a square
+a historical landing. These shapes identify location types, not landing safety.”
 
-## 0:50–1:35 — Read a Site Card
+## 0:45–1:30 — Move through time
 
-[Point to type, coordinate context, four metrics and rank. Open Sun & Earth,
-then briefly Seasons. Do not operate a nonexistent play/time bar.]
+[Drag the UTC slider and release. Press Play briefly, then Pause. Point to
+marker fill, its upper-right dot and the Site Card's updated UTC instant.]
 
-“The Site Card distinguishes a specific study point from a regional center or a
-historical landing. Its sources explain the coordinates. Sunlight averages the
-visible fraction of the solar disk over 2027 and 2028 at two metres above ground.
-It does not measure electricity. Earth Visibility is a geometric Earth view,
-not a guaranteed radio link. Longest Night and Longest Earth Absence describe
-the longest modeled gaps within that window. They do not calculate battery
-endurance. Charts show the Terrain Horizon, and Seasons summarizes monthly
-changes. The rank compares this metric among our catalog entries, not landing
-safety.”
+“The time bar lets us move through hourly conditions or play and pause them.
+Marker fill follows how much of the Sun's disk clears the terrain. The small
+dot is filled when Earth's center is visible and hollow when it is not.
+Markers change while time moves. When we release or pause, the Site Card's
+instant and charts follow. Its two-year averages stay fixed. Sunlight is mean
+Illumination Fraction, not generated electricity. Longest Night and Longest Earth
+Absence describe gaps within that window, not battery endurance or guaranteed
+communication outages.”
 
-## 1:35–2:15 — Plan a scenario
+## 1:30–2:15 — Inspect the neighborhood
 
-[Click Plan here. Show Where, Surface Asset, When and Results. Use the current
-Planner's Instant slider. In the polar map, choose Sunlight or Earth visibility,
-click a neighborhood cell and point out the updated Surface Asset/results. The
-current metric's best cell has a dashed outline; the selected cell has a solid
-outline. Use Back to the site to return to the catalog position.]
+[Click Plan here. Keep the pre-computed 2 m Catalog Site scenario. Show the
+four steps and Color by; select a visible neighborhood cell on the polar map.
+Point to the moved Surface Asset and results, then Back to the site.]
 
-“Plan here opens four steps: choose a position, set the Surface Asset, choose
-when to analyze, and inspect the results. Asset Height can change what clears
-the terrain. Elevation Mask requires extra clearance for Earth's center. We
-keep two metres to use the prepared neighborhood, choose a time window and
-inspect the countdowns. They describe Sunset and Earthset from the selected
-instant. Selecting a neighborhood cell directly on the polar map moves our
-Surface Asset and updates its analysis.”
+“Plan here opens four steps: position, Surface Asset, time window and results.
+We keep two metres to use the pre-computed neighborhood. Selecting a cell on
+the polar map moves our asset and updates its analysis. Sunlight and Earth
+Visibility colors summarize the chosen window. Best cell means highest value
+for that metric, not safest landing. Custom Sites and other heights can request
+live neighborhoods in the supported polar region, but those calculations take
+longer. Here we use prepared data to keep exploration responsive.”
 
-## 2:15–3:00 — Science, boundaries and purpose
+## 2:15–3:00 — What the science supports
 
-[Return to the Catalog or About panel; end on the Moon View.]
+[Return to the Site Card or About; end on the Moon View.]
 
-“NASA provides the ephemerides, elevation models and imagery; our project
-calculates the terrain horizons and summary metrics. Our four illumination-study
-points are within one point two percentage points of published means. That is
-a consistency check, not independent validation: both use LOLA data and different
-time periods. Terrain resolution, hourly sampling and operational constraints
-still matter. We do not certify safe landings, electrical power or communications.
-Our contribution is an accessible way to inspect locations, understand what the
-numbers mean and ask better questions before a complete mission assessment.”
+“NASA supplies ephemerides, terrain and imagery; our project calculates horizons,
+illumination and visibility metrics. Our four illumination-study points are
+within one point two percentage points of published means. That is a consistency
+check, not independent validation: both use LOLA data and different time periods.
+Hourly sampling, terrain resolution and operational constraints still matter.
+We do not certify safe landings, usable power or working radio links. Our goal
+is to help people inspect locations, understand assumptions and ask better
+questions before a complete mission assessment.”
 
-## Offline replacement if external services fail
+## Offline replacement
 
-Show the already exported Plotly map and say: “This is our schematic offline
-fallback. It preserves documented locations and coordinate meaning without
-requiring remote services. Real imagery and the interactive Moon View are
-unavailable in this recording.” If cached panels still work, show those separately.
-Do not imply the offline HTML includes the NASA imagery, charts or live calculations.
+If remote imagery or browser libraries fail, show the exported Plotly map and
+say: “This is our schematic offline fallback. It preserves documented locations
+without remote services. It does not reproduce the NASA imagery, time playback
+or the full application.” Cached scientific panels may still be shown separately.
+Do not present a fallback as a recording of an unavailable live interaction.
 
-## Final pass after the team's last merge
+## Final checks before recording
 
-- Confirm the hosted build and exact control names; rehearse in the recording browser.
-- A6/B6 neighborhood cells are implemented on the polar map for Catalog Sites
-  at or south of 80°S, at 2 m height. Rehearse cell selection, both color metrics,
-  Best cell and Back to the site in the recording browser. Best means highest
-  value for the selected metric and window, not safest landing point.
-- A3 time-bar playback, animated marker states, A7 in-view navigation and A8/B7
-  additional layer controls still need a new code/browser check. They are not
-  demonstrated as implemented in this script.
-- Currently the Site Card falls back to the first 2027 instant without a time-bar
-  event; the Planner has its own Instant slider. Update this narration if that changes.
-- Check legends actually consuming SUN_LAYER / EARTH_LAYER before showing them;
-  text constants alone do not add a working Layers panel.
-- If using the optional Malapert example, select (-1600 m east, +100 m north) directly on
-  the polar map's Site Neighborhood cells. The separate 2027–2028 check gives 100% of hourly Earth-view
-  samples there; the screen's selected window is a different summary. Do not call
-  it a summit, permanent visibility or a validated communications link.
-- Coordinate a final copy pass with the panel owners: some chart/result sentences
-  are still hardcoded outside texts.py, including “the Sun shines X% of the time”.
-  Narrate that number as mean Illumination Fraction, not binary sunlight duration.
-  Countdown tooltips are not centralized yet; About explains their interpretation.
-- Record the final duration and publish the video URL only after reviewing the take.
+- Rehearse for approximately three minutes in the actual browser and hosted build.
+  Check that Pause/slider release updates the Site Card, while the summary stays fixed.
+- Explain a Custom Site's ticked ring and a Surface Asset's cross in a circle
+  only if they appear. A triangle denotes an approximate reference; no new entry
+  of that kind is required for the demonstration.
+- The Planner's Moon View time bar covers its Analysis Window, but its results
+  panel still has an independent Instant slider. Do not claim its countdowns
+  synchronize with the Moon View bar. Use the panel slider if demonstrating them.
+- Neighborhoods are offered at or south of 80°S. Catalog Sites at 2 m reuse prepared
+  terrain; other cases require Paint the Site Neighborhood. Keep that slower path
+  out of the main take. Best cell is disabled as No better cell when differences
+  are below the implementation's threshold; choose another covered window if needed.
+- Layers Panel and additional NASA visibility-layer controls are still pending;
+  existing Photos/Relief switches are base layers, not those controls.
+- Some scientific captions remain hardcoded in other owners' panels; narrate
+  Sunlight as mean Illumination Fraction rather than binary sunlight duration.
+- If using the optional Malapert example, the point is -1600 m east, +100 m north.
+  Its separate two-year Earth Visibility result is not the same as a short-window
+  percentage and does not establish a summit or permanent communications.
+- Publish the video URL after reviewing the final recording.
 
-Scientific references and reproducible comparisons remain in
-[illumination_comparison.md](illumination_comparison.md). See also the
+Sources and reproducible checks: [illumination comparison](illumination_comparison.md),
 [mission explainer](mission_explainer.md), [NASA south-pole background](https://www.nasa.gov/reference/moonbase-environment/)
-and [JPL Horizons manual](https://ssd.jpl.nasa.gov/horizons/manual.html).
+and [Horizons manual](https://ssd.jpl.nasa.gov/horizons/manual.html).
