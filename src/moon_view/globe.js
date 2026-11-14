@@ -121,9 +121,9 @@ const globeView = (() => {
   // Moon: the Catalog Sites, the Custom Site and, in the Site Planner, the Surface Asset. globe.gl builds one element
   // per data object, so the objects are kept across reruns and only updated.
   function markerItems(state, data) {
-    const kept = state.globeMarkers || {}, next = {}, custom = data.custom && focusSite(data);
-    const items = [...data.sites, ...(custom ? [custom] : [])]
-      .map(s => ({ key: s.key, name: s.name, kind: s.kind, lat: s.lat, lon: s.lon }));
+    const kept = state.globeMarkers || {}, next = {}, custom = data.custom;
+    const items = data.sites.map(s => ({ key: s.key, name: s.name, kind: s.kind, lat: s.lat, lon: s.lon }));
+    if (custom) items.push({ key: "custom", name: "Custom Site", kind: "custom", lat: custom.lat, lon: custom.lon });
     if (data.mode === "planner" && data.asset) {
       items.push({ key: "asset", name: "Surface Asset", kind: "asset", lat: data.asset.lat, lon: data.asset.lon });
     }
@@ -135,7 +135,7 @@ const globeView = (() => {
   // the site.
   const highlighted = (state, item) => (state.data.mode === "planner" ? item.key === "asset"
     : item.key === "custom" || item.key === state.data.selected);
-  const clickable = item => item.key !== "asset" && item.key !== "custom";
+  const clickable = item => !isPicked(item);
 
   function markerElement(state, item) {
     const el = document.createElement("div");
