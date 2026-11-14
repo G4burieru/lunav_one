@@ -23,13 +23,16 @@ def grid(summary):
     average, worst = st.columns(2)
     average.caption("On average")
     worst.caption("Worst case")
-    average.metric(f"{icon('sun')} Sunlight", f"{summary['sunlight_pct']:.0f}%", help=texts.SUNLIGHT_HELP,
-                   border=True)
-    worst.metric(f"{icon('night')} Longest night", night, help=texts.LONGEST_NIGHT_HELP, border=True)
-    average.metric(f"{icon('earth')} Earth visible", f"{summary['earth_visible_pct']:.0f}%", help=texts.EARTH_HELP,
-                   border=True)
-    worst.metric(f"{icon('no-earth')} Longest without Earth", absence, help=texts.LONGEST_EARTH_ABSENCE_HELP,
-                 border=True)
+    average.metric(f"{icon('sun')} Sunlight", f"{summary['sunlight_pct']:.0f}%", border=True)
+    worst.metric(f"{icon('night')} Longest night", night, border=True)
+    average.metric(f"{icon('earth')} Earth visible", f"{summary['earth_visible_pct']:.0f}%", border=True)
+    worst.metric(f"{icon('no-earth')} Longest without Earth", absence, border=True)
+    # One expander instead of help= on each metric: a help button is named after its label, icon markdown included.
+    with st.expander("What do these numbers mean?"):
+        for name, text in [("Sunlight", texts.SUNLIGHT_HELP), ("Longest night", texts.LONGEST_NIGHT_HELP),
+                           ("Earth visible", texts.EARTH_HELP),
+                           ("Longest without Earth", texts.LONGEST_EARTH_ABSENCE_HELP)]:
+            st.markdown(f"**{name}.** {text}")
 
 
 def rank_sentence(summary, custom):
