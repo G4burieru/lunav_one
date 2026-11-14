@@ -25,6 +25,6 @@
     "lon": 23.47,
     "start": "2027-01-01",
     "end": "2029-01-01",
-    "terrain": null
+    "terrain": "LOLA 118 m global DEM"
   }
 }

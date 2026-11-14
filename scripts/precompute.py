@@ -12,26 +12,38 @@ import pandas as pd
 from src import catalog
 from src.horizons_api import get_ephemerides_data
 from src.sites import LUNAR_SITES
-from src.terrain import neighborhood_horizons
+from src.terrain import dem_for, neighborhood_horizons
 
-SOUTH_POLE_DEM_LIMIT = -80.0  # the 80 m south pole DEM covers 80°S to the pole
+
+def save_ephemerides(path, ephemerides):
+    """Write the CSV only if its content changed (gzip stores a timestamp, so rewrites always look modified)."""
+    numeric = {column: 4 for column in ephemerides.columns if column != "time"}
+    ephemerides = ephemerides.round(numeric)
+    if path.exists() and pd.read_csv(path, parse_dates=["time"]).equals(ephemerides):
+        return
+    ephemerides.to_csv(path, index=False, compression={"method": "gzip", "mtime": 0})
+
+
+def save_terrain(path, **arrays):
+    """Write the npz only if its arrays changed (zip stores timestamps, so rewrites always look modified)."""
+    if path.exists():
+        with np.load(path) as old:
+            if set(old.files) == set(arrays) and all(np.array_equal(old[k], v) for k, v in arrays.items()):
+                return
+    np.savez_compressed(path, **arrays)
 
 
 def precompute_site(name, site, data_dir):
     days = (pd.Timestamp(catalog.END) - pd.Timestamp(catalog.START)).days
     ephemerides = get_ephemerides_data(site["lat"], site["lon"], catalog.START, days)
-    numeric = {column: 4 for column in ephemerides.columns if column != "time"}
-    ephemerides.round(numeric).to_csv(data_dir / f"{catalog.slug(name)}_ephemerides.csv.gz", index=False)
+    save_ephemerides(data_dir / f"{catalog.slug(name)}_ephemerides.csv.gz", ephemerides)
 
-    terrain = None
-    if site["lat"] <= SOUTH_POLE_DEM_LIMIT:
-        east, north = catalog.neighborhood_offsets()
-        horizons = neighborhood_horizons(site["lat"], site["lon"], east, north, catalog.ASSET_HEIGHT_M)
-        np.savez_compressed(data_dir / f"{catalog.slug(name)}_terrain.npz", east=east, north=north,
-                            horizons=np.round(horizons * 100).astype(np.int16))
-        terrain = "LOLA 80 m south pole DEM"
-    # shortcut: sites outside 80°S have no terrain yet; the global 118 m DEM comes next (docs/adr/0002).
-    return {"lat": site["lat"], "lon": site["lon"], "start": catalog.START, "end": catalog.END, "terrain": terrain}
+    east, north = catalog.neighborhood_offsets()
+    horizons = neighborhood_horizons(site["lat"], site["lon"], east, north, catalog.ASSET_HEIGHT_M)
+    save_terrain(data_dir / f"{catalog.slug(name)}_terrain.npz", east=east, north=north,
+                 horizons=np.round(horizons * 100).astype(np.int16))
+    return {"lat": site["lat"], "lon": site["lon"], "start": catalog.START, "end": catalog.END,
+            "terrain": dem_for(site["lat"])[1]}
 
 
 def main(data_dir=catalog.DATA_DIR):

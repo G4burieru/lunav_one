@@ -42,3 +42,12 @@ def test_moving_toward_the_sun_raises_it():
     one_km_in_degrees = np.degrees(1000 / MOON_RADIUS_M)
     assert elevation_at_offset(5.0, 90.0, 1000.0, 0.0) == pytest.approx(5.0 + one_km_in_degrees)
     assert elevation_at_offset(5.0, 90.0, 0.0, 1000.0) == pytest.approx(5.0)
+
+
+def test_local_axes_scale_east_by_latitude_in_cylindrical_maps():
+    from rasterio.crs import CRS
+    from src.terrain import local_axes
+    cylindrical = CRS.from_proj4("+proj=eqc +R=1737400 +units=m +no_defs")
+    _, north, east = local_axes(cylindrical, 60.0, 10.0)
+    assert np.linalg.norm(north) == pytest.approx(1.0, rel=1e-6)
+    assert np.linalg.norm(east) == pytest.approx(2.0, rel=1e-4)  # 1 / cos(60°)

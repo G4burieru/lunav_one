@@ -23,3 +23,17 @@ def test_load_site_ignores_data_for_moved_sites(tmp_path):
 
 def test_precompute_script_imports():
     import scripts.precompute  # noqa: F401  (guards against syntax errors in the CLI script)
+
+
+def test_unchanged_data_is_not_rewritten(tmp_path):
+    from scripts.precompute import save_ephemerides, save_terrain
+    eph = pd.DataFrame({"time": pd.to_datetime(["2027-01-01 00:00"]), "sun_elevation": [1.23456]})
+    csv, npz = tmp_path / "a_ephemerides.csv.gz", tmp_path / "a_terrain.npz"
+    save_ephemerides(csv, eph)
+    save_terrain(npz, horizons=np.array([1, 2], dtype=np.int16))
+    before = csv.read_bytes(), npz.stat().st_mtime_ns
+    save_ephemerides(csv, eph)
+    save_terrain(npz, horizons=np.array([1, 2], dtype=np.int16))
+    assert (csv.read_bytes(), npz.stat().st_mtime_ns) == before
+    save_terrain(npz, horizons=np.array([1, 3], dtype=np.int16))
+    assert np.load(npz)["horizons"].tolist() == [1, 3]
