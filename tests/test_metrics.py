@@ -59,3 +59,34 @@ def test_monthly_summary_groups_by_calendar_month():
     assert summary["sunlight_pct"].tolist() == [75.0, 0.0]
     assert summary["earth_visible_pct"].tolist() == [50.0, 100.0]
     assert summary["hours"].tolist() == [2.0, 2.0]
+
+
+GAPS = pd.DataFrame({
+    "time": pd.date_range("2027-01-01", periods=8, freq="h"),
+    "sun_elevation": [0.0] * 8,  # ignored: the illumination_fraction column wins
+    "illumination_fraction": [1.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0],
+    "earth_elevation": [1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0],
+    "earth_horizon": [0.0] * 8,
+})
+
+
+def test_longest_night_and_earth_absence_are_the_longest_runs():
+    from src.metrics import longest_earth_absence, longest_night
+    assert longest_night(GAPS) == 3.0  # a partly lit hour (0.5) ends the night
+    assert longest_earth_absence(GAPS) == 2.0
+    assert longest_earth_absence(GAPS, elevation_mask=1.5) == 8.0  # Earth never clears the mask
+    assert longest_night(GAPS.assign(illumination_fraction=1.0)) == 0.0
+
+
+def test_site_summary_is_the_site_card_grid():
+    from src.metrics import site_summary
+    assert site_summary(GAPS) == pytest.approx({"sunlight_pct": 100 * 2.5 / 8, "earth_visible_pct": 100 * 5 / 8,
+                                                "longest_night_h": 3.0, "longest_earth_absence_h": 2.0})
+
+
+def test_hourly_states_round_trip():
+    from src.metrics import hourly_states
+    states = hourly_states(GAPS)
+    assert states.dtype == "uint8" and len(states) == len(GAPS)
+    assert (states & 0x7F).tolist() == [100, 0, 0, 0, 50, 0, 0, 100]
+    assert (states >> 7).astype(bool).tolist() == (GAPS["earth_elevation"] > 0).tolist()
