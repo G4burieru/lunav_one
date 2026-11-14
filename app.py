@@ -8,7 +8,8 @@ import streamlit as st
 
 from src.moon_view import moon_view
 from src.panels import about, catalog_list, planner, site_card
-from src.panels.common import CUSTOM, PANEL, SELECTED, VIEW_CHOICE, VIEWS, open_panel, select_custom, select_site
+from src.panels.common import (CUSTOM, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, open_panel, rail_active,
+                               select_custom, select_site)
 from src.sites import LUNAR_SITES
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
@@ -82,16 +83,18 @@ def view_request(selected, custom):
 
 
 selected, custom = st.session_state.get(SELECTED), st.session_state.get(CUSTOM)
-panel = st.session_state.get(PANEL, "catalog")
+panel, panel_open = st.session_state.get(PANEL, "catalog"), st.session_state.get(PANEL_OPEN, True)
 if panel == "site" and selected not in LUNAR_SITES and not custom:
     panel = "catalog"
-st.html(CSS + f"<style>.st-key-panel {{ width: {PANEL_WIDTH[panel]}; }}</style>")
+# A hidden panel is still rendered, so its widgets keep their values until it is shown again.
+st.html(CSS + f"<style>.st-key-panel {{ width: {PANEL_WIDTH[panel]};"
+        + ("" if panel_open else " display: none;") + " }</style>")
 
 with st.container(key="rail"):
     for name, label, icon in RAIL:
-        active = name == panel or (name, panel) == ("catalog", "site")
         st.button(label, icon=icon, key=f"rail_{name}", on_click=open_panel, args=(name,),
-                  type="primary" if active else "secondary", width="stretch")
+                  type="primary" if panel_open and rail_active(name) else "secondary", width="stretch",
+                  help=f"Hide the {label} panel" if panel_open and rail_active(name) else None)
 
 view, view_id = view_request(selected, custom)  # before the panel, whose globe/map switch it may move
 view_slot = st.container(key="view")  # filled after the panel, whose render() can return what the view shows

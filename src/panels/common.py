@@ -16,6 +16,7 @@ get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
 
 # Session state: the open panel, the selected Catalog Site key, and the Custom Site ({"lat", "lon"}) if any.
 PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
+PANEL_OPEN = "panel_open"  # False while the panel is hidden (a second click on its rail icon)
 MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
 VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")
 VIEW_ICONS = {"Globe": "moon", "South pole map": "pole-map"}
@@ -40,9 +41,19 @@ def icon(name):
     return f"![](app/static/icons/{name}.svg)"
 
 
+def rail_active(name):
+    """Whether rail icon `name` stands for the current panel (the catalog icon also stands for a Site Card)."""
+    panel = st.session_state.get(PANEL, "catalog")
+    return name == panel or (name, panel) == ("catalog", "site")
+
+
 def open_panel(name):
-    """Rail callback. The catalog clears the selection; the Site Planner starts at the selected site."""
-    st.session_state[PANEL] = name
+    """Rail callback. A click on the current panel's icon hides the panel and the next click shows it again, so the
+    whole Moon can be seen. Opening the catalog clears the selection; the Site Planner starts at the selected site."""
+    if rail_active(name):
+        st.session_state[PANEL_OPEN] = not st.session_state.get(PANEL_OPEN, True)
+        return
+    st.session_state[PANEL], st.session_state[PANEL_OPEN] = name, True
     if name == "catalog":
         st.session_state[SELECTED] = st.session_state[CUSTOM] = None
     elif name == "planner" and st.session_state.get(SELECTED):
@@ -55,13 +66,13 @@ def open_panel(name):
 def select_site(key):
     """Every way of choosing a Catalog Site (globe, map, catalog list) calls this before the script reruns."""
     st.session_state[SELECTED], st.session_state[CUSTOM] = key, None
-    st.session_state[PANEL] = "site" if key else "catalog"
+    st.session_state[PANEL], st.session_state[PANEL_OPEN] = ("site" if key else "catalog"), True
 
 
 def select_custom(lat, lon):
     """Open the Site Card of a Custom Site (from the search, or a confirmed click on the Moon View)."""
     st.session_state[SELECTED], st.session_state[CUSTOM] = None, {"lat": lat, "lon": lon}
-    st.session_state[PANEL] = "site"
+    st.session_state[PANEL], st.session_state[PANEL_OPEN] = "site", True
 
 
 def parse_coordinates(text):
