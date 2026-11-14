@@ -44,3 +44,18 @@ def test_visibility_hours():
     assert earth_visible_hours(DF) == 5.0
     assert earth_visible_hours(DF, elevation_mask=2.5) == 3.0
     assert sunlight_hours(DF.assign(illumination_fraction=[1.0, 0.5, 0.0, 0.0, 1.0])) == 2.5
+
+
+def test_monthly_summary_groups_by_calendar_month():
+    from src.metrics import monthly_summary
+    df = pd.DataFrame({
+        "time": pd.to_datetime(["2027-01-31 22:00", "2027-01-31 23:00", "2027-02-01 00:00", "2027-02-01 01:00"]),
+        "sun_elevation": [1.0, 1.0, -1.0, -1.0],
+        "earth_elevation": [1.0, -1.0, 1.0, 1.0],
+        "illumination_fraction": [1.0, 0.5, 0.0, 0.0],
+    })
+    summary = monthly_summary(df)
+    assert list(summary.index.month) == [1, 2]
+    assert summary["sunlight_pct"].tolist() == [75.0, 0.0]
+    assert summary["earth_visible_pct"].tolist() == [50.0, 100.0]
+    assert summary["hours"].tolist() == [2.0, 2.0]

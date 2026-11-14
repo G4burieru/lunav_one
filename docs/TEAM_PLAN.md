@@ -57,7 +57,11 @@ Do not change these without telling the team:
   `sun_horizon`, `earth_horizon`, `illumination_fraction`, and `df.attrs` `terrain`, `source`, `site`. Catalog
   sites return instantly; other points are computed live (up to ~2 min), so cache the call in the app.
 - `src/metrics.py`: `hours_until_sunset(df, at)`, `hours_until_earthset(df, at, elevation_mask=0.0)`,
-  `sunlight_hours(df)`, `earth_visible_hours(df, elevation_mask=0.0)`.
+  `sunlight_hours(df)`, `earth_visible_hours(df, elevation_mask=0.0)`, and `monthly_summary(df, elevation_mask=0.0)`
+  (per-month `sunlight_pct`, `earth_visible_pct`, `hours`) for seasonal views.
+- `neighborhood_summary(site_key, start_date, days, elevation_mask=0.0)` in `src/conditions.py`: one row per Site
+  Neighborhood point (`east_m`, `north_m`, `lat`, `lon`, `sunlight_pct`, `earth_visible_pct`) for a heatmap; takes
+  ~0.1 s for 14 days and ~3 s for 2 years. Pass a row's `lat`/`lon` to `get_conditions` for that point.
 - `LUNAR_SITES[name] = {"lat", "lon", "description"}` in `src/sites.py`.
 
 ### Shared Vocabulary and Decisions
