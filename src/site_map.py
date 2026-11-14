@@ -32,12 +32,22 @@ def plot_south_pole_map(selected_site=None, lat=None, lon=None):
         r=[90 + site["lat"] for site in polar.values()],
         theta=[site["lon"] for site in polar.values()],
         text=[site.get("name", name) for name, site in polar.items()],
-        customdata=[[site["lat"], site["lon"], site["description"]] for site in polar.values()],
-        mode="markers+text", textposition="top center", name="Study regions",
-        marker=dict(size=10, color="#4ba3d3"),
+        customdata=[[
+            site["lat"], site["lon"], site["description"],
+            site.get("coordinate_kind", "unspecified"),
+            site.get("coordinate_meaning", "Coordinate meaning not provided"),
+            site.get("topographic_validation", "Validation status not provided"),
+        ] for site in polar.values()],
+        mode="markers+text", textposition="top center", name="Catalog Sites",
+        marker=dict(size=10, color="#4ba3d3", symbol=[
+            {"studied_point": "diamond", "region_center": "circle",
+             "actual_landing": "square"}.get(site.get("coordinate_kind"), "circle")
+            for site in polar.values()
+        ]),
         hovertemplate=("<b>%{text}</b><br>Latitude: %{customdata[0]:.5f}°"
                        "<br>Longitude: %{customdata[1]:.5f}° E"
-                       "<br>%{customdata[2]}<extra></extra>"),
+                       "<br>%{customdata[2]}<br>Type: %{customdata[3]}"
+                       "<br>%{customdata[4]}<br>%{customdata[5]}<extra></extra>"),
     ))
     if lat is not None and lat <= -80:
         fig.add_trace(go.Scatterpolar(
@@ -49,7 +59,7 @@ def plot_south_pole_map(selected_site=None, lat=None, lon=None):
         fig.add_annotation(text="Selected location is outside the south-pole map (90–80° S).",
                            x=0.5, y=1.1, xref="paper", yref="paper", showarrow=False)
     fig.update_layout(
-        title="Lunar south pole · schematic study-region map", height=650,
+        title="Lunar south pole · schematic Catalog Site map", height=650,
         margin=dict(t=100, b=80),
         polar=dict(
             radialaxis=dict(range=[0, 10], tickvals=[0, 2, 4, 6, 8, 10],
