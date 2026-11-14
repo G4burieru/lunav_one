@@ -7,8 +7,9 @@ from src.charts import plot_earth_visibility, plot_monthly, plot_sun_elevation
 from src.metrics import (earth_visible_hours, hours_until_earthset, hours_until_sunset, monthly_summary,
                          site_summary, sunlight_hours)
 from src.panels import texts
-from src.panels.common import (CUSTOM, KIND_LABELS, SELECTED, data_note, format_countdown, format_duration, header,
-                               icon, open_panel, ordinal, rank, select_site, selected_instant, two_years)
+from src.panels.common import (CUSTOM, KIND_LABELS, SELECTED, catalog_time, data_note, format_countdown,
+                               format_duration, header, icon, open_panel, ordinal, rank, select_site,
+                               selected_instant, time_payload, two_years)
 from src.sites import LUNAR_SITES
 
 CHART_DAYS = 28  # the Sun & Earth tab shows this many days around the selected instant
@@ -134,3 +135,8 @@ def render():
         sun_and_earth(df, at, summary)
     with tab_seasons:
         seasons(df)
+    if custom:  # the time bar shows the Custom Site's states next to the Catalog Sites'
+        time = catalog_time()
+        time["states"]["custom"] = time_payload({"custom": df})["states"]["custom"]
+        return {"time": {**time, "instant": f"{at:%Y-%m-%dT%H:%M:%SZ}"}}
+    return None

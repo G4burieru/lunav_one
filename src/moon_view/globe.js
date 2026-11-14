@@ -103,25 +103,45 @@ const globeView = (() => {
     return { lat: Math.max(site.lat, -85), lng: site.lon, altitude: site.lat < -75 ? 0.9 : 1.6 };
   }
 
+  // A click on the Moon (not on a site) offers to analyze that point, with a pulsing ring as provisional marker. The
+  // balloon floats at the click, so it closes when the globe is turned.
+  function askToAnalyze(state, lat, lng, event) {
+    state.closeBalloon?.();
+    const globe = state.globe, box = state.root.getBoundingClientRect();
+    globe.controls().autoRotate = false;
+    globe.ringsData([{ lat, lng }]);
+    const el = analyzeBalloon(state, lat, lng, () => {
+      globe.ringsData([]); el.remove(); state.closeBalloon = null;
+    });
+    el.classList.add("floating");
+    el.style.left = `${event.clientX - box.left}px`;
+    el.style.top = `${event.clientY - box.top}px`;
+    state.root.appendChild(el);
+    state.closeBalloon = () => el.querySelector("button:last-child").click();
+  }
+
   function update(state, data, active) {
-    const globe = state.globe, selected = data.sites.find(s => s.key === data.selected);
-    globe.pointsData(data.sites).labelsData(selected ? [selected] : []);
+    const globe = state.globe, focus = focusSite(data);
+    globe.pointsData(data.custom ? [...data.sites, focus] : data.sites).labelsData(focus ? [focus] : []);
     if (!active) {  // hidden behind the polar map: stop drawing until shown again
+      state.closeBalloon?.();
       if (!state.globePaused) { state.globePaused = true; globe.pauseAnimation(); }
       return;
     }
     if (state.globePaused) { state.globePaused = false; globe.resumeAnimation(); }
-    globe.controls().autoRotate = state.spinning && !selected;
-    if (state.cameraKey !== (data.selected || "")) {
-      state.cameraKey = data.selected || "";
-      globe.pointOfView(cameraFor(selected), state.globeShown ? 1500 : 0);
+    globe.controls().autoRotate = state.spinning && !focus && !state.closeBalloon;
+    const key = focus ? `${focus.key}:${focus.lat},${focus.lon}` : "";
+    if (state.cameraKey !== key) {
+      state.cameraKey = key;
+      globe.pointOfView(cameraFor(focus), state.globeShown ? 1500 : 0);
     }
     state.globeShown = true;
   }
 
   function create(state) {
     const root = state.root, el = root.querySelector(".globe");
-    const isSelected = s => s.key === state.data.selected;
+    const isSelected = s => s.key === state.data.selected || s.key === "custom";
+    const choose = s => s.key !== "custom" && state.setTriggerValue("site", s.key);
     const globe = new Globe(el, { rendererConfig: { antialias: true, alpha: false } })
       .backgroundColor("#000005")
       .showAtmosphere(false)
@@ -130,12 +150,16 @@ const globeView = (() => {
       .pointAltitude(s => isSelected(s) ? 0.025 : 0.01)
       .pointRadius(s => isSelected(s) ? 0.55 : 0.35)
       .pointLabel(tooltip)
-      .onPointClick(s => state.setTriggerValue("site", s.key))
+      .onPointClick(choose)
       .labelLat("lat").labelLng("lon").labelText("name")
       .labelSize(1.1).labelDotRadius(0.35).labelColor(() => "#ffffff").labelResolution(2)
       .labelLabel(tooltip)
-      .onLabelClick(s => state.setTriggerValue("site", s.key));
+      .onLabelClick(choose)
+      .ringLat("lat").ringLng("lng").ringColor(() => t => `rgba(230, 107, 39, ${1 - t})`)
+      .ringMaxRadius(2.5).ringPropagationSpeed(2).ringRepeatPeriod(900)
+      .onGlobeClick(({ lat, lng }, event) => askToAnalyze(state, lat, lng, event));
     globe.controls().autoRotateSpeed = 0.35;
+    globe.controls().addEventListener("start", () => state.closeBalloon?.());
     state.globe = globe;
     spinUntilFirstInteraction(state);
 
