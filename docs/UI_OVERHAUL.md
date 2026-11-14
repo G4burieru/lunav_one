@@ -56,6 +56,10 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
 - **Done: the rail hides the panel.** A second click on the open panel's icon hides the panel and the next shows it
   again; choosing a site also shows it. The hidden panel is still rendered (`display: none`), so its inputs keep
   their values and the view keeps using what the panel returns.
+- **Stale modules after a deploy:** Streamlit drops changed modules only for the browser sessions that saw the
+  change, and Streamlit Cloud updates the code without restarting Python, so new sessions could mix a new
+  `app.py` with old `src` modules (the ImportError after PR #24). `app.py` now drops every `src` module when a
+  `src/*.py` file changed since they were imported.
 - **For A3** (helpers in `src/panels/common.py`):
   - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
     `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
@@ -329,6 +333,8 @@ C1, C3 and C4 need nothing and can start right away, even before Step 0.
   4. Pick the cell 1600 m west and 100 m north.
 - `main` stays demo-ready after every merge. Keep pull requests small and merge often.
 - No new Python dependency; `requirements.txt` stays as it is. Browser libraries come from the CDN.
+- After the merge, open https://lunavone.streamlit.app/. If it shows an error that `main` does not have locally,
+  reboot it: Manage app (lower right) → ⋮ → Reboot app.
 - New non-trivial logic (metrics, search parsing, state encoding) gets a test.
 
 ## Risks
