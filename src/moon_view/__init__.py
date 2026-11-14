@@ -9,7 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 _DIR = Path(__file__).parent
-_JS_FILES = ("globe.js", "polar_map.js", "view.js")  # view.js last: shared helpers and the default export
+_JS_FILES = ("globe.js", "polar_map.js", "time_bar.js", "view.js")  # view.js last: helpers and the default export
 # Overlays marked data-for show only with that view. Leaflet's stylesheet is linked here, inside the component's
 # shadow root, where the polar map lives; keep its version in step with polar_map.js.
 _HTML = """
@@ -22,6 +22,12 @@ _HTML = """
   <div class="overlay layers"><span class="choices" data-for="globe"></span><span class="choices" data-for="map"></span>
   </div>
   <div class="overlay info"><div class="info-name"></div><div class="info-text"></div></div>
+  <div class="overlay time-bar" hidden>
+    <button class="play" type="button" aria-label="Play"></button>
+    <input class="time-slider" type="range" min="0" max="0" step="1" value="0" aria-label="Instant (UTC)">
+    <output class="time-label"></output>
+    <div class="time-readout"></div>
+  </div>
   <div class="overlay status" data-for="globe"></div>
   <div class="overlay status" data-for="map"></div>
   <div class="overlay credit" data-for="globe">Imagery: LRO WAC · Elevation: LOLA · NASA Moon Trek</div>
@@ -40,8 +46,9 @@ def moon_view(sites, selected=None, *, key, on_site=None, on_point=None, on_cell
     """Mount the Moon View over `sites` (a LUNAR_SITES-like dict), highlighting the `selected` key.
 
     `height` is any CSS length. The arguments after it follow the data contract in docs/UI_OVERHAUL.md: `view`
-    ("globe" or "map") is applied only when `view_id` changes. The others wait for the time bar, the Site Planner
-    and the overlays.
+    ("globe" or "map") is applied only when `view_id` changes; `time` feeds the time bar, whose `instant` reaches
+    Python only if `on_instant` is given; `mode` and `asset` draw the Site Planner's Surface Asset. `custom`,
+    `overlays` and `neighborhood` wait for their tasks.
     """
     # Registered on every run, so edits to the .js and .css files show up on the next rerun without a restart.
     component = st.components.v2.component(

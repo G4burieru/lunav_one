@@ -27,17 +27,6 @@ const polarMap = (() => {
   const MAP_LAT = -60;  // sites farther north are off the map
   const SITE_ZOOM = 8.5;  // about 25 m per pixel: a selected site with the terrain around it
   const OVERVIEW_M = 135000;  // the overview shows this far from the pole: every polar Catalog Site
-  // Marker shapes by coordinate kind, as in src/site_map.py: ◆ studied point, ● region center, ■ historical landing,
-  // ▲ approximate reference.
-  const SHAPES = {
-    studied_point: '<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>',
-    region_center: '<circle cx="12" cy="12" r="9.5"/>',
-    actual_landing: '<path d="M3 3H21V21H3Z"/>',
-    approximate_reference: '<path d="M12 2 22.5 21H1.5Z"/>',
-    custom: '<circle cx="12" cy="12" r="6"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',  // a picked point
-  };
-  const KINDS = { studied_point: "studied point", region_center: "region center", actual_landing: "historical landing",
-                  approximate_reference: "approximate reference", custom: "custom site" };
 
   function load() {
     if (window.L?.Proj) return Promise.resolve();
@@ -70,34 +59,63 @@ const polarMap = (() => {
       .forEach(b => b.classList.toggle("active", b.dataset.layer === name));
   }
 
-  // Redraw the site markers (Catalog Sites and the Custom Site) when the sites or the selection change.
+  // The markers on the map: the Catalog Sites, the Custom Site and, in the Site Planner, the Surface Asset. The
+  // selected site or the Custom Site is highlighted; in the Site Planner only the Surface Asset, which starts on the
+  // site (two labels would overlap). Only Catalog Sites can be chosen.
+  function markerItems(data) {
+    const planner = data.mode === "planner", custom = data.custom && focusSite(data);
+    const items = [...data.sites, ...(custom ? [custom] : [])].filter(s => s.lat <= MAP_LAT)
+      .map(s => ({ key: s.key, name: s.name, kind: s.kind, lat: s.lat, lon: s.lon,
+                   selected: !planner && (s.key === "custom" || s.key === data.selected) }));
+    if (planner && data.asset && data.asset.lat <= MAP_LAT) {
+      items.push({ key: "asset", name: "Surface Asset", kind: "asset", lat: data.asset.lat, lon: data.asset.lon,
+                   selected: true });
+    }
+    return items;
+  }
+
+  // What the map centers on: the Site Planner's Surface Asset, else the Custom Site or the selected site
+  // (focusSite in view.js); null for the overview.
+  function focusOf(data) {
+    const asset = data.mode === "planner" && data.asset;
+    const focus = asset ? { key: "asset", lat: asset.lat, lon: asset.lon } : focusSite(data);
+    return focus && focus.lat <= MAP_LAT ? focus : null;
+  }
+
+  // Redraw the markers when the sites, the selection, the Custom Site or the Surface Asset change; paint() shows the
+  // hour's state.
   function drawSites(state, data) {
-    const m = state.map, signature = JSON.stringify([data.selected, data.custom, data.sites]);
+    const m = state.map, items = markerItems(data), signature = JSON.stringify(items);
     if (signature === m.signature) return;
     m.signature = signature;
     m.sites.clearLayers();
-    const custom = data.custom ? [focusSite(data)] : [];
-    [...data.sites, ...custom].filter(s => s.lat <= MAP_LAT).forEach(site => {
-      const selected = site.key === data.selected || site.key === "custom", size = selected ? 26 : 18;
-      const marker = L.marker([site.lat, site.lon], {
-        icon: L.divIcon({ className: `site-marker${selected ? " selected" : ""}`, iconSize: [size, size],
-          html: `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${SHAPES[site.kind] || SHAPES.region_center}`
-            + "</svg>" }),
-        zIndexOffset: selected ? 1000 : 0, riseOnHover: true,
+    m.markers = items.map(item => {
+      const size = item.selected ? 26 : 18, choosable = item.key !== "asset" && item.key !== "custom";
+      const marker = L.marker([item.lat, item.lon], {  // interactive, so that a click never reaches the map below
+        icon: L.divIcon({ className: `site-marker${item.selected ? " selected" : ""}${choosable ? "" : " static"}`,
+                          iconSize: [size, size], html: markerHtml(item.kind) }),
+        zIndexOffset: item.selected ? 1000 : 0, riseOnHover: true, keyboard: choosable,
       });
-      marker.bindTooltip(escapeHtml(site.name), { direction: "top", offset: [0, -size / 2], permanent: selected,
-                                                   className: "site-label" });
-      const choose = () => site.key !== "custom" && state.setTriggerValue("site", site.key);
-      marker.on("click", choose);
-      marker.on("add", () => {  // Leaflet makes markers focusable buttons; give them a name and Enter or Space
-        const el = marker.getElement();
-        el.setAttribute("aria-label", `${site.name}, ${KINDS[site.kind] || "site"}${selected ? ", selected" : ""}`);
-        el.addEventListener("keydown", e => {
-          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
+      marker.bindTooltip(escapeHtml(item.name), { direction: "top", offset: [0, -size / 2 - 6],
+                                                  permanent: item.selected, className: "site-label" });
+      if (choosable) {
+        const choose = () => state.setTriggerValue("site", item.key);
+        marker.on("click", choose);
+        marker.on("add", () => {  // Leaflet makes markers focusable buttons; give them a name and Enter or Space
+          const el = marker.getElement();
+          el.setAttribute("aria-label", `${item.name}, ${KINDS[item.kind] || "site"}${item.selected ? ", selected" : ""}`);
+          el.addEventListener("keydown", e => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
+          });
         });
-      });
+      }
       m.sites.addLayer(marker);
+      return { marker, key: item.key };
     });
+  }
+
+  function paint(state) {
+    (state.map.markers || []).forEach(({ marker, key }) => paintMarker(marker.getElement(), timeBar.stateOf(state, key)));
   }
 
   function create(state) {
@@ -164,32 +182,32 @@ const polarMap = (() => {
   function update(state, data, active) {
     const m = state.map;
     drawSites(state, data);
+    paint(state);
     if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
-    const focus = focusSite(data), site = focus && focus.lat <= MAP_LAT ? focus : null;
-    const key = site ? `${site.key}:${site.lat},${site.lon}` : "";
-    if (!m.shown) {  // just switched to the map: start from the overview the first time, then fly to the site
+    const focus = focusOf(data), key = focus ? `${focus.key}:${focus.lat},${focus.lon}` : "";
+    if (!m.shown) {  // just switched to the map: start from the overview the first time, then fly to the focus
       m.shown = true;
       m.leaflet.invalidateSize();
       const first = !m.placed;
       m.placed = true;
       if (first) centerOn(state, null, false);
-      [m.centeredOn, m.centeredSite] = [key, site];
-      if (site || !first) centerOn(state, site, true);
+      m.centeredOn = key;
+      if (focus || !first) centerOn(state, focus, true);
     } else if (m.centeredOn !== key) {
-      [m.centeredOn, m.centeredSite] = [key, site];
-      centerOn(state, site, true);
+      m.centeredOn = key;
+      centerOn(state, focus, true);
     }
   }
 
-  // The panel widens when a Site Card opens, so center the site again unless the user has moved the map since.
+  // The panel widens when a Site Card opens, so center the focus again unless the user has moved the map since.
   function layout(state) {
     const m = state.map;
     m.leaflet.invalidateSize({ pan: false });
-    if (m.shown && !m.userMoved) centerOn(state, m.centeredSite || null, true);
+    if (m.shown && !m.userMoved) centerOn(state, focusOf(state.data), true);
   }
 
   const destroy = state => state.map.leaflet.remove();
 
   return { load, loadError: "Could not load the map (Leaflet and proj4) from the CDN.", exists: state => !!state.map,
-           create, update, layout, destroy };
+           create, update, paint, layout, destroy };
 })();

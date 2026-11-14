@@ -9,10 +9,7 @@ const globeView = (() => {
     Elevation: ["LRO_LOLA_ClrShade_Global_128ppd_v04", "png", 3],  // LOLA color shaded relief
   };
   const BUMP = ["LRO_LOLA_DEM_Global_128ppd_v04", "png", 2];  // LOLA elevation (grayscale) for bump shading
-  const SELECTED_COLOR = "#e66b27", SITE_COLOR = "#4ba3d3";
   const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  const tooltip = s => `<b>${escapeHtml(s.name)}</b><br>${s.lat.toFixed(4)}°, ${s.lon.toFixed(4)}° E`;
 
   const load = () => (window.Globe ? Promise.resolve() : loadScript(GLOBE_GL_URL));
 
@@ -120,9 +117,66 @@ const globeView = (() => {
     state.closeBalloon = () => el.querySelector("button:last-child").click();
   }
 
+  // The markers are HTML elements (markerHtml in view.js) that globe.gl places over the canvas and hides behind the
+  // Moon: the Catalog Sites, the Custom Site and, in the Site Planner, the Surface Asset. globe.gl builds one element
+  // per data object, so the objects are kept across reruns and only updated.
+  function markerItems(state, data) {
+    const kept = state.globeMarkers || {}, next = {}, custom = data.custom && focusSite(data);
+    const items = [...data.sites, ...(custom ? [custom] : [])]
+      .map(s => ({ key: s.key, name: s.name, kind: s.kind, lat: s.lat, lon: s.lon }));
+    if (data.mode === "planner" && data.asset) {
+      items.push({ key: "asset", name: "Surface Asset", kind: "asset", lat: data.asset.lat, lon: data.asset.lon });
+    }
+    state.globeMarkers = next;  // an item that leaves (Custom Site, Surface Asset) comes back as a new object
+    return items.map(item => (next[item.key] = Object.assign(kept[item.key] || {}, item)));
+  }
+
+  // The selected site or the Custom Site is highlighted; in the Site Planner only the Surface Asset, which starts on
+  // the site.
+  const highlighted = (state, item) => (state.data.mode === "planner" ? item.key === "asset"
+    : item.key === "custom" || item.key === state.data.selected);
+  const clickable = item => item.key !== "asset" && item.key !== "custom";
+
+  function markerElement(state, item) {
+    const el = document.createElement("div");
+    el.className = "site-marker globe-marker";
+    el.innerHTML = `${markerHtml(item.kind)}<span class="marker-name">${escapeHtml(item.name)}</span>`;
+    // Keep marker clicks away from the globe, which would offer to analyze the point under them.
+    ["pointerdown", "pointerup", "click"].forEach(type => el.addEventListener(type, e => e.stopPropagation()));
+    if (clickable(item)) {  // a focusable button: click, Enter or Space chooses the site
+      const choose = () => state.setTriggerValue("site", item.key);
+      el.tabIndex = 0;
+      el.setAttribute("role", "button");
+      el.addEventListener("click", choose);
+      el.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
+      });
+    }
+    item.el = el;
+    mark(state, item);
+    return el;
+  }
+
+  // Selection and the time bar's state, on one marker; elements appear a moment after htmlElementsData().
+  function mark(state, item) {
+    if (!item.el) return;
+    const on = highlighted(state, item);
+    item.el.classList.toggle("selected", on);
+    if (clickable(item)) {
+      item.el.setAttribute("aria-label", `${item.name}, ${KINDS[item.kind] || "site"}${on ? ", selected" : ""}`);
+    }
+    paintMarker(item.el, timeBar.stateOf(state, item.key));
+  }
+
+  function paint(state) {
+    (state.globeItems || []).forEach(item => mark(state, item));
+  }
+
   function update(state, data, active) {
     const globe = state.globe, focus = focusSite(data);
-    globe.pointsData(data.custom ? [...data.sites, focus] : data.sites).labelsData(focus ? [focus] : []);
+    state.globeItems = markerItems(state, data);
+    globe.htmlElementsData(state.globeItems);
+    paint(state);
     if (!active) {  // hidden behind the polar map: stop drawing until shown again
       state.closeBalloon?.();
       if (!state.globePaused) { state.globePaused = true; globe.pauseAnimation(); }
@@ -140,21 +194,12 @@ const globeView = (() => {
 
   function create(state) {
     const root = state.root, el = root.querySelector(".globe");
-    const isSelected = s => s.key === state.data.selected || s.key === "custom";
-    const choose = s => s.key !== "custom" && state.setTriggerValue("site", s.key);
     const globe = new Globe(el, { rendererConfig: { antialias: true, alpha: false } })
       .backgroundColor("#000005")
       .showAtmosphere(false)
-      .pointLat("lat").pointLng("lon")
-      .pointColor(s => isSelected(s) ? SELECTED_COLOR : SITE_COLOR)
-      .pointAltitude(s => isSelected(s) ? 0.025 : 0.01)
-      .pointRadius(s => isSelected(s) ? 0.55 : 0.35)
-      .pointLabel(tooltip)
-      .onPointClick(choose)
-      .labelLat("lat").labelLng("lon").labelText("name")
-      .labelSize(1.1).labelDotRadius(0.35).labelColor(() => "#ffffff").labelResolution(2)
-      .labelLabel(tooltip)
-      .onLabelClick(choose)
+      .htmlLat("lat").htmlLng("lon").htmlAltitude(0.005).htmlTransitionDuration(0)
+      .htmlElement(item => markerElement(state, item))
+      .htmlElementVisibilityModifier((marker, visible) => marker.classList.toggle("behind", !visible))
       .ringLat("lat").ringLng("lng").ringColor(() => t => `rgba(230, 107, 39, ${1 - t})`)
       .ringMaxRadius(2.5).ringPropagationSpeed(2).ringRepeatPeriod(900)
       .onGlobeClick(({ lat, lng }, event) => askToAnalyze(state, lat, lng, event));
@@ -185,5 +230,5 @@ const globeView = (() => {
   }
 
   return { load, loadError: "Could not load globe.gl from the CDN.", exists: state => !!state.globe, create, update,
-           layout, destroy };
+           paint, layout, destroy };
 })();

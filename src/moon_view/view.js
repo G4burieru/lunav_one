@@ -2,9 +2,44 @@
 // before this one into a single module. Streamlit calls the default export again on every rerun with new data, on
 // the same element, so each view is created the first time it is shown and then only updated.
 //
-// A view is an object with load(), exists(state), create(state), update(state, data, active), layout(state) and
-// destroy(state). The function declarations below are shared by the view files (declarations are hoisted).
+// A view is an object with load(), exists(state), create(state), update(state, data, active), paint(state),
+// layout(state) and destroy(state). The declarations below are shared by the other files (they are hoisted).
 const VIEWS = { globe: globeView, map: polarMap };
+
+// Site markers, the same in both views. The shape shows the coordinate kind, as in src/site_map.py: ◆ studied
+// point, ● region center, ■ historical landing, ▲ approximate reference; a Custom Site is a ring with ticks and the
+// Site Planner's Surface Asset a cross in a circle. With time data, the fill rises with the Illumination Fraction at
+// the time bar's hour, and the dot at the top right is filled while Earth is visible and hollow while it is not:
+// shape as well as color.
+const SHAPES = {
+  studied_point: '<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>',
+  region_center: '<circle cx="12" cy="12" r="9.5"/>',
+  actual_landing: '<path d="M3 3H21V21H3Z"/>',
+  approximate_reference: '<path d="M12 2 22.5 21H1.5Z"/>',
+  custom: '<circle cx="12" cy="12" r="6"/><path class="cross" d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
+  asset: '<circle cx="12" cy="12" r="9.5"/><path class="cross" d="M12 4v16M4 12h16"/>',
+};
+const KINDS = { studied_point: "studied point", region_center: "region center", actual_landing: "historical landing",
+                approximate_reference: "approximate reference", custom: "Custom Site", asset: "Surface Asset" };
+
+function markerHtml(kind) {
+  const shape = SHAPES[kind] || SHAPES.region_center;
+  return `<svg class="shape" viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`
+    + `<svg class="lit" viewBox="0 0 24 24" aria-hidden="true">${shape}</svg><span class="earth"></span>`;
+}
+
+// Show `s` ({sun, earth} from timeBar.stateOf, or null without time data) on a marker element.
+function paintMarker(el, s) {
+  if (!el) return;
+  el.classList.toggle("timed", !!s);
+  if (!s) return;
+  el.querySelector(".lit").style.clipPath = `inset(${100 - s.sun}% 0 0 0)`;
+  el.classList.toggle("earth-up", s.earth);
+}
+
+function paintViews(state) {
+  Object.values(VIEWS).forEach(view => view.exists(state) && view.paint(state));
+}
 
 function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;",
@@ -120,11 +155,12 @@ function render(state) {
 }
 
 export default function (component) {
-  const { data, parentElement, setTriggerValue } = component;
+  const { data, parentElement, setTriggerValue, setStateValue } = component;
   const root = parentElement.querySelector(".moon-view");
   root.style.setProperty("--view-height", data.height);
   const state = root.__lunav || (root.__lunav = { root });
   state.setTriggerValue = setTriggerValue;
+  state.setStateValue = setStateValue;
   state.data = data;  // the views read the latest data from here, including in their event handlers
   if (!state.observer) {
     watchLayout(state);
@@ -139,6 +175,7 @@ export default function (component) {
     root.dataset.view = state.view;
   }
   updateInfo(state, data);
+  timeBar.update(state, data.time);
   render(state);
   return () => {
     state.observer.disconnect();
