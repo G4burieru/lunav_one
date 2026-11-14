@@ -72,8 +72,9 @@ def plot_south_pole_map(selected_site=None, lat=None, lon=None):
     if lat is not None and lat <= -80:
         fig.add_trace(go.Scatterpolar(
             r=[90 + lat], theta=[lon], mode="markers", name=selected_name,
-            customdata=[[lat, lon]], marker=dict(size=16, symbol="x", color="#e66b27"),
-            hovertemplate="Latitude: %{customdata[0]:.5f}°<br>Longitude: %{customdata[1]:.5f}° E<extra>%{fullData.name}</extra>",
+            customdata=[[lat, lon, f"{abs(lon):.5f}° {'W' if lon < 0 else 'E'}"]],
+            marker=dict(size=16, symbol="x", color="#e66b27"),
+            hovertemplate="Latitude: %{customdata[0]:.5f}°<br>Longitude: %{customdata[2]}<extra>%{fullData.name}</extra>",
         ))
     elif lat is not None:
         fig.add_annotation(text="Selected location is outside the south-pole map (90–80° S).",
