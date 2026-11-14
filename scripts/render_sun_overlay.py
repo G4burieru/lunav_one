@@ -16,24 +16,13 @@ from PIL import Image
 from rasterio.enums import Resampling
 from rasterio.windows import Window
 
+from src.colors import SUN_RAMP as RAMP, ramp_rgb
 from src.terrain import GDAL_ENV, _read_chunk
 
 URL = "https://pgda.gsfc.nasa.gov/data/MoonIllumination/AVGVISIB_85S_060M_201608.TIF"
 OUT = Path(__file__).resolve().parent.parent / "static" / "overlays"
 DECIMATION = 4  # 60 m pixels -> 240 m
-# Sequential: one amber hue, lightness rising with sunlight. Passes the dataviz ordinal checks on the app's dark
-# surface (#0e1117): monotone lightness, visible steps, 0% end at 2.2:1 contrast.
-RAMP = [(0.0, "#6b4400"), (0.25, "#8f5c00"), (0.5, "#c27c00"), (0.75, "#f5a623"), (1.0, "#ffd98a")]
-
-
 NO_DATA = 255  # palette index left transparent; indices 0-254 run along the ramp
-
-
-def ramp(values):
-    """RGB (0-255) along RAMP for an array of fractions 0-1."""
-    stops = [stop for stop, _ in RAMP]
-    colors = np.array([[int(hex_[i:i + 2], 16) for i in (1, 3, 5)] for _, hex_ in RAMP], dtype=float)
-    return np.stack([np.interp(values, stops, colors[:, c]) for c in range(3)], axis=-1).round().astype(np.uint8)
 
 
 def colorize(fraction):
@@ -41,7 +30,7 @@ def colorize(fraction):
     palette from the ramp keeps every step; generic quantizers collapse a single hue to a few colors."""
     level = np.rint(np.clip(np.ma.filled(fraction, 0.0), 0, 1) * (NO_DATA - 1))
     image = Image.fromarray(np.where(np.ma.getmaskarray(fraction), NO_DATA, level).astype(np.uint8), "P")
-    image.putpalette([*ramp(np.linspace(0, 1, NO_DATA)).ravel().tolist(), 0, 0, 0])
+    image.putpalette([*ramp_rgb(np.linspace(0, 1, NO_DATA), RAMP).ravel().tolist(), 0, 0, 0])
     image.info["transparency"] = NO_DATA
     return image
 

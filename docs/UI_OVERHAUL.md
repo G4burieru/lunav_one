@@ -56,6 +56,17 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
 - **Done: the rail hides the panel.** A second click on the open panel's icon hides the panel and the next shows it
   again; choosing a site also shows it. The hidden panel is still rendered (`display: none`), so its inputs keep
   their values and the view keeps using what the panel returns.
+- **Done: A6 and B6.** In the Site Planner, for a Catalog Site south of 80°S at 2 m, the south polar map paints
+  the Site Neighborhood: 100 m cells colored with the sunlight or Earth visibility ramp of `src/colors.py`, the
+  best cell outlined in dashes and the Surface Asset's cell in a solid line. A click on a cell sends `cell`, and
+  `planner.on_map_cell` moves the Surface Asset there; the panel has a legend and a "Best cell" button, which
+  also works from the keyboard. The map frames the whole Site Neighborhood and stays put while the Surface Asset
+  moves. The Plotly heatmap (`plot_neighborhood`) is gone. The Site Planner returns `view` and `view_id`
+  (`"planner:<site>"`), so the map opens for polar sites and the globe for the others.
+- **Stale modules after a deploy:** Streamlit drops changed modules only for the browser sessions that saw the
+  change, and Streamlit Cloud updates the code without restarting Python, so new sessions could mix a new
+  `app.py` with old `src` modules (the ImportError after PR #24). `app.py` now drops every `src` module when a
+  `src/*.py` file changed since they were imported.
 - **For A3** (helpers in `src/panels/common.py`):
   - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
     `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
@@ -231,7 +242,7 @@ Python to Moon View (`data`):
 | `custom`, `asset` | `{lat, lon}` or `null`: the Custom Site, and the Surface Asset position in the Planner |
 | `time` | `{start, hours, instant, states: {key: base64}}`; one byte per hour: bits 0–6 illumination fraction × 100, bit 7 Earth visible |
 | `overlays` | a subset of `["earth", "sun"]` |
-| `neighborhood` | `null` or `{cells: [{lat, lon, value}], label, selected, best}` |
+| `neighborhood` | `null` or `{site, center: {lat, lon}, reach_m, label, selected, best, cells: [{corners: [[lat, lon] × 4], value, color}]}` |
 
 Moon View to Python:
 
@@ -329,6 +340,8 @@ C1, C3 and C4 need nothing and can start right away, even before Step 0.
   4. Pick the cell 1600 m west and 100 m north.
 - `main` stays demo-ready after every merge. Keep pull requests small and merge often.
 - No new Python dependency; `requirements.txt` stays as it is. Browser libraries come from the CDN.
+- After the merge, open https://lunavone.streamlit.app/. If it shows an error that `main` does not have locally,
+  reboot it: Manage app (lower right) → ⋮ → Reboot app.
 - New non-trivial logic (metrics, search parsing, state encoding) gets a test.
 
 ## Risks

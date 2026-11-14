@@ -56,14 +56,18 @@ safety.”
 ## 1:35–2:15 — Plan a scenario
 
 [Click Plan here. Show Where, Surface Asset, When and Results. Use the current
-Planner's Instant slider and Plotly Site Neighborhood heatmap.]
+Planner's Instant slider. In the polar map, choose Sunlight or Earth visibility,
+click a neighborhood cell and point out the updated Surface Asset/results. The
+current metric's best cell has a dashed outline; the selected cell has a solid
+outline. Use Back to the site to return to the catalog position.]
 
 “Plan here opens four steps: choose a position, set the Surface Asset, choose
 when to analyze, and inspect the results. Asset Height can change what clears
 the terrain. Elevation Mask requires extra clearance for Earth's center. We
 keep two metres to use the prepared neighborhood, choose a time window and
 inspect the countdowns. They describe Sunset and Earthset from the selected
-instant. The neighborhood heatmap lets us investigate nearby positions.”
+instant. Selecting a neighborhood cell directly on the polar map moves our
+Surface Asset and updates its analysis.”
 
 ## 2:15–3:00 — Science, boundaries and purpose
 
@@ -89,15 +93,19 @@ Do not imply the offline HTML includes the NASA imagery, charts or live calculat
 ## Final pass after the team's last merge
 
 - Confirm the hosted build and exact control names; rehearse in the recording browser.
-- A3 time-bar playback, animated marker states, A6/B6 in-map neighborhood cells,
-  A7 in-view navigation and A8/B7 layer controls need a new code/browser check.
-  They are not demonstrated as implemented in this script.
+- A6/B6 neighborhood cells are implemented on the polar map for Catalog Sites
+  at or south of 80°S, at 2 m height. Rehearse cell selection, both color metrics,
+  Best cell and Back to the site in the recording browser. Best means highest
+  value for the selected metric and window, not safest landing point.
+- A3 time-bar playback, animated marker states, A7 in-view navigation and A8/B7
+  additional layer controls still need a new code/browser check. They are not
+  demonstrated as implemented in this script.
 - Currently the Site Card falls back to the first 2027 instant without a time-bar
   event; the Planner has its own Instant slider. Update this narration if that changes.
 - Check legends actually consuming SUN_LAYER / EARTH_LAYER before showing them;
   text constants alone do not add a working Layers panel.
-- If using the optional Malapert example, select (-1600 m east, +100 m north) in
-  the Plotly heatmap. The separate 2027–2028 check gives 100% of hourly Earth-view
+- If using the optional Malapert example, select (-1600 m east, +100 m north) directly on
+  the polar map's Site Neighborhood cells. The separate 2027–2028 check gives 100% of hourly Earth-view
   samples there; the screen's selected window is a different summary. Do not call
   it a summit, permanent visibility or a validated communications link.
 - Coordinate a final copy pass with the panel owners: some chart/result sentences

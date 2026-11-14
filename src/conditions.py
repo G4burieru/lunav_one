@@ -40,6 +40,16 @@ def offset_from(site, lat, lon):
     return xs[0], ys[0]
 
 
+def cell_corners(site, east, north, size=catalog.NEIGHBORHOOD_SPACING_M):
+    """Corners (lat, lon) of the square cell of `size` m around each offset (m east and north of `site`, in its
+    local frame), going around the cell, for drawing a Site Neighborhood on a map. Shape (points, 4, 2)."""
+    half = size / 2
+    xs = (np.asarray(east, dtype=float)[:, None] + [-half, half, half, -half]).ravel()
+    ys = (np.asarray(north, dtype=float)[:, None] + [-half, -half, half, half]).ravel()
+    lons, lats = warp_transform(_local_crs(site), MOON_GEOGRAPHIC, list(xs), list(ys))
+    return np.stack([lats, lons], axis=-1).reshape(-1, 4, 2)
+
+
 def _catalog_match(lat, lon):
     reach = catalog.NEIGHBORHOOD_RADIUS_M + catalog.NEIGHBORHOOD_SPACING_M / 2
     for name, site in LUNAR_SITES.items():

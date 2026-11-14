@@ -52,10 +52,12 @@ const polarMap = (() => {
   }
 
   // Center `site`, or the pole for the overview, in the part of the map that the panel leaves uncovered.
+  // A site with `reach` (meters) is framed so that far around it fits; other sites use SITE_ZOOM.
   function centerOn(state, site, animate) {
     const m = state.map, map = m.leaflet, size = map.getSize(), right = panelRight(state.root);
-    const fit = Math.log2(RES0 * Math.min(size.x - right, size.y) / (2 * OVERVIEW_M));
-    const zoom = site ? SITE_ZOOM : Math.max(map.getMinZoom(), Math.floor(fit * 4) / 4);
+    const fit = reach => Math.floor(4 * Math.log2(RES0 * Math.min(size.x - right, size.y) / (2 * reach))) / 4;
+    const zoom = !site ? Math.max(map.getMinZoom(), fit(OVERVIEW_M))
+      : site.reach ? Math.min(MAX_ZOOM, fit(site.reach)) : SITE_ZOOM;
     const point = map.project(site ? [site.lat, site.lon] : [-90, 0], zoom).subtract([right / 2, 0]);
     const center = map.unproject(point, zoom);
     m.userMoved = false;
@@ -72,13 +74,13 @@ const polarMap = (() => {
 
   // Redraw the site markers (Catalog Sites and the Custom Site) when the sites or the selection change.
   function drawSites(state, data) {
-    const m = state.map, signature = JSON.stringify([data.selected, data.custom, data.sites]);
+    const focus = focusSite(data), picked = focus && isPicked(focus) ? [focus] : [];
+    const m = state.map, signature = JSON.stringify([data.selected, focus, data.sites]);
     if (signature === m.signature) return;
     m.signature = signature;
     m.sites.clearLayers();
-    const custom = data.custom ? [focusSite(data)] : [];
-    [...data.sites, ...custom].filter(s => s.lat <= MAP_LAT).forEach(site => {
-      const selected = site.key === data.selected || site.key === "custom", size = selected ? 26 : 18;
+    [...data.sites, ...picked].filter(s => s.lat <= MAP_LAT).forEach(site => {
+      const selected = site.key === data.selected || isPicked(site), size = selected ? 26 : 18;
       const marker = L.marker([site.lat, site.lon], {
         icon: L.divIcon({ className: `site-marker${selected ? " selected" : ""}`, iconSize: [size, size],
           html: `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${SHAPES[site.kind] || SHAPES.region_center}`
@@ -87,7 +89,7 @@ const polarMap = (() => {
       });
       marker.bindTooltip(escapeHtml(site.name), { direction: "top", offset: [0, -size / 2], permanent: selected,
                                                    className: "site-label" });
-      const choose = () => site.key !== "custom" && state.setTriggerValue("site", site.key);
+      const choose = () => !isPicked(site) && state.setTriggerValue("site", site.key);
       marker.on("click", choose);
       marker.on("add", () => {  // Leaflet makes markers focusable buttons; give them a name and Enter or Space
         const el = marker.getElement();
@@ -132,7 +134,7 @@ const polarMap = (() => {
       .on("loading", () => setStatus(state, "map", ""))
       .on("tileerror", () => setStatus(state, "map", "Some NASA Moon Trek tiles could not be loaded."));
     state.map = {
-      leaflet: map, sites: L.layerGroup().addTo(map),
+      leaflet: map, sites: L.layerGroup().addTo(map), hood: L.layerGroup().addTo(map), canvas: L.canvas(),
       bases: Object.fromEntries(Object.entries(BASES).map(([name, layers]) => [name, L.layerGroup(layers.map(tiles))])),
     };
 
@@ -161,11 +163,39 @@ const polarMap = (() => {
     popup.openOn(map);
   }
 
+  // The Site Planner's Site Neighborhood (task A6): one 100 m square per point, colored by the panel's choice, on a
+  // canvas, which keeps some 1,300 cells fast. A click on a cell sends "cell" with its index. The best cell has a
+  // dashed outline and the Surface Asset's cell a solid one.
+  function drawNeighborhood(state, data) {
+    const m = state.map, hood = data.mode === "planner" ? data.neighborhood : null;
+    const signature = JSON.stringify(hood);
+    if (signature === m.hoodSignature) return;
+    m.hoodSignature = signature;
+    m.hood.clearLayers();
+    if (!hood) return;
+    const unit = `% ${hood.label}`;
+    hood.cells.forEach((cell, i) => {
+      L.polygon(cell.corners, { renderer: m.canvas, stroke: false, fillColor: cell.color, fillOpacity: 0.8,
+                                bubblingMouseEvents: false })
+        .bindTooltip(`${cell.value.toFixed(0)}${unit}`, { sticky: true, className: "site-label" })
+        .on("click", () => state.setTriggerValue("cell", i))
+        .addTo(m.hood);
+    });
+    const outline = (i, dashArray) => L.polygon(hood.cells[i].corners, { renderer: m.canvas, color: "#fff",
+      weight: 2, dashArray, fill: false, interactive: false }).addTo(m.hood);
+    if (hood.best != null) outline(hood.best, "4 3");
+    if (hood.selected != null) outline(hood.selected, null);
+  }
+
   function update(state, data, active) {
     const m = state.map;
     drawSites(state, data);
+    drawNeighborhood(state, data);
     if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
-    const focus = focusSite(data), site = focus && focus.lat <= MAP_LAT ? focus : null;
+    // The Site Planner frames its whole Site Neighborhood and stays put while the Surface Asset moves inside it.
+    const focus = focusSite(data), hood = data.mode === "planner" ? data.neighborhood : null;
+    const site = hood ? { key: `hood:${hood.site}`, lat: hood.center.lat, lon: hood.center.lon, reach: hood.reach_m }
+      : focus && focus.lat <= MAP_LAT ? focus : null;
     const key = site ? `${site.key}:${site.lat},${site.lon}` : "";
     if (!m.shown) {  // just switched to the map: start from the overview the first time, then fly to the site
       m.shown = true;

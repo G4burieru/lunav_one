@@ -69,14 +69,22 @@ function addFullscreenButton(state) {
   root.querySelector(".layers").appendChild(button);
 }
 
-// The site the views focus on: the Custom Site (key "custom") if there is one, else the selected Catalog Site.
+// The site the views focus on: in the Site Planner its Surface Asset (key "asset"); otherwise the Custom Site (key
+// "custom") if there is one, else the selected Catalog Site.
 function focusSite(data) {
+  if (data.mode === "planner" && data.asset) {
+    return { key: "asset", name: "Surface Asset", kind: "custom", lat: data.asset.lat, lon: data.asset.lon,
+             description: "The Site Planner's Surface Asset." };
+  }
   if (data.custom) {
     return { key: "custom", name: "Custom Site", kind: "custom", lat: data.custom.lat, lon: data.custom.lon,
              description: "A location you picked." };
   }
   return data.sites.find(s => s.key === data.selected) || null;
 }
+
+// A point the user picked rather than a Catalog Site: it is drawn like a selected site but cannot be chosen.
+const isPicked = site => site.key === "custom" || site.key === "asset";
 
 // Full screen hides the app's panel, so the view shows the selected site itself.
 function updateInfo(state, data) {
