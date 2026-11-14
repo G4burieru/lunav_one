@@ -26,6 +26,13 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   keyword arguments for `moon_view`, so `app.py` now fills the view after the panel. The Site Planner returns
   `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. It keeps its own
   Instant slider until A3 covers the Planner window.
+- **Done: C4.** `python -m scripts.render_sun_overlay` writes the Sunlight overlay for A8:
+  - `static/overlays/sun_85s.png` is 1264 × 1264 px at 240 m per pixel, about 1 MB.
+  - `sun_85s.json` holds its bounds, ±151740 m in the same polar stereographic CRS as the Moon Trek tiles.
+  - In Leaflet: `L.Proj.imageOverlay("app/static/overlays/sun_85s.png", L.bounds([-151740, -151740], [151740,
+    151740]), {opacity: 0.7})`.
+  - The color ramp (one amber hue, darker means less Sun) is in the JSON for the B7 legend, and the caveat text is
+    `texts.SUN_LAYER`.
 - **For A3 and A5** (helpers in `src/panels/common.py`):
   - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
     `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`

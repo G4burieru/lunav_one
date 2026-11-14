@@ -18,6 +18,10 @@ ASSET_HEIGHT_HELP = ("Height of the solar panel or antenna above the ground. 2 m
                      "heights compute the terrain horizon live, in about 30 s.")
 ELEVATION_MASK_HELP = ("Minimum angle Earth's center must clear above the terrain horizon to count as visible, for "
                        "example to keep an antenna's beam clear of the ground.")
+SUN_LAYER = ("Average sunlight at ground level over 18.6 years (NASA PGDA). Site figures are 2 m above the ground "
+             "and differ: at Connecting Ridge C1 this map gives 44% and the Site Card 88%.")
+EARTH_LAYER = ("Share of the time any part of Earth is above the terrain, at ground level over 18.6 years (NASA PGDA). "
+               "It matches our Site Card values within 1 to 5 points.")
 CUSTOM_SITE = "A location you picked. Its conditions are computed live from NASA JPL Horizons and LOLA terrain."
 NO_TERRAIN = "No terrain data here (outside 80°S): these figures use the ideal horizon of a smooth Moon."
 
