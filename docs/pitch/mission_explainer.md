@@ -57,8 +57,9 @@ Our model illustrates this distinction at Malapert: the region center has
 48.90% Earth Visibility, while a point 1600 m west and 100 m north has Earth
 visible in every hourly sample of 2027–2028 at 2 m Asset Height and zero Elevation
 Mask. These are modeled geometric results, not communications guarantees or
-summit identifications. They are consistent with [NASA's regional description](https://science.nasa.gov/image-detail/20100618/).
-See the [qualitative comparison and precise assumptions](illumination_comparison.md).
+summit identifications. They are consistent with [NASA's regional description](https://science.nasa.gov/image-detail/20100618/),
+and our catalog values agree with NASA's PGDA Earth visibility map within a few
+percentage points. See the [comparison and precise assumptions](illumination_comparison.md).
 
 ## What Lunav One can explain today
 

@@ -99,7 +99,7 @@ LOLA-derived provenance. No coordinate transformation or change to catalog
 positions is needed for this compatibility check. This resolves the earlier
 frame-reconciliation item, not complete terrain or landing-safety validation.
 
-## Earth Visibility: qualitative comparison
+## Earth Visibility: comparison with the NASA PGDA map
 
 For the same 2027–2028 window, 2 m Asset Height and 0° Elevation Mask, the
 Malapert regional center has 48.90% Earth Visibility. At the pre-computed point
@@ -109,23 +109,79 @@ samples. Its coordinates are approximately latitude -85.99115552°, longitude
 Exactly 1600 m west with no north offset gives 65.93%, so the north offset must
 be included when reproducing the example.
 
-The four Shackleton / Connecting Ridge study points have 49.97–55.22% Earth
-Visibility. These results are **consistent with published descriptions**, not
-numerically validated by a matching external site-by-site percentage table:
+### Reference data
 
+NASA Goddard's Planetary Geodesy Data Archive publishes an
+[average Earth visibility map](https://pgda.gsfc.nasa.gov/products/69) of the
+south pole from LOLA topography (Mazarico et al., 2011; product updated 2016).
+Each 60 m pixel from 85°S to the pole holds the percentage of hourly timesteps
+over an 18.6-year nutation cycle in which any part of Earth's disk is above the
+terrain, at the surface. NASA's
+[Lunar Surface Data Book (M2M-30044, March 2025)](https://ntrs.nasa.gov/api/citations/20250002845/downloads/M2M-30044%20Lunar%20Surface%20Data%20Book%20Baseline_Final.pdf),
+section 5.1, names this product as the Earth visibility reference for Artemis
+surface planning. It uses the same polar stereographic projection and 1737.4 km
+sphere as our DEMs, so catalog coordinates map onto it directly.
+
+### Like-for-like result
+
+The map counts any part of Earth's disk; our Earth Visibility uses its center.
+For this comparison only, the project value counts any part of the disk
+(Earth's center above the Terrain Horizon minus its 0.95° apparent radius). The
+3×3 range is the spread of map values within 90 m of the point, which shows how
+quickly terrain changes the result.
+
+| Point | Project, any part of disk (%) | PGDA map pixel (%) | Difference (points) | PGDA 3×3 range (%) |
+|---|---:|---:|---:|---:|
+| Shackleton Rim S1 | 54.47 | 53.75 | +0.72 | 30.94–53.75 |
+| Connecting Ridge C1 | 58.48 | 53.91 | +4.57 | 50.28–58.19 |
+| Connecting Ridge C2 | 59.46 | 58.65 | +0.81 | 16.90–58.65 |
+| Shackleton Rim S2 | 57.23 | 53.44 | +3.79 | 15.68–56.69 |
+| Malapert regional center | 53.50 | 52.41 | +1.09 | 48.96–53.15 |
+| Faustini Rim A regional center | 51.69 | 50.80 | +0.89 | 36.70–50.81 |
+| Haworth regional center | 45.18 | 43.94 | +1.24 | 43.71–44.10 |
+| Malapert best neighborhood point | 100.00 | 79.70 | +20.30 | 49.83–100.00 |
+
+Six of the seven catalog points are within 1.3 percentage points of NASA's map;
+C1 and S2 are within 4.6 points, and for both an adjacent 60 m pixel reaches our
+value. Every difference is positive, which is the expected direction: our
+observer is 2 m above the ground and the map is at the surface. The Malapert
+best point sits on a slope where the map ranges from 50% to 100% across
+neighboring pixels, so its single-pixel value is not a meaningful benchmark;
+the map does confirm that 100% Earth visibility occurs within 90 m of it.
+
+Differences that remain: 18.6-year versus two-year averaging, 60 m pixels
+versus our 20 m near-field terrain and exact points, and surface versus 2 m
+observer height. Both calculations use LOLA-derived terrain, so this checks the
+horizon and ephemeris computation rather than the terrain data itself.
+
+The same archive offers an average solar illumination map, but it is not
+comparable at these points. With the Sun never more than about 1.6° above the
+horizon near the pole, a 2 m height and pixel size change the result strongly:
+at C1 the surface map gives 44.31%, while Gläser et al. (2017) report 92.1%
+solar visibility at 2 m with a 20 m DTM. Solar values are therefore compared
+only against Gläser et al. above.
+
+### Other sources
+
+- [Bryant (2009), JPL IPN Progress Report 42-176](https://ipnpr.jpl.nasa.gov/progress_report/42-176/176C.pdf),
+  written for NASA's SCaN lunar architecture study, tabulates Earth visibility at
+  2 m for 11 south polar peaks. It used a 2006 Goldstone radar DEM whose
+  coordinates do not land on the same peaks in LOLA terrain: at 7 of its 11
+  points both our model and the PGDA map give 0%. It is used only for its
+  summary that polar peaks see some part of Earth about 60–65% of the time,
+  the whole disk about 50%, and the Malapert summit 100%.
 - [NASA's Malapert region description](https://science.nasa.gov/image-detail/20100618/)
   describes favorable Earth visibility at the massif; it does not identify our
   catalog center or our selected cell as a summit.
 - [Moonbase Mons Malapert, hosted by ILOA](https://iloa.org/media/Moonbase_Mons_Malapert.pdf)
-  is a secondary source (Aerospace America, October 2008). It describes probable
+  is a secondary source (Aerospace America, October 2008) describing probable
   continuous Earth views from the summit and roughly half-month views from
-  Shackleton's rim. Those descriptions are qualitative, not measurements at our
-  model coordinates, and do not guarantee a radio link.
-- [Mazarico et al. (2011), PGDA products](https://pgda.gsfc.nasa.gov/products/69)
-  provides Earth-visibility maps, not a numerical benchmark here. Those maps
-  count any exposed part of Earth's disk; our Earth Visibility criterion uses
-  its center, so the definitions differ. The [paper record](https://ui.adsabs.harvard.edu/abs/2011Icar..211.1066M)
-  is retained as a bibliographic reference.
+  Shackleton's rim.
+- [Mazarico et al. (2011)](https://ui.adsabs.harvard.edu/abs/2011Icar..211.1066M)
+  is the method paper for the PGDA maps.
+
+To reproduce the table, run `python -m scripts.compare_pgda`. It reads the
+pre-computed catalog data and about eighteen 3×3 pixel windows from the PGDA maps.
 
 “100%” here means all modeled hourly samples in the stated two-year window,
 not guaranteed uninterrupted visibility at finer time scales or for all time.
