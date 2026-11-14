@@ -22,7 +22,8 @@ from rasterio.warp import transform as warp_transform
 from src import catalog
 from src.horizons_api import get_ephemerides_data
 from src.sites import LUNAR_SITES
-from src.terrain import MOON_GEOGRAPHIC, MOON_RADIUS_M, SOUTH_POLE_DEM_LIMIT, apply_terrain, dem_for, site_horizon
+from src.terrain import (MOON_GEOGRAPHIC, MOON_RADIUS_M, SOUTH_POLE_DEM_LIMIT, apply_terrain, dem_for,
+                         elevation_at_offset, illumination_fraction, site_horizon)
 
 
 def offset_from(site, lat, lon):
@@ -76,3 +77,50 @@ def get_conditions(lat, lon, start_date, days, asset_height=catalog.ASSET_HEIGHT
     conditions = apply_terrain(ephemerides, horizon, east, north)
     conditions.attrs.update(terrain=terrain, source=source, site=name)
     return conditions
+
+
+def _bodies_over_neighborhood(ephemerides, body, horizons, east, north):
+    """(elevation, horizon) arrays of shape (points, times) for one body across neighborhood points."""
+    azimuth = ephemerides[f"{body}_azimuth"].to_numpy()
+    lower = np.floor(azimuth).astype(int) % 360
+    weight = azimuth - np.floor(azimuth)
+    horizon = horizons[:, lower] * (1 - weight) + horizons[:, (lower + 1) % 360] * weight
+    elevation = elevation_at_offset(ephemerides[f"{body}_elevation"].to_numpy()[None, :], azimuth[None, :],
+                                    east[:, None], north[:, None])
+    return elevation, horizon
+
+
+def neighborhood_summary(site_key, start_date, days, elevation_mask=0.0, chunk=100):
+    """Sunlight and Earth Visibility at every Site Neighborhood point of a catalog site, at 2 m Asset Height.
+
+    Returns one row per point: east_m, north_m (offset from the site, in the site's frame), lat, lon,
+    sunlight_pct (mean Illumination Fraction, %) and earth_visible_pct (% of hours with Earth Visibility).
+    Pass a row's lat/lon to get_conditions for its full time series. Uses pre-computed ephemerides when the period
+    is covered, otherwise one live JPL Horizons call. Raises ValueError if the site has no pre-computed data.
+    """
+    site = LUNAR_SITES[site_key]
+    data = catalog.load_site(site_key, site)
+    if data is None or data[1] is None:
+        raise ValueError(f"No pre-computed Site Neighborhood for {site_key!r}; run python -m scripts.precompute")
+    ephemerides, neighborhood = data
+    start = pd.Timestamp(start_date)
+    stop = start + pd.Timedelta(days=days)
+    if not (start >= pd.Timestamp(catalog.START) and stop <= pd.Timestamp(catalog.END)):
+        ephemerides = get_ephemerides_data(site["lat"], site["lon"], start.date(), days)
+    window = ephemerides[(ephemerides["time"] >= start) & (ephemerides["time"] < stop)]
+
+    east, north, horizons = neighborhood["east"], neighborhood["north"], neighborhood["horizons"]
+    sunlight, earth = np.empty(len(east)), np.empty(len(east))
+    for i in range(0, len(east), chunk):  # chunks keep (points x hours) arrays small for multi-year windows
+        part = slice(i, i + chunk)
+        sun_elevation, sun_horizon = _bodies_over_neighborhood(window, "sun", horizons[part], east[part], north[part])
+        sunlight[part] = illumination_fraction(sun_elevation, sun_horizon).mean(axis=1) * 100
+        earth_elevation, earth_horizon = _bodies_over_neighborhood(window, "earth", horizons[part], east[part],
+                                                                   north[part])
+        earth[part] = (earth_elevation - earth_horizon > elevation_mask).mean(axis=1) * 100
+
+    local = CRS.from_proj4(f"+proj=aeqd +lat_0={site['lat']} +lon_0={site['lon']} +R={MOON_RADIUS_M} +units=m "
+                           "+no_defs")
+    lons, lats = warp_transform(local, MOON_GEOGRAPHIC, list(east), list(north))
+    return pd.DataFrame({"east_m": east, "north_m": north, "lat": lats, "lon": lons,
+                         "sunlight_pct": sunlight, "earth_visible_pct": earth})

@@ -63,3 +63,22 @@ def earth_visible_hours(df, elevation_mask=0.0):
     """Hours with Earth Visibility in the DataFrame."""
     visible = df["earth_elevation"] - _horizon(df, "earth") > elevation_mask
     return float(visible.sum() * _step_hours(df))
+
+
+def monthly_summary(df, elevation_mask=0.0):
+    """Sunlight and Earth Visibility per calendar month, to show seasonal change.
+
+    Returns a DataFrame indexed by month start with `sunlight_pct` (mean Illumination Fraction, %),
+    `earth_visible_pct` (% of hours with Earth Visibility) and `hours` (samples in the month, so partial months
+    at the window edges can be flagged).
+    """
+    fraction = df["illumination_fraction"] if "illumination_fraction" in df else \
+        illumination_fraction(df["sun_elevation"], 0.0)
+    visible = df["earth_elevation"] - _horizon(df, "earth") > elevation_mask
+    month = df["time"].dt.to_period("M").dt.to_timestamp()
+    grouped = pd.DataFrame({"sunlight": fraction, "earth": visible, "month": month}).groupby("month")
+    return pd.DataFrame({
+        "sunlight_pct": grouped["sunlight"].mean() * 100,
+        "earth_visible_pct": grouped["earth"].mean() * 100,
+        "hours": grouped.size() * _step_hours(df),
+    })

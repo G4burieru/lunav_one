@@ -29,3 +29,26 @@ def test_catalog_site_uses_precomputed_data_offline():
     assert len(df) == 7 * 24
     assert {"sun_horizon", "earth_horizon", "illumination_fraction"} <= set(df.columns)
     assert df["illumination_fraction"].between(0, 1).all()
+
+
+def test_neighborhood_summary_matches_get_conditions_at_the_site():
+    from src.conditions import neighborhood_summary
+    from src.metrics import earth_visible_hours, sunlight_hours
+    name, site = _precomputed_site()
+    summary = neighborhood_summary(name, "2027-03-01", 14)
+    assert len(summary) == len(catalog.neighborhood_offsets()[0])
+    centre = summary[(summary["east_m"] == 0) & (summary["north_m"] == 0)].iloc[0]
+    assert centre["lat"] == pytest.approx(site["lat"], abs=1e-6)
+    df = get_conditions(site["lat"], site["lon"], "2027-03-01", 14)
+    assert centre["sunlight_pct"] == pytest.approx(100 * sunlight_hours(df) / len(df), abs=1e-6)
+    assert centre["earth_visible_pct"] == pytest.approx(100 * earth_visible_hours(df) / len(df), abs=1e-6)
+
+
+def test_neighborhood_points_round_trip_through_get_conditions():
+    from src.conditions import neighborhood_summary
+    name, _ = _precomputed_site()
+    summary = neighborhood_summary(name, "2027-03-01", 7)
+    best = summary.loc[summary["sunlight_pct"].idxmax()]
+    df = get_conditions(best["lat"], best["lon"], "2027-03-01", 7)
+    assert df.attrs["source"] == "pre-computed"
+    assert 100 * df["illumination_fraction"].mean() == pytest.approx(best["sunlight_pct"], abs=1e-6)
