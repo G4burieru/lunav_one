@@ -41,10 +41,10 @@ Each member edits only the files they own. This keeps merges conflict-free.
 
 | Owner | Files |
 |---|---|
-| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `src/conditions.py`, `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py`, `tests/test_conditions.py` |
-| Igor | `app.py`, `src/charts.py`, `.streamlit/` |
-| Renata | `src/sites.py`, `src/site_map.py`, `README.md`, `docs/pitch/` |
-| Shared | `requirements.txt`, `pytest.ini`, `docs/TEAM_PLAN.md`, `GLOSSARY.md`, `docs/adr/` |
+| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `src/conditions.py`, `src/panels/` (except `texts.py`), `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py`, `tests/test_conditions.py` |
+| Igor | `app.py`, `src/moon_view/`, `src/charts.py`, `.streamlit/` |
+| Renata | `src/sites.py`, `src/site_map.py`, `src/panels/texts.py`, `README.md`, `docs/pitch/` |
+| Shared | `requirements.txt`, `pytest.ini`, `docs/TEAM_PLAN.md`, `docs/UI_OVERHAUL.md`, `GLOSSARY.md`, `docs/adr/`, `tests/test_app.py` |
 
 If you need a change in a file you do not own, ask its owner.
 
@@ -63,6 +63,8 @@ Do not change these without telling the team:
   Neighborhood point (`east_m`, `north_m`, `lat`, `lon`, `sunlight_pct`, `earth_visible_pct`) for a heatmap; takes
   ~0.1 s for 14 days and ~3 s for 2 years. Pass a row's `lat`/`lon` to `get_conditions` for that point.
 - `LUNAR_SITES[name] = {"lat", "lon", "description"}` in `src/sites.py`.
+- `moon_view(sites, selected, *, key, on_site, ...)` in `src/moon_view/`: the data going in and the events coming
+  out are listed in [`docs/UI_OVERHAUL.md`](UI_OVERHAUL.md).
 
 ### Shared Vocabulary and Decisions
 

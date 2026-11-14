@@ -27,12 +27,18 @@ _Avoid_: Observer height, camera height
 ### Sites
 
 **Catalog Site**:
-A curated, named landing site whose terrain horizon and ephemerides are pre-computed.
-_Avoid_: Preset, predefined location
+A curated, named location, such as a studied point, a region center or a historical landing, whose terrain horizon
+and ephemerides are pre-computed. None is a certified landing site.
+_Avoid_: Landing site, preset, predefined location
 
 **Custom Site**:
-A latitude/longitude entered by the user that is not in the catalog.
-_Avoid_: Manual coordinates, user location
+A location the user picks, by coordinates or on the map, that is not in the catalog.
+_Avoid_: Manual coordinates, user location, pin
+
+**Site Card**:
+The panel that presents one selected site: what kind of location it is, where it is, and how much sunlight and
+Earth visibility it gets.
+_Avoid_: Landing site card, info box, popup
 
 **Site Neighborhood**:
 The area around a catalog site whose terrain horizons are pre-computed for the Site Planner.
@@ -57,6 +63,10 @@ _Avoid_: Sunlit (as a yes/no), light percentage
 The instant the illumination fraction reaches 0.
 _Avoid_: Shadow onset
 
+**Longest Night**:
+The longest continuous period within the analysis window in which the illumination fraction is 0.
+_Avoid_: Eclipse, darkness period, shadow duration
+
 **Elevation Mask**:
 The minimum angle Earth's center must clear above the terrain horizon to count as visible; 0° by default.
 _Avoid_: Margin, cutoff angle
@@ -68,3 +78,14 @@ _Avoid_: Line of sight, comms window (for a single instant)
 **Earthset**:
 The instant Earth visibility ends.
 _Avoid_: Loss of signal
+
+**Longest Earth Absence**:
+The longest continuous period within the analysis window without Earth visibility.
+_Avoid_: Blackout, comms outage, loss of signal
+
+### Time
+
+**Analysis Window**:
+The period over which a site's sunlight and Earth visibility figures are computed: all of 2027–2028 in the
+Explorer, and a start date and duration chosen by the user in the Site Planner.
+_Avoid_: Date range, time range
