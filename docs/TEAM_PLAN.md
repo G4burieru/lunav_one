@@ -41,7 +41,7 @@ Each member edits only the files they own. This keeps merges conflict-free.
 
 | Owner | Files |
 |---|---|
-| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py` |
+| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `src/conditions.py`, `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py`, `tests/test_conditions.py` |
 | Igor | `app.py`, `src/charts.py`, `.streamlit/` |
 | Renata | `src/sites.py`, `src/site_map.py`, `README.md`, `docs/pitch/` |
 | Shared | `requirements.txt`, `docs/TEAM_PLAN.md`, `GLOSSARY.md`, `docs/adr/` |
@@ -52,9 +52,12 @@ If you need a change in a file you do not own, ask its owner.
 
 Do not change these without telling the team:
 
-- `get_ephemerides_data(lat, lon, start_date, days)` returns a DataFrame with columns `time`, `sun_elevation`,
-  `earth_elevation`.
-- `hours_until_sunset(df, at)` and `hours_until_earthset(df, at)` in `src/metrics.py`.
+- `get_conditions(lat, lon, start_date, days, asset_height=2.0)` in `src/conditions.py` is the entry point for the
+  app. It returns a DataFrame with `time`, `sun_azimuth`, `sun_elevation`, `earth_azimuth`, `earth_elevation`,
+  `sun_horizon`, `earth_horizon`, `illumination_fraction`, and `df.attrs` `terrain`, `source`, `site`. Catalog
+  sites return instantly; other points are computed live (up to ~2 min), so cache the call in the app.
+- `src/metrics.py`: `hours_until_sunset(df, at)`, `hours_until_earthset(df, at, elevation_mask=0.0)`,
+  `sunlight_hours(df)`, `earth_visible_hours(df, elevation_mask=0.0)`.
 - `LUNAR_SITES[name] = {"lat", "lon", "description"}` in `src/sites.py`.
 
 ### Shared Vocabulary and Decisions

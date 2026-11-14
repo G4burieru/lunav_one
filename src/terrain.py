@@ -141,6 +141,18 @@ def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.
     ])
 
 
+def apply_terrain(ephemerides, horizon, east_m=0.0, north_m=0.0):
+    """Copy of an ephemerides DataFrame seen from a point offset from where it was computed, with the terrain
+    horizon in the direction of each body and the Illumination Fraction."""
+    out = ephemerides.copy()
+    for body in ("sun", "earth"):
+        azimuth = out[f"{body}_azimuth"]
+        out[f"{body}_elevation"] = elevation_at_offset(out[f"{body}_elevation"], azimuth, east_m, north_m)
+        out[f"{body}_horizon"] = horizon_at(horizon, azimuth)
+    out["illumination_fraction"] = illumination_fraction(out["sun_elevation"], out["sun_horizon"])
+    return out
+
+
 def elevation_at_offset(elevation, azimuth, east_m, north_m):
     """Elevation (deg) of a distant body seen from a point offset (east_m, north_m) from where it was computed.
 
