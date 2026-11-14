@@ -124,5 +124,5 @@ with st.container(key="panel"):
 with view_slot:  # the view needs no Horizons data, so it opens even if Horizons is down
     # A panel's render() can override any of these, e.g. the Site Planner's view, Surface Asset and time bar data.
     moon_view(LUNAR_SITES, selected, key="moon_view", **{"on_site": on_view_site, "on_point": on_view_point,
-                                                         "view": view, "view_id": view_id, "custom": custom,
-                                                         **view_data})
+                                                         "on_cell": planner.on_map_cell, "view": view,
+                                                         "view_id": view_id, "custom": custom, **view_data})

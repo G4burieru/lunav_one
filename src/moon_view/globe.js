@@ -100,7 +100,7 @@ const globeView = (() => {
 
   function update(state, data, active) {
     const globe = state.globe, focus = focusSite(data);
-    globe.pointsData(data.custom ? [...data.sites, focus] : data.sites).labelsData(focus ? [focus] : []);
+    globe.pointsData(focus && isPicked(focus) ? [...data.sites, focus] : data.sites).labelsData(focus ? [focus] : []);
     if (!active) {  // hidden behind the polar map: stop drawing until shown again
       state.closeBalloon?.();
       if (!state.globePaused) { state.globePaused = true; globe.pauseAnimation(); }
@@ -118,8 +118,8 @@ const globeView = (() => {
 
   function create(state) {
     const root = state.root, el = root.querySelector(".globe");
-    const isSelected = s => s.key === state.data.selected || s.key === "custom";
-    const choose = s => s.key !== "custom" && state.setTriggerValue("site", s.key);
+    const isSelected = s => s.key === state.data.selected || isPicked(s);
+    const choose = s => !isPicked(s) && state.setTriggerValue("site", s.key);
     const globe = new Globe(el, { rendererConfig: { antialias: true, alpha: false } })
       .backgroundColor("#000005")
       .showAtmosphere(false)

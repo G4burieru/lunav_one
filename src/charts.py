@@ -41,27 +41,3 @@ def plot_monthly(monthly, full_month_hours):
                       legend=dict(orientation="h", y=-0.25))
     return fig
 
-
-def plot_neighborhood(points, column, label):
-    """Site Neighborhood map (src/conditions.neighborhood_summary): 100 m cells colored by `column`.
-
-    The catalog site is at (0, 0); the best cell is starred. Each marker carries its row index as customdata.
-    """
-    best = points[column].idxmax()
-    fig = go.Figure(go.Scatter(
-        x=points["east_m"], y=points["north_m"], mode="markers", customdata=points.index, name=label,
-        marker=dict(symbol="square", size=10, color=points[column], colorscale="Cividis", cmin=0, cmax=100,
-                    colorbar=dict(title=f"{label} (%)")),
-        text=[f"{v:.0f}%" for v in points[column]],
-        hovertemplate="East %{x:.0f} m · North %{y:.0f} m<br>" + label + ": %{text}<extra></extra>",
-    ))
-    fig.add_trace(go.Scatter(x=[0], y=[0], mode="markers", name="Catalog Site", hoverinfo="skip",
-                             marker=dict(symbol="x", size=14, color="#e66b27", line=dict(width=1, color="white"))))
-    fig.add_trace(go.Scatter(x=[points.at[best, "east_m"]], y=[points.at[best, "north_m"]], mode="markers",
-                             name=f"Best point ({points.at[best, column]:.0f}%)", customdata=[best],
-                             marker=dict(symbol="star", size=18, color="white", line=dict(width=1, color="black"))))
-    fig.update_layout(title=f"Site Neighborhood: {label}", height=560, xaxis_title="East (m)",
-                      yaxis=dict(title="North (m)", scaleanchor="x"), legend=dict(orientation="h", y=-0.15),
-                      clickmode="event+select")
-    return fig
-
