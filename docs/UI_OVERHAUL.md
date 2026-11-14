@@ -18,6 +18,16 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   - Add `user-select: none` to the map; otherwise a drag selects the text of the zoom buttons.
   - A fast drag flings the map through Leaflet's inertia.
   - Trigger events last one run, so read them in their callbacks, as `on_view_site` in `app.py` does.
+- **Done: C1, C2, C3, B1, B2, B4, and the search half of B5.** The catalog has the search (names and coordinates)
+  and the sorted compact cards; the Site Card has the grid, the rank sentence, the selected-instant line and the
+  three tabs, for Catalog Sites and Custom Sites. The comparison table is gone; the Plotly south pole map stays until
+  A2 replaces it.
+- **For A3 and A5** (helpers in `src/panels/common.py`):
+  - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
+    `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
+    and uses 2027-01-01 00:00 until the bar sends one.
+  - On a confirmed `point`, call `select_custom(lat, lon)`. The Custom Site is in `st.session_state["custom"]`; pass
+    it to `moon_view` as `custom` to draw it.
 
 ## Decisions
 

@@ -9,7 +9,7 @@ import streamlit as st
 from src.charts import load_south_pole_relief, plot_south_pole_relief_map
 from src.moon_view import moon_view
 from src.panels import about, catalog_list, planner, site_card
-from src.panels.common import PANEL, SELECTED, VIEW_CHOICE, VIEWS, open_panel, select_site
+from src.panels.common import CUSTOM, PANEL, SELECTED, VIEW_CHOICE, VIEWS, open_panel, select_site
 from src.sites import LUNAR_SITES
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="🌕", layout="wide")
@@ -66,7 +66,7 @@ def on_map_select(map_key):
 
 selected = st.session_state.get(SELECTED)
 panel = st.session_state.get(PANEL, "catalog")
-if panel == "site" and selected not in LUNAR_SITES:
+if panel == "site" and selected not in LUNAR_SITES and not st.session_state.get(CUSTOM):
     panel = "catalog"
 st.html(CSS + f"<style>.st-key-panel {{ width: {PANEL_WIDTH[panel]}; }}</style>")
 

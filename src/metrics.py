@@ -72,6 +72,43 @@ def earth_visible_hours(df, elevation_mask=0.0):
     return float(_earth_visible(df, elevation_mask).sum() * _step_hours(df))
 
 
+def _longest_run_hours(df, flags):
+    """Duration of the longest run of consecutive True samples, in hours."""
+    flags = np.asarray(flags, dtype=bool)
+    if not flags.any():
+        return 0.0
+    edges = np.flatnonzero(np.diff(np.concatenate(([0], flags.astype(np.int8), [0]))))  # run starts and ends
+    return float((edges[1::2] - edges[::2]).max() * _step_hours(df))
+
+
+def longest_night(df):
+    """Longest Night: the longest continuous period, in hours, with the Illumination Fraction at 0."""
+    return _longest_run_hours(df, _illumination(df) <= 0)
+
+
+def longest_earth_absence(df, elevation_mask=0.0):
+    """Longest Earth Absence: the longest continuous period, in hours, without Earth Visibility."""
+    return _longest_run_hours(df, ~_earth_visible(df, elevation_mask))
+
+
+def site_summary(df, elevation_mask=0.0):
+    """The Site Card grid over the whole DataFrame: `sunlight_pct` (mean Illumination Fraction, %),
+    `earth_visible_pct` (% of hours with Earth Visibility), `longest_night_h` and `longest_earth_absence_h`."""
+    return {
+        "sunlight_pct": float(_illumination(df).mean() * 100),
+        "earth_visible_pct": float(_earth_visible(df, elevation_mask).mean() * 100),
+        "longest_night_h": longest_night(df),
+        "longest_earth_absence_h": longest_earth_absence(df, elevation_mask),
+    }
+
+
+def hourly_states(df, elevation_mask=0.0):
+    """One byte per sample for the Moon View time bar: bits 0-6 hold the Illumination Fraction in percent
+    (0-100), bit 7 is set when Earth is visible. Returns a uint8 NumPy array."""
+    sun = np.rint(np.clip(np.asarray(_illumination(df), dtype=float), 0, 1) * 100).astype(np.uint8)
+    return sun | (np.asarray(_earth_visible(df, elevation_mask), dtype=np.uint8) << 7)
+
+
 def monthly_summary(df, elevation_mask=0.0):
     """Sunlight and Earth Visibility per calendar month, to show seasonal change.
 

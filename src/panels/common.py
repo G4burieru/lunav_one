@@ -1,18 +1,24 @@
 """Helpers shared by the floating panels (docs/UI_OVERHAUL.md). Owner: Gabriel."""
+import base64
 import datetime
+import re
 
+import pandas as pd
 import streamlit as st
 
 from src import catalog
 from src.charts import plot_earth_visibility, plot_sun_elevation
 from src.conditions import get_conditions, neighborhood_summary
-from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
+from src.metrics import (earth_visible_hours, hourly_states, hours_until_earthset, hours_until_sunset,
+                         site_summary, sunlight_hours)
 from src.sites import LUNAR_SITES
 
 get_data = st.cache_data(show_spinner=False)(get_conditions)
 get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
 
-PANEL, SELECTED = "panel", "selected"  # session state: the open panel, and the selected Catalog Site key
+# Session state: the open panel, the selected Catalog Site key, and the Custom Site ({"lat", "lon"}) if any.
+PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
+MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
 VIEW_CHOICE, VIEWS = "view_choice", ("🌕 Globe", "🗺️ South pole map")
 CUSTOM_SITE = "Custom Site"
 KIND_LABELS = {
@@ -23,23 +29,100 @@ KIND_LABELS = {
 }
 CACHE_START = datetime.date.fromisoformat(catalog.START)
 CACHE_END = datetime.date.fromisoformat(catalog.END)  # exclusive
+EXPLORER_DAYS = (CACHE_END - CACHE_START).days  # the Explorer's Analysis Window: all of 2027–2028
 DATE_HELP = (f"Catalog Sites are pre-computed from {CACHE_START} to {CACHE_END - datetime.timedelta(days=1)} "
              "and load instantly. Other dates and Custom Sites query JPL Horizons and the LOLA DEM live.")
+_COORDINATES = re.compile(r"^\s*(-?\d+(?:\.\d+)?)\s*°?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*(?:E)?\s*$", re.IGNORECASE)
 
 
 def open_panel(name):
     """Rail callback. The catalog clears the selection; the Site Planner starts at the selected site."""
     st.session_state[PANEL] = name
     if name == "catalog":
-        st.session_state[SELECTED] = None
+        st.session_state[SELECTED] = st.session_state[CUSTOM] = None
     elif name == "planner" and st.session_state.get(SELECTED):
         st.session_state["planner_site"] = st.session_state[SELECTED]
+    elif name == "planner" and st.session_state.get(CUSTOM):
+        custom = st.session_state[CUSTOM]
+        st.session_state.update(planner_site=CUSTOM_SITE, planner_lat=custom["lat"], planner_lon=custom["lon"])
 
 
 def select_site(key):
     """Every way of choosing a Catalog Site (globe, map, catalog list) calls this before the script reruns."""
-    st.session_state[SELECTED] = key
+    st.session_state[SELECTED], st.session_state[CUSTOM] = key, None
     st.session_state[PANEL] = "site" if key else "catalog"
+
+
+def select_custom(lat, lon):
+    """Open the Site Card of a Custom Site (from the search, or a confirmed click on the Moon View)."""
+    st.session_state[SELECTED], st.session_state[CUSTOM] = None, {"lat": lat, "lon": lon}
+    st.session_state[PANEL] = "site"
+
+
+def parse_coordinates(text):
+    """(lat, lon) from text such as "-89.44, -137.17" or "-89.44° 222.83° E", or None. Longitudes above 180°
+    are east-positive from 0 to 360 and are wrapped to [-180, 180]."""
+    match = _COORDINATES.match(text or "")
+    if not match:
+        return None
+    lat, lon = float(match[1]), float(match[2])
+    if not (-90 <= lat <= 90 and -180 <= lon <= 360):
+        return None
+    return lat, lon - 360 if lon > 180 else lon
+
+
+def two_years(lat, lon, catalog_site=True):
+    """Conditions over the Explorer's Analysis Window: instant for Catalog Sites, live (about 30 s) otherwise.
+    None, with an error shown, if the live computation fails."""
+    return load(lat, lon, CACHE_START, EXPLORER_DAYS, catalog_site=catalog_site)
+
+
+@st.cache_data(show_spinner=False)
+def catalog_summaries():
+    """The Site Card grid (src.metrics.site_summary) of every Catalog Site over 2027–2028, one row per key."""
+    return pd.DataFrame({key: site_summary(get_data(site["lat"], site["lon"], str(CACHE_START), EXPLORER_DAYS))
+                         for key, site in LUNAR_SITES.items()}).T
+
+
+def rank(column, value, lower_is_better=False):
+    """Place of `value` among the Catalog Sites' `column` in catalog_summaries(): 1 + the number doing better."""
+    values = catalog_summaries()[column]
+    return int((values < value).sum() if lower_is_better else (values > value).sum()) + 1
+
+
+def ordinal(n):
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def format_duration(hours):
+    """A Longest Night or Longest Earth Absence for people: hours below two days, days above."""
+    if hours == 0:
+        return "None"
+    return f"{hours:.0f} h" if hours < 48 else f"{hours / 24:.1f} days"
+
+
+def time_payload(dfs, instant=None, elevation_mask=0.0):
+    """The Moon View `time` data (docs/UI_OVERHAUL.md) for DataFrames that share one hourly time axis, keyed by
+    site key (or "asset" in the Site Planner)."""
+    times = next(iter(dfs.values()))["time"]
+    return {"start": times.iloc[0].strftime("%Y-%m-%dT%H:%M:%SZ"), "hours": len(times), "instant": instant,
+            "states": {key: base64.b64encode(hourly_states(df, elevation_mask).tobytes()).decode()
+                       for key, df in dfs.items()}}
+
+
+@st.cache_data(show_spinner=False)
+def catalog_time():
+    """Time bar states of every Catalog Site over 2027–2028, for the Explorer; set "instant" before sending."""
+    return time_payload({key: get_data(site["lat"], site["lon"], str(CACHE_START), EXPLORER_DAYS)
+                         for key, site in LUNAR_SITES.items()})
+
+
+def selected_instant(df):
+    """The time bar's instant (UTC, naive like df["time"]), or the start of `df` until the time bar sets one."""
+    value = (st.session_state.get(MOON_VIEW) or {}).get("instant")
+    at = pd.Timestamp(value) if value else df["time"].iloc[0]
+    at = at.tz_convert("UTC").tz_localize(None) if at.tzinfo else at
+    return min(max(at.floor("h"), df["time"].iloc[0]), df["time"].iloc[-1])
 
 
 def header():
