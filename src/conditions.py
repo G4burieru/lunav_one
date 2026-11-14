@@ -10,9 +10,11 @@ Contract used by app.py; coordinate any change with the team:
         "source"    "pre-computed", "pre-computed terrain + live ephemerides", or "live"
         "site"      catalog site name whose Site Neighborhood was used, or None
 
-Pre-computed data is used when the point is inside a catalog Site Neighborhood at the default asset height
-(snapped to the nearest 100 m grid point) and, for ephemerides, when the period is covered (docs/adr/0001).
-Otherwise JPL Horizons and the DEM are read live, which can take a minute or two; cache the result in the app.
+Pre-computed data is used when the point is inside a catalog Site Neighborhood (snapped to the nearest 100 m grid
+point) and, for ephemerides, when the period is covered (docs/adr/0001). Pre-computed horizons are for a 2 m Asset
+Height: other heights are computed live inside 80°S, and reuse the 2 m horizon elsewhere (marked in "terrain"),
+because the global DEM is too slow to read live (docs/adr/0002). Live computation can take up to about a minute;
+cache the result in the app.
 """
 import numpy as np
 import pandas as pd
@@ -26,11 +28,15 @@ from src.terrain import (MOON_GEOGRAPHIC, MOON_RADIUS_M, SOUTH_POLE_DEM_LIMIT, a
                          elevation_at_offset, illumination_fraction, site_horizon)
 
 
+def _local_crs(site):
+    """Azimuthal equidistant projection centred on a site: x is metres east, y metres north, in the site's frame."""
+    return CRS.from_proj4(f"+proj=aeqd +lat_0={site['lat']} +lon_0={site['lon']} +R={MOON_RADIUS_M} +units=m "
+                          "+no_defs")
+
+
 def offset_from(site, lat, lon):
     """East and north offset (m) of a lunar point from a site, in the site's local frame."""
-    local = CRS.from_proj4(f"+proj=aeqd +lat_0={site['lat']} +lon_0={site['lon']} +R={MOON_RADIUS_M} +units=m "
-                           "+no_defs")
-    xs, ys = warp_transform(MOON_GEOGRAPHIC, local, [lon], [lat])
+    xs, ys = warp_transform(MOON_GEOGRAPHIC, _local_crs(site), [lon], [lat])
     return xs[0], ys[0]
 
 
@@ -49,7 +55,10 @@ def _catalog_match(lat, lon):
 def get_conditions(lat, lon, start_date, days, asset_height=catalog.ASSET_HEIGHT_M):
     start = pd.Timestamp(start_date)
     stop = start + pd.Timedelta(days=days)
-    match = _catalog_match(lat, lon) if asset_height == catalog.ASSET_HEIGHT_M else None
+    match = _catalog_match(lat, lon)
+    other_height = asset_height != catalog.ASSET_HEIGHT_M
+    if match and other_height and lat <= SOUTH_POLE_DEM_LIMIT:
+        match = None  # inside 80°S the live DEMs are fast enough to compute the requested height exactly
 
     if match:
         name, site, (ephemerides, neighborhood), east, north = match
@@ -63,6 +72,8 @@ def get_conditions(lat, lon, start_date, days, asset_height=catalog.ASSET_HEIGHT
             ephemerides = get_ephemerides_data(site["lat"], site["lon"], start.date(), days)
             source = "pre-computed terrain + live ephemerides"
         terrain = catalog.read_manifest()[name]["terrain"]
+        if other_height:
+            terrain += f" (horizon pre-computed for {catalog.ASSET_HEIGHT_M:g} m Asset Height)"
     else:
         name, east, north, source = None, 0.0, 0.0, "live"
         ephemerides = get_ephemerides_data(lat, lon, start.date(), days)
@@ -119,8 +130,6 @@ def neighborhood_summary(site_key, start_date, days, elevation_mask=0.0, chunk=1
                                                                    north[part])
         earth[part] = (earth_elevation - earth_horizon > elevation_mask).mean(axis=1) * 100
 
-    local = CRS.from_proj4(f"+proj=aeqd +lat_0={site['lat']} +lon_0={site['lon']} +R={MOON_RADIUS_M} +units=m "
-                           "+no_defs")
-    lons, lats = warp_transform(local, MOON_GEOGRAPHIC, list(east), list(north))
+    lons, lats = warp_transform(_local_crs(site), MOON_GEOGRAPHIC, list(east), list(north))
     return pd.DataFrame({"east_m": east, "north_m": north, "lat": lats, "lon": lons,
                          "sunlight_pct": sunlight, "earth_visible_pct": earth})

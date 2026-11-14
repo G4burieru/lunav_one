@@ -3,11 +3,14 @@
 A Terrain Horizon is the elevation angle of the skyline in each azimuth (0° = north, clockwise), as seen by a
 Surface Asset `asset_height` metres above the ground.
 """
+import math
 import time
+import warnings
 
 import numpy as np
 import rasterio
 import rasterio.errors
+from affine import Affine
 from rasterio.crs import CRS
 from rasterio.warp import transform as warp_transform
 from rasterio.windows import Window, from_bounds
@@ -15,11 +18,11 @@ from rasterio.windows import Window, from_bounds
 MOON_RADIUS_M = 1737400.0
 SUN_RADIUS_DEG = 0.2665  # apparent solar disk radius from the Moon
 AZIMUTHS = np.arange(360.0)
+MAX_DISTANCE_M = 150_000.0
 SOUTH_POLE_80M = "/vsicurl/https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF"
 SOUTH_POLE_20M = "/vsicurl/https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF"
-NEAR_FIELD_M = 10_000.0  # inside 80°S, terrain closer than this uses SOUTH_POLE_20M
 GLOBAL_118M = "/vsicurl/https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"
-SOUTH_POLE_DEM_LIMIT = -80.0  # SOUTH_POLE_80M covers 80°S to the pole
+SOUTH_POLE_DEM_LIMIT = -80.0  # the south pole DEMs cover 80°S to the pole
 MOON_GEOGRAPHIC = CRS.from_proj4(f"+proj=longlat +R={MOON_RADIUS_M} +no_defs")
 GDAL_ENV = {
     "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
@@ -28,6 +31,16 @@ GDAL_ENV = {
     "GDAL_HTTP_MAX_RETRY": "3",
     "GDAL_HTTP_RETRY_DELAY": "2",
 }
+
+# Distance rings (DEM, decimation, from m, to m): fine terrain close to the point, coarser far away where a pixel
+# subtends a smaller angle. Decimation 4 reads the 80 m DEM's built-in 320 m overview.
+SOUTH_POLE_RINGS = [
+    (SOUTH_POLE_20M, 1, 0.0, 10_000.0),
+    (SOUTH_POLE_80M, 1, 10_000.0, 50_000.0),
+    (SOUTH_POLE_80M, 4, 50_000.0, MAX_DISTANCE_M),
+]
+# The global DEM has no overviews and is stored in full-width rows, so decimating it saves no download.
+GLOBAL_RINGS = [(GLOBAL_118M, 1, 0.0, MAX_DISTANCE_M)]
 
 
 def elevation_angle(distance, target_height, observer_height):
@@ -39,17 +52,20 @@ def elevation_angle(distance, target_height, observer_height):
 
 
 def ground_height(dem, dem_transform, x, y):
-    col, row = ~dem_transform * (x, y)
-    return dem[int(row), int(col)]
+    """DEM height at a map point, or NaN outside the array or where the DEM has no data."""
+    col, row = ~dem_transform @ (x, y)
+    row, col = math.floor(row), math.floor(col)
+    inside = 0 <= row < dem.shape[0] and 0 <= col < dem.shape[1]
+    return float(dem[row, col]) if inside else math.nan
 
 
-def horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height=2.0, max_distance=150_000.0,
+def horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height=2.0, max_distance=MAX_DISTANCE_M,
                     azimuths=AZIMUTHS, min_distance=0.0, ground=None):
     """Terrain horizon (deg) per azimuth from a DEM array of heights relative to the reference sphere.
 
     `north` and `east` are the map displacements of one surface metre north and east at (x0, y0) (see local_axes).
     Only terrain between `min_distance` and `max_distance` is considered; `ground` overrides the observer's ground
-    height (used when a finer DEM knows it better). Directions that leave the DEM use the terrain seen so far.
+    height (used when a finer DEM knows it better). Directions with no terrain in range are NaN.
     shortcut: the map scale is taken at the site; in the global (cylindrical) DEM it drifts over 150 km at high
     latitudes. Fine below ~60° and inside the south pole DEM.
     """
@@ -62,14 +78,16 @@ def horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height=2.0, m
     az = np.radians(np.asarray(azimuths))[:, None]
     dx = np.sin(az) * east[0] + np.cos(az) * north[0]
     dy = np.sin(az) * east[1] + np.cos(az) * north[1]
-    cols, rows = inverse * (x0 + dx * distances, y0 + dy * distances)
+    cols, rows = inverse @ (x0 + dx * distances, y0 + dy * distances)
     cols, rows = np.floor(cols).astype(int), np.floor(rows).astype(int)
     inside = (rows >= 0) & (rows < dem.shape[0]) & (cols >= 0) & (cols < dem.shape[1])
 
     heights = np.full(cols.shape, np.nan)
     heights[inside] = dem[rows[inside], cols[inside]]
     angles = elevation_angle(distances, heights, ground + asset_height)
-    return np.nanmax(angles, axis=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN directions (outside the DEM) are expected
+        return np.nanmax(angles, axis=1)
 
 
 def local_axes(crs, lat, lon):
@@ -97,42 +115,52 @@ def dem_for(lat):
 CHUNK_ROWS = 512
 
 
-def _read_chunk(src, window, attempts=4):
+def _read_chunk(src, window, out_shape, attempts=6):
     for attempt in range(attempts):
         try:
-            return src.read(1, window=window, masked=True).astype(float)
+            return src.read(1, window=window, out_shape=out_shape, masked=True).astype(np.float32)
         except rasterio.errors.RasterioIOError:
             if attempt == attempts - 1:
                 raise
-            time.sleep(2 * (attempt + 1))
+            time.sleep(5 * 2 ** attempt)  # 5, 10, 20, 40, 80 s: PGDA outages can last over a minute
 
 
-def _read_around(url, lat, lon, radius):
+def _read_around(url, lat, lon, radius, decimation=1):
     """DEM heights (m, relative to the reference sphere) within `radius` surface metres of a site; NaN outside.
 
+    `decimation` > 1 reads a coarser version (one value per `decimation` pixels), served from the file's overviews.
     shortcut: windows are not wrapped across the ±180° meridian of the global DEM; add it if a catalog site needs it.
     """
+    f = decimation
     with rasterio.Env(**GDAL_ENV), rasterio.open(url) as src:
         (x0, y0), north, east = local_axes(src.crs, lat, lon)
-        rx = radius * max(abs(north[0]), abs(east[0]))
-        ry = radius * max(abs(north[1]), abs(east[1]))
-        window = from_bounds(x0 - rx, y0 - ry, x0 + rx, y0 + ry, src.transform).round_offsets().round_lengths()
-        r0, c0, h, w = int(window.row_off), int(window.col_off), int(window.height), int(window.width)
+        # Largest map extent of `radius` surface metres in any direction (north/east can point diagonally on the map).
+        rx = radius * np.hypot(north[0], east[0])
+        ry = radius * np.hypot(north[1], east[1])
+        window = from_bounds(x0 - rx, y0 - ry, x0 + rx, y0 + ry, src.transform)
+        # Align the window to multiples of the decimation so coarse pixels line up with the overview grid.
+        r0, c0 = math.floor(window.row_off / f) * f, math.floor(window.col_off / f) * f
+        h = math.ceil((window.row_off + window.height - r0) / f) * f
+        w = math.ceil((window.col_off + window.width - c0) / f) * f
         c_start, c_stop = max(c0, 0), min(c0 + w, src.width)
-        dem = np.full((h, w), np.nan)
-        for r in range(max(r0, 0), min(r0 + h, src.height), CHUNK_ROWS):
-            rows = min(CHUNK_ROWS, r0 + h - r, src.height - r)
-            band = _read_chunk(src, Window(c_start, r, c_stop - c_start, rows))
-            dem[r - r0:r - r0 + rows, c_start - c0:c_stop - c0] = band.filled(np.nan) * src.scales[0] + src.offsets[0]
-        return dem, src.window_transform(window), (x0, y0), north, east
+        dem = np.full((h // f, w // f), np.nan, dtype=np.float32)
+        for r in range(max(r0, 0), min(r0 + h, src.height), CHUNK_ROWS * f):
+            rows = min(CHUNK_ROWS * f, r0 + h - r, src.height - r)
+            out_shape = (math.ceil(rows / f), math.ceil((c_stop - c_start) / f))
+            band = _read_chunk(src, Window(c_start, r, c_stop - c_start, rows), out_shape)
+            top, left = (r - r0) // f, (c_start - c0) // f
+            dem[top:top + out_shape[0], left:left + out_shape[1]] = (
+                band.filled(np.nan) * src.scales[0] + src.offsets[0])
+        dem_transform = src.window_transform(Window(c0, r0, w, h)) @ Affine.scale(f)
+        return dem, dem_transform, (x0, y0), north, east
 
 
-def site_horizon(lat, lon, asset_height=2.0, max_distance=150_000.0):
+def site_horizon(lat, lon, asset_height=2.0, max_distance=MAX_DISTANCE_M):
     """Terrain horizon (deg, per 1° azimuth) at a lunar site, reading only the needed part of the DEM."""
     return _horizons(lat, lon, np.zeros(1), np.zeros(1), asset_height, max_distance)[0]
 
 
-def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.0, max_distance=150_000.0):
+def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.0, max_distance=MAX_DISTANCE_M):
     """Terrain horizons (N x 360, deg) at points offset (east, north) metres from a site.
 
     Azimuths stay in the site's frame (the site's north), so they match the site's ephemerides; near the pole the
@@ -141,25 +169,30 @@ def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.
     return _horizons(lat, lon, np.asarray(east_offsets), np.asarray(north_offsets), asset_height, max_distance)
 
 
-def _horizons(lat, lon, east_offsets, north_offsets, asset_height, max_distance):
-    """Horizons at points offset from a site. Inside 80°S, terrain within NEAR_FIELD_M (and the ground height) comes
-    from the 20 m DEM and farther terrain from the 80 m DEM; elsewhere the global DEM is used throughout."""
+def _horizons(lat, lon, east_offsets, north_offsets, asset_height, max_distance, rings=None):
+    """Horizons at points offset from a site, combining the distance rings for the latitude.
+
+    The observer's ground height comes from the finest ring with data there. Raises ValueError for a point with no
+    terrain data, rather than returning a horizon full of NaN.
+    """
+    if rings is None:
+        rings = SOUTH_POLE_RINGS if lat <= SOUTH_POLE_DEM_LIMIT else GLOBAL_RINGS
+    rings = [(url, f, near, min(far, max_distance)) for url, f, near, far in rings if near < max_distance]
     reach = np.hypot(east_offsets, north_offsets).max()
-    far_dem, far_transform, (x0, y0), north, east = _read_around(dem_for(lat)[0], lat, lon, max_distance + reach)
-    near = _read_around(SOUTH_POLE_20M, lat, lon, NEAR_FIELD_M + reach) if lat <= SOUTH_POLE_DEM_LIMIT else None
+    grids = [_read_around(url, lat, lon, far + reach, f) for url, f, _, far in rings]
+    (x0, y0), north, east = grids[0][2:]
+
     horizons = []
     for e, n in zip(east_offsets, north_offsets):
         x, y = x0 + e * east[0] + n * north[0], y0 + e * east[1] + n * north[1]
-        if near is None:
-            horizons.append(horizon_profile(far_dem, far_transform, x, y, north, east, asset_height, max_distance))
-            continue
-        near_dem, near_transform = near[0], near[1]
-        ground = ground_height(near_dem, near_transform, x, y)
-        close = horizon_profile(near_dem, near_transform, x, y, north, east, asset_height, NEAR_FIELD_M,
-                                ground=ground)
-        distant = horizon_profile(far_dem, far_transform, x, y, north, east, asset_height, max_distance,
-                                  min_distance=NEAR_FIELD_M, ground=ground)
-        horizons.append(np.fmax(close, distant))
+        grounds = (ground_height(dem, dem_transform, x, y) for dem, dem_transform, *_ in grids)
+        ground = next((g for g in grounds if math.isfinite(g)), math.nan)
+        if not math.isfinite(ground):
+            raise ValueError(f"No terrain data at lat {lat}, lon {lon}, offset ({e:.0f} m E, {n:.0f} m N)")
+        profiles = [horizon_profile(dem, dem_transform, x, y, north, east, asset_height, far, min_distance=near,
+                                    ground=ground)
+                    for (dem, dem_transform, *_), (_, _, near, far) in zip(grids, rings)]
+        horizons.append(np.fmax.reduce(profiles))
     return np.array(horizons)
 
 

@@ -67,8 +67,8 @@ src/site_map.py              Schematic polar map and offline HTML export
 src/sites.py                 Sourced coordinate catalog
 data/                        Pre-computed ephemerides and terrain horizons for catalog sites
 data/catalog/                Eight sites and coordinate manifest, 2027–2028
-scripts/precompute.py        Generates data/catalog/ (Gabriel)
-.github/workflows/precompute.yml  Regenerates data and opens a review PR (Gabriel)
+scripts/precompute.py        Generates data/catalog/
+.github/workflows/precompute.yml  Regenerates data and opens a review PR
 tests/test_horizons_api.py    Ephemeris parsing tests
 tests/test_terrain.py         Synthetic terrain and illumination tests
 tests/test_metrics.py         Terrain-aware countdown and duration tests
@@ -104,11 +104,12 @@ See [docs/TEAM_PLAN.md](docs/TEAM_PLAN.md) for details.
 The catalog and map run independently of Streamlit, Horizons and the other science modules:
 
 ```bash
-.venv/bin/python -m src.site_map --site 'Haworth' --output /tmp/lunar_south_pole.html
+.venv/bin/python -m src.site_map --site 'Haworth'
 ```
 
 Open the resulting HTML file in a browser. Use `--output` to choose an accessible folder if needed. Plotly is embedded, so no network connection
-is needed to view it. Hover over markers for names, coordinates and descriptions.
+is needed to view it. By default, `lunar_south_pole.html` is written to the current
+folder and is ignored by Git. Hover over markers for names, coordinates and descriptions.
 
 ```python
 from src.site_map import plot_south_pole_map
@@ -189,7 +190,7 @@ There is no need to run pre-computation for documentation-only changes.
 
 [Preliminary literature comparison](docs/pitch/illumination_comparison.md) records
 four study points. With the combined 20 m/80 m terrain, all four mean
-illumination estimates differ from the paper by less than two percentage points. This is a
+illumination estimates differ from the paper by less than 1.2 percentage points. This is a
 consistency check, not a claim of independent mission validation.
 
 ## Scientific explanation and presentation drafts
@@ -206,8 +207,9 @@ full-Sun hours (the integral of Illumination Fraction), not hours with any part
 of the Sun visible and not generated electrical energy. Earth Visibility is a
 geometric criterion; it does not establish a working radio link.
 
-Polar terrain calculations combine 20 m LOLA data within 10 km with 80 m data
-farther away. Apollo 11 uses the pre-computed global DEM. Pre-computed Site
+Polar terrain calculations combine 20 m LOLA data within 10 km, 80 m data
+from 10–50 km, and a 320 m overview from 50–150 km. The DEM read-window
+correction in PR #12 and regenerated data are included. Apollo 11 uses the pre-computed global DEM. Pre-computed Site
 Neighborhoods sample a 2 km radius at 100 m spacing and 2 m Asset Height;
 nearby coordinates use the nearest supported point. Other heights and dates can
 require live requests. Custom Sites outside the south-pole DEM use the Ideal

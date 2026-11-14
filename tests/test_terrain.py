@@ -51,3 +51,55 @@ def test_local_axes_scale_east_by_latitude_in_cylindrical_maps():
     _, north, east = local_axes(cylindrical, 60.0, 10.0)
     assert np.linalg.norm(north) == pytest.approx(1.0, rel=1e-6)
     assert np.linalg.norm(east) == pytest.approx(2.0, rel=1e-4)  # 1 / cos(60°)
+
+
+def _synthetic_dem(memfile, lat, lon, height_at):
+    """Write a 60 x 60 km south polar stereographic DEM around (lat, lon) into `memfile`; return its path."""
+    from rasterio.crs import CRS
+    from src.terrain import local_axes
+    crs = CRS.from_proj4("+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +R=1737400 +units=m +no_defs")
+    (x0, y0), _, _ = local_axes(crs, lat, lon)
+    size, res = 600, 100.0
+    transform = from_origin(x0 - size * res / 2, y0 + size * res / 2, res, res)
+    cols, rows = np.meshgrid(np.arange(size) + 0.5, np.arange(size) + 0.5)
+    xs, ys = transform @ (cols, rows)
+    dem = height_at(np.hypot(xs - x0, ys - y0)).astype(np.float32)
+    with memfile.open(driver="GTiff", width=size, height=size, count=1, dtype="float32", crs=crs,
+                      transform=transform, nodata=np.nan) as dst:
+        dst.write(dem, 1)
+    return memfile.name
+
+
+# Longitude -135° makes local north point diagonally on the polar map: the case where the read window used to shrink.
+DIAGONAL = (-89.4, -135.0)
+
+
+def test_read_window_reaches_full_radius_when_north_is_diagonal():
+    from rasterio.io import MemoryFile
+    from src.terrain import _horizons
+    ring = lambda d: np.where((d > 8500) & (d < 9500), 500.0, 0.0)
+    with MemoryFile() as memfile:
+        url = _synthetic_dem(memfile, *DIAGONAL, ring)
+        horizon = _horizons(*DIAGONAL, np.zeros(1), np.zeros(1), 2.0, 9_600.0, rings=[(url, 1, 0.0, 9_600.0)])[0]
+    expected = elevation_angle(8500, 500.0, 2.0)
+    assert horizon == pytest.approx(np.full(360, expected), abs=0.1)  # the ring is seen in every direction
+
+
+def test_decimated_ring_sees_the_same_terrain():
+    from rasterio.io import MemoryFile
+    from src.terrain import _horizons
+    ring = lambda d: np.where((d > 8000) & (d < 10000), 500.0, 0.0)
+    with MemoryFile() as memfile:
+        url = _synthetic_dem(memfile, *DIAGONAL, ring)
+        rings = [(url, 1, 0.0, 5_000.0), (url, 2, 5_000.0, 12_000.0)]
+        horizon = _horizons(*DIAGONAL, np.zeros(1), np.zeros(1), 2.0, 12_000.0, rings=rings)[0]
+    assert horizon == pytest.approx(np.full(360, elevation_angle(8000, 500.0, 2.0)), abs=0.3)
+
+
+def test_point_without_terrain_data_raises():
+    from rasterio.io import MemoryFile
+    from src.terrain import _horizons
+    with MemoryFile() as memfile:
+        url = _synthetic_dem(memfile, *DIAGONAL, lambda d: np.full(d.shape, np.nan))
+        with pytest.raises(ValueError, match="No terrain data"):
+            _horizons(*DIAGONAL, np.zeros(1), np.zeros(1), 2.0, 5_000.0, rings=[(url, 1, 0.0, 5_000.0)])

@@ -52,3 +52,15 @@ def test_neighborhood_points_round_trip_through_get_conditions():
     df = get_conditions(best["lat"], best["lon"], "2027-03-01", 7)
     assert df.attrs["source"] == "pre-computed"
     assert 100 * df["illumination_fraction"].mean() == pytest.approx(best["sunlight_pct"], abs=1e-6)
+
+
+def test_catalog_site_outside_the_pole_keeps_terrain_at_other_heights():
+    for name, site in LUNAR_SITES.items():
+        data = catalog.load_site(name, site)
+        if site["lat"] > -80 and data is not None and data[1] is not None:
+            break
+    else:
+        pytest.skip("no pre-computed catalog site outside 80°S")
+    df = get_conditions(site["lat"], site["lon"], "2027-03-01", 7, asset_height=5.0)
+    assert df.attrs["source"] == "pre-computed"
+    assert "pre-computed for 2 m Asset Height" in df.attrs["terrain"]

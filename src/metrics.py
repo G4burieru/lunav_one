@@ -13,6 +13,16 @@ def _horizon(df, body):
     return df[f"{body}_horizon"] if f"{body}_horizon" in df else 0.0
 
 
+def _illumination(df):
+    if "illumination_fraction" in df:
+        return df["illumination_fraction"]
+    return illumination_fraction(df["sun_elevation"], 0.0)
+
+
+def _earth_visible(df, elevation_mask):
+    return df["earth_elevation"] - _horizon(df, "earth") > elevation_mask
+
+
 def _hours_until_negative(df, margin, at):
     """Hours from `at` until `margin` drops to <= 0 (0.0 if already there, None if not within the data)."""
     at = pd.Timestamp(at)
@@ -54,15 +64,12 @@ def hours_until_earthset(df, at, elevation_mask=0.0):
 
 def sunlight_hours(df):
     """Equivalent full-Sun hours in the DataFrame: the Illumination Fraction summed over time."""
-    fraction = df["illumination_fraction"] if "illumination_fraction" in df else \
-        illumination_fraction(df["sun_elevation"], 0.0)
-    return float(np.sum(fraction) * _step_hours(df))
+    return float(np.sum(_illumination(df)) * _step_hours(df))
 
 
 def earth_visible_hours(df, elevation_mask=0.0):
     """Hours with Earth Visibility in the DataFrame."""
-    visible = df["earth_elevation"] - _horizon(df, "earth") > elevation_mask
-    return float(visible.sum() * _step_hours(df))
+    return float(_earth_visible(df, elevation_mask).sum() * _step_hours(df))
 
 
 def monthly_summary(df, elevation_mask=0.0):
@@ -72,11 +79,9 @@ def monthly_summary(df, elevation_mask=0.0):
     `earth_visible_pct` (% of hours with Earth Visibility) and `hours` (samples in the month, so partial months
     at the window edges can be flagged).
     """
-    fraction = df["illumination_fraction"] if "illumination_fraction" in df else \
-        illumination_fraction(df["sun_elevation"], 0.0)
-    visible = df["earth_elevation"] - _horizon(df, "earth") > elevation_mask
     month = df["time"].dt.to_period("M").dt.to_timestamp()
-    grouped = pd.DataFrame({"sunlight": fraction, "earth": visible, "month": month}).groupby("month")
+    grouped = pd.DataFrame({"sunlight": _illumination(df), "earth": _earth_visible(df, elevation_mask),
+                            "month": month}).groupby("month")
     return pd.DataFrame({
         "sunlight_pct": grouped["sunlight"].mean() * 100,
         "earth_visible_pct": grouped["earth"].mean() * 100,
