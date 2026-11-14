@@ -8,6 +8,10 @@ def test_every_panel_renders():
     at.button(key="explorer_pick_Connecting Ridge C1").click().run()  # catalog list -> Site Card
     assert not at.exception
     assert at.session_state["panel"] == "site"
+    at.button(key="card_back").click().run()
+    at.selectbox(key="search").set_value("Haworth").run()  # search -> Site Card
+    assert not at.exception
+    assert at.session_state["selected"] == "Haworth"
     for panel in ("planner", "about", "catalog"):
         at.button(key=f"rail_{panel}").click().run()
         assert not at.exception, panel

@@ -6,6 +6,17 @@ First versions, to be rewritten in task D1 of docs/UI_OVERHAUL.md. Use the terms
 INTRO = ("Near the lunar south pole the Sun stays close to the horizon, so nearby terrain decides when a place gets "
          "sunlight and a view of Earth. Pick a site to see how often it has both.")
 
+SUNLIGHT_HELP = ("Share of the time the Sun shines on a panel 2 m above the ground in 2027–2028, counting a partly "
+                 "hidden Sun in proportion. The best ridges near the pole get about 80–90%; the lunar equator, 50%.")
+EARTH_HELP = ("Share of the hours in 2027–2028 when Earth's center is above the terrain, so an antenna could point "
+              "straight at it. Near-side equatorial sites see Earth all the time; polar sites about half the time.")
+LONGEST_NIGHT_HELP = ("Longest stretch in 2027–2028 with the Sun completely hidden: how long batteries would have to "
+                      "last. Nights at the lunar equator last about 15 days.")
+LONGEST_EARTH_ABSENCE_HELP = ("Longest stretch in 2027–2028 without Earth in view: how long direct-to-Earth "
+                              "communication would be impossible.")
+CUSTOM_SITE = "A location you picked. Its conditions are computed live from NASA JPL Horizons and LOLA terrain."
+NO_TERRAIN = "No terrain data here (outside 80°S): these figures use the ideal horizon of a smooth Moon."
+
 ABOUT = """
 Lunar Landing Site Navigator shows how much sunlight (for power) and Earth visibility (for direct-to-Earth
 communication) a Surface Asset would have near the lunar south pole, and when.
