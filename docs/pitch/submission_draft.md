@@ -69,9 +69,10 @@ user studies or operational use.
 Explorer now provides Catalog Site context, time-series analysis and a comparison
 table for covered dates. Site Planner accepts Custom Sites, Asset Height and
 Elevation Mask. Pre-computed data and automatic regeneration are present.
-Monthly and Site Neighborhood summaries exist in the science modules; displaying
-them in the interface remains future work. Further scientific and reference-frame
-review is still required.
+Monthly summaries and a selectable Site Neighborhood heatmap are available in
+the interface. Lunar reference-frame compatibility has been checked against
+Horizons and LOLA documentation and response headers. Complete scientific,
+uncertainty and operational review remains required.
 
 The current prototype does not certify landing safety, locate ice deposits,
 calculate electrical power or validate radio links. It does not identify an
@@ -89,6 +90,20 @@ the earlier discrepancy. This is a consistency check, not independent validation
 the time windows differ and both calculations use LOLA-derived terrain. The
 project combines 20 m, 80 m and 320 m terrain at different distances rather than exactly
 reproducing the study's 20 m method.
+
+## Earth Visibility evidence
+
+The documented Malapert regional center gives 48.90% Earth Visibility. A modeled
+cell 1600 m west and 100 m north gives 100% of hourly samples in 2027–2028 at
+2 m Asset Height and 0° Elevation Mask. It is an example of terrain sensitivity,
+not a confirmed summit or a guarantee of a working communications link.
+
+These results are consistent with published descriptions of favorable Malapert
+Earth visibility and roughly half-month visibility from Shackleton. The
+[comparison document](illumination_comparison.md) distinguishes NASA's regional
+context, the secondary ILOA-hosted article, and Mazarico's maps from numerical
+validation at matching coordinates. Both the exact offset and the analysis
+window must accompany the percentage.
 
 ## Publication details to complete
 

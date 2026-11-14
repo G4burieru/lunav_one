@@ -1,7 +1,7 @@
 """Curated lunar sites. Owner: Renata.
 
 Degrees: latitude positive north; longitude positive east, in [-180, 180].
-Catalog Sites support Explorer context and future Site Planner pre-computation.
+Catalog Sites support Explorer context and Site Planner analysis.
 No entry certifies landing safety or permanent illumination. Coordinate reference
 frames are recorded per source; no frame transformation or DEM validation is done.
 
@@ -47,13 +47,18 @@ def _studied_point(name, lat, source_lon, source_row):
         "coordinate_source": ILLUMINATION_SOURCE,
         "source_location": f"Table 2, PDF page 12, {source_row}",
         "coordinate_convention": COORDINATE_CONVENTION,
-        "coordinate_reference_frame": "Source LOLA DTM; exact frame realization requires reconciliation with project DEM",
+        "coordinate_reference_frame": "DE421 mean-Earth (MOON_ME); 1737.4 km reference sphere; aligned with Horizons lunar orientation and PGDA LOLA source coordinates",
+        "coordinate_frame_sources": [
+            "https://ssd.jpl.nasa.gov/horizons/manual.html#lunar-mean-earth-frame-of-de421",
+            "https://pgda.gsfc.nasa.gov/products/78",
+            "https://pgda.gsfc.nasa.gov/products/69",
+        ],
         "coordinate_kind": "studied_point",
         "coordinate_meaning": "Specific point studied for illumination; not a landing certification",
         "source_longitude_east_360": source_lon,
         "study_asset_height_m": 2.0,
         "priority": "high",
-        "topographic_validation": "Pending validation against the project LOLA DEM and its reference frame",
+        "topographic_validation": "Pending complete topographic validation; DE421 MOON_ME reference-frame compatibility confirmed",
     }
 
 

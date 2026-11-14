@@ -24,7 +24,7 @@ comparison for windows covered by pre-computed data.
 | Streamlit request cache | Caches get_conditions results |
 | Explorer and Site Planner modes | Available; Site Planner accepts Asset Height and Elevation Mask |
 | Catalog Site comparison | Available for pre-computed date windows at 2 m Asset Height |
-| Monthly and Site Neighborhood summaries | Science functions available; not yet displayed in app.py |
+| Monthly and Site Neighborhood summaries | Available in charts and the selectable Site Planner heatmap |
 | Full scientific validation | Pending |
 | Automatic data regeneration | Workflow opens a data PR after relevant changes on main; requires review and merge |
 
@@ -56,37 +56,56 @@ python -m pytest -q
 ## Project Structure
 
 ```text
-app.py                       Streamlit interface
-src/horizons_api.py          Live Sun/Earth azimuth and elevation
-src/terrain.py               LOLA DEM access, Terrain Horizon, Illumination Fraction
-src/metrics.py               Terrain-aware countdowns, durations and monthly summary
-src/conditions.py            Conditions entry point and Site Neighborhood summary
-src/catalog.py               Pre-computed data loader
-src/charts.py                Ephemeris charts
-src/site_map.py              Schematic polar map and offline HTML export
-src/sites.py                 Sourced coordinate catalog
-data/                        Pre-computed ephemerides and terrain horizons for catalog sites
-data/catalog/                Eight sites and coordinate manifest, 2027–2028
-scripts/precompute.py        Generates data/catalog/
-.github/workflows/precompute.yml  Regenerates data and opens a review PR
-tests/test_horizons_api.py    Ephemeris parsing tests
-tests/test_terrain.py         Synthetic terrain and illumination tests
-tests/test_metrics.py         Terrain-aware countdown and duration tests
-tests/test_catalog.py         Pre-computed data loading tests
-tests/test_conditions.py      Conditions entry-point tests
-tests/test_sites.py           Coordinate provenance and compatibility tests
-tests/test_site_map.py        Map integration and offline export tests
-docs/pitch/                  Science explainer, submission draft and demo script
-docs/adr/                    Data design decisions
-docs/TEAM_PLAN.md            Ownership and workflow
-GLOSSARY.md                  Shared project terminology
+lunav_one/
+├── app.py                       # Streamlit: Explorer and Site Planner
+├── requirements.txt
+├── pytest.ini
+├── GLOSSARY.md                  # Shared terminology
+├── .streamlit/
+│   └── config.toml              # Interface theme
+├── .github/workflows/
+│   └── precompute.yml           # Regenerate data and open a review PR
+├── src/
+│   ├── sites.py                 # Sourced Catalog Sites
+│   ├── site_map.py              # Schematic polar map and offline HTML export
+│   ├── globe.py                 # 3D globe with streamed lunar textures
+│   ├── charts.py                # Conditions, monthly and neighborhood charts
+│   ├── horizons_api.py          # JPL observer ephemerides
+│   ├── terrain.py               # LOLA access and Terrain Horizon
+│   ├── conditions.py            # Conditions and Site Neighborhood summaries
+│   ├── metrics.py               # Countdowns, durations and monthly summary
+│   └── catalog.py               # Pre-computed data loader
+├── scripts/
+│   └── precompute.py            # Generates data/catalog/
+├── data/
+│   └── catalog/                 # Pre-computed ephemerides and terrain horizons
+│       ├── manifest.json        # Coordinates, date coverage and terrain source
+│       ├── *_ephemerides.csv.gz # Hourly ephemerides, 2027–2028
+│       └── *_terrain.npz        # Site Neighborhood horizons at 2 m Asset Height
+├── tests/
+│   ├── test_sites.py
+│   ├── test_site_map.py
+│   ├── test_horizons_api.py
+│   ├── test_terrain.py
+│   ├── test_conditions.py
+│   ├── test_metrics.py
+│   └── test_catalog.py
+└── docs/
+    ├── TEAM_PLAN.md             # Ownership and workflow
+    ├── agents/                 # Repository instructions
+    ├── adr/                    # Data architecture decisions
+    └── pitch/
+        ├── mission_explainer.md
+        ├── submission_draft.md
+        ├── demo_script.md
+        └── illumination_comparison.md
 ```
 
 ## Data Sources
 
 - [JPL Horizons System](https://ssd.jpl.nasa.gov/horizons/): Observer ephemerides for specified lunar coordinates.
 - [LOLA terrain products](https://pgda.gsfc.nasa.gov/products/78): elevation data for terrain calculations.
-- [LROC QuickMap](https://quickmap.lroc.asu.edu/) and [Moon Trek](https://trek.nasa.gov/moon/): cartographic references; imagery is not embedded in the prototype map.
+- [LROC QuickMap](https://quickmap.lroc.asu.edu/) and [Moon Trek](https://trek.nasa.gov/moon/): cartographic and texture sources; the 3D globe streams imagery, while the standalone polar map remains schematic.
 - [Canadian Space Agency: Moon Exploration](https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/).
 
 ## Team
@@ -147,8 +166,10 @@ studied the four priority points at a 2 m Asset Height for 2017–2037. Their so
 longitudes (222.83, 245.98, 197.19, 204.70 degrees east) were converted by subtracting
 360. S1/S2 are local catalog labels for the two Shackleton rows, not the cluster
 identifiers in the article's Table 3. These are not certified landing points and
-no permanent illumination is claimed. Reconciliation of the source coordinate
-frame and topographic validation against the project's LOLA DEM remain pending.
+no permanent illumination is claimed. The studied points, PGDA DEMs and Horizons
+lunar orientation use the DE421 mean-Earth (MOON_ME) frame on a 1737.4 km sphere.
+Frame compatibility is confirmed; complete topographic validation remains pending.
+See the [frame evidence and Earth Visibility comparison](docs/pitch/illumination_comparison.md).
 
 Existing dictionary keys are retained for compatibility. **The key
 `Shackleton Crater (Rim)` now uses S1 instead of the previous Site04 region center
@@ -215,9 +236,9 @@ nearby coordinates use the nearest supported point. Other heights and dates can
 require live requests. Custom Sites outside the south-pole DEM use the Ideal
 Horizon if no pre-computed neighborhood is available, with a warning.
 
-Monthly and Site Neighborhood summaries exist as science functions but are not
-yet exposed by the current interface. No complete reference-frame, uncertainty,
-vehicle-safety or operational assessment has been performed. The literature
+Monthly charts and the selectable Site Neighborhood heatmap are now exposed in
+the interface. Reference-frame compatibility has been checked; a complete
+uncertainty, vehicle-safety or operational assessment has not been performed. The literature
 comparison is a consistency check using related LOLA-derived inputs, not an
 independent validation. This is an educational prototype, not a mission safety
 tool. The schematic map itself does not calculate terrain or illumination.
