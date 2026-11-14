@@ -33,7 +33,15 @@ and Relief base layers on the map. These images provide context, not live shadow
 A Site Card shows coordinate type, source context and 2027–2028 conditions at
 2 m Asset Height: mean Illumination Fraction, Earth Visibility, Longest Night
 and Longest Earth Absence. Its rank compares one metric among Catalog Sites,
-not safety or mission suitability. Overview, Sun & Earth and Seasons tabs show
+not safety or mission suitability. An integrated UTC time bar supports dragging
+and Play/Pause. Marker shape identifies coordinate type; fill level represents
+Illumination Fraction, and a filled/hollow upper-right dot represents Earth
+Visibility. Markers update during playback. Releasing the slider or pausing
+synchronizes the Site Card's instant, countdown line and charts; its two-year
+summary and ranks remain unchanged. The initial globe rotation stops at the
+first interaction and respects reduced-motion preferences.
+
+Overview, Sun & Earth and Seasons tabs show
 source details, 28-day elevation charts and monthly summaries. The old comparison
 table has been replaced by the sorted catalog cards and ranks.
 
@@ -45,7 +53,9 @@ Site Neighborhood cells are drawn directly on the polar map, colored by Sunlight
 or Earth Visibility for the chosen window and mask. Clicking a cell moves the
 Surface Asset and updates its analysis. Best cell selects the highest modeled
 value for the chosen metric; Back to the site restores the catalog position.
-Neither selects a certified landing location. Custom Sites can also be created from
+Neither selects a certified landing location. For Custom Sites and other heights
+at or south of 80°S, Paint the Site Neighborhood starts a live calculation on
+demand; external-service availability and waiting time still apply. Custom Sites can also be created from
 coordinate search or an analyzed click on the globe/map.
 
 Eight Catalog Sites have source references and coordinate meanings. Four
@@ -109,14 +119,18 @@ The intended benefit is educational: let people inspect terrain, compare clearly
 defined environmental metrics and understand uncertainty. User-study or
 operational impact has not been measured.
 
-The Site Neighborhood is now integrated into the polar map; the former Plotly
-neighborhood chart is removed. The separate schematic Plotly map remains an
-offline export. The current branch does not yet render the planned playback
-time bar or a Layers panel. The Site Card uses the first Explorer instant unless
-an instant event is provided; the Planner retains its own Instant slider. These
-remaining controls need a final pass after the team's merge and are not
-presented here as completed functionality. Browser/CDN/imagery
-availability and the hosted build must be checked before recording.
+The Site Neighborhood is integrated into the polar map, including explicitly
+requested live neighborhoods for Custom Sites and other heights in the supported
+polar region. The separate schematic Plotly map remains an offline export.
+The Moon View has a working UTC slider, playback and dynamic marker states.
+The Layers Panel and additional layer controls remain pending in this checkout.
+
+One integration difference remains: although the Planner's Moon View bar covers
+its Analysis Window, the results panel still uses a separate Instant slider.
+Do not claim its countdowns follow the Moon View bar. Before recording, verify
+the hosted build, browser/CDN/imagery loading, marker changes and Site Card
+synchronization after slider release or pause. Live neighborhood computation
+should not be required by the main recording path.
 
 ## Publication details
 
