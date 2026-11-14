@@ -11,7 +11,7 @@ them in the actual run. Recheck this script when the interface changes.
 - In Explorer, select Shackleton Rim S1 (internal key `Shackleton Crater (Rim)`).
 - Choose 2027-01-01 and a 14-day window at the default 2 m Asset Height, then
   let loading finish before recording. Covered scenarios use committed data.
-- Export the map in advance: `python -m src.site_map --site 'Connecting Ridge C1' --output /tmp/lunar_demo.html`.
+- Export the map in advance: `python -m src.site_map --site 'Connecting Ridge C1'`.
 - Keep the exported file open in the browser as a fallback. If a live case fails,
   return to the covered catalog window or show the offline map. Do not
   substitute invented curves or present the map as an offline ephemeris cache.
@@ -60,7 +60,7 @@ Point out the controls without triggering a slower live request during narration
 “Site Planner accepts a Custom Site, Asset Height and Elevation Mask. Some changes
 require live calculations. Polar terrain now uses twenty-metre data close to
 the point. Comparing our four study points with the literature, their average
-illumination differs by less than two percentage points. The earlier Shackleton
+illumination differs by less than 1.2 percentage points. The earlier Shackleton
 S2 discrepancy fell substantially. This is consistent with terrain resolution
 mattering, but shared LOLA data and different time periods mean this remains a
 consistency check, not independent validation.”

@@ -38,7 +38,8 @@ comparison is preliminary and does not complete topographic validation.
 
 The interface integrates Terrain Horizon, Illumination Fraction and terrain-aware
 countdowns, with an identified Ideal Horizon fallback where terrain is unavailable.
-The polar terrain model now uses 20 m sampling within 10 km and 80 m farther away.
+The polar terrain model uses 20 m sampling within 10 km, 80 m from 10–50 km,
+and a 320 m overview from 50–150 km, with the corrected DEM read window.
 These calculations are covered by automated tests. Synthetic tests check computational behavior; they do not
 constitute validation of real Catalog Site terrain.
 
@@ -82,11 +83,11 @@ selection for any current mission.
 [Comparison with published results](illumination_comparison.md) checks mean
 Illumination Fraction for four study points using committed 2027–2028 data.
 With finer local terrain, all four average illumination values differ from the
-paper by less than two percentage points. S2 improved from a -12.33 to a -1.11
+paper by less than 1.2 percentage points. S2 improved from a -12.33 to a -1.11
 percentage-point difference, consistent with terrain resolution contributing to
 the earlier discrepancy. This is a consistency check, not independent validation:
 the time windows differ and both calculations use LOLA-derived terrain. The
-project combines 20 m near-field and 80 m far-field terrain rather than exactly
+project combines 20 m, 80 m and 320 m terrain at different distances rather than exactly
 reproducing the study's 20 m method.
 
 ## Publication details to complete

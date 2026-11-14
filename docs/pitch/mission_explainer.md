@@ -64,8 +64,8 @@ available, while complete topographic validation remains pending.
 The prototype displays a schematic polar map and terrain-aware Sun/Earth curves
 using ephemerides from [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html). Science
 functions calculate Terrain Horizon and Illumination Fraction, which are now
-used in the interface. Polar calculations combine 20 m terrain within 10 km
-with 80 m terrain farther away.
+used in the interface. Polar calculations combine 20 m terrain within 10 km,
+80 m from 10–50 km, and a 320 m overview from 50–150 km.
 [LOLA products](https://pgda.gsfc.nasa.gov/products/78) provide topographic context,
 while [LROC QuickMap](https://quickmap.lroc.im-ldi.com/) is a cartographic reference,
 not an image layer currently embedded in our map.
