@@ -9,9 +9,10 @@ import pandas as pd
 import streamlit as st
 
 from src import catalog
-from src.charts import plot_earth_visibility, plot_sun_elevation
-from src.conditions import get_conditions
-from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
+from src.charts import plot_earth_visibility, plot_monthly, plot_neighborhood, plot_sun_elevation
+from src.conditions import get_conditions, neighborhood_summary
+from src.globe import globe_html, image_data_uri, load_moon_elevation, load_moon_layer
+from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, monthly_summary, sunlight_hours
 from src.site_map import plot_south_pole_map
 from src.sites import LUNAR_SITES
 
@@ -20,6 +21,27 @@ st.title("🌕 Lunar Landing Site Navigator")
 st.caption("Solar power and direct-to-Earth communication for lunar south pole landings | NASA Space Apps 2026")
 
 get_data = st.cache_data(show_spinner=False)(get_conditions)
+get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
+
+
+def or_none(loader, *args):
+    """Loader result or None; failures are not cached, so the next rerun retries."""
+    try:
+        return loader(*args)
+    except Exception:
+        return None
+
+
+@st.cache_data(show_spinner="Loading high-resolution Moon imagery from NASA Moon Trek...")
+def texture_uri(layer):
+    return image_data_uri(load_moon_layer(layer), quality=80)  # 4096 x 2048 px, ~3 MB
+
+
+@st.cache_data(show_spinner=False)
+def bump_uri():
+    return image_data_uri(load_moon_elevation())
+
+
 CUSTOM_SITE = "Custom Site"
 KIND_LABELS = {
     "studied_point": "◆ Studied point",
@@ -58,9 +80,10 @@ def window_inputs(key):
     return date, days
 
 
-def load(lat, lon, date, days, asset_height=catalog.ASSET_HEIGHT_M):
+def load(lat, lon, date, days, asset_height=catalog.ASSET_HEIGHT_M, catalog_site=True):
     """Conditions DataFrame, or None (with an error shown) so the rest of the page keeps working."""
-    live = "" if is_cached(date, days) else " Live computation can take up to ~30 s."
+    instant = catalog_site and is_cached(date, days) and asset_height == catalog.ASSET_HEIGHT_M
+    live = "" if instant else " Live computation can take up to ~1 min."
     with st.spinner("Computing Sun and Earth conditions..." + live):
         try:
             return get_data(lat, lon, str(date), days, asset_height)
@@ -152,14 +175,38 @@ with tab_explorer:
         key = st.selectbox("Catalog Site", list(LUNAR_SITES), format_func=site_label, key="explorer_site")
         site = LUNAR_SITES[key]
         site_details(site)
-    # The map needs no external data, so it renders even if Horizons is down.
-    col_map.plotly_chart(plot_south_pole_map(key), width="stretch")
+    # The maps need no Horizons data, so they render even if Horizons is down.
+    with col_map:
+        col_view, col_layer = st.columns(2)
+        views = ["🌕 3D Moon", "🗺️ South pole map"]
+        view = col_view.segmented_control("View", views, default=views[0], key="explorer_view") or views[0]
+        if view == views[0]:
+            # globe.gl renders the full-resolution texture on the GPU (see src/globe.py).
+            layer = col_layer.segmented_control("Surface", ["Imagery", "Elevation"], default="Imagery",
+                                                key="explorer_globe_layer") or "Imagery"
+            texture, bump = or_none(texture_uri, layer), or_none(bump_uri)
+            if texture is None:
+                st.caption("Could not download the NASA Moon textures; showing a plain sphere.")
+            st.iframe(globe_html(LUNAR_SITES, key, texture, bump, height=600), height=600)
+            st.caption("Drag to rotate, scroll to zoom, hover a site for details. Imagery: LRO WAC global mosaic · "
+                       "Elevation: LOLA color shaded relief · NASA Moon Trek. Shading: LOLA (NASA SVS CGI Moon Kit).")
+        else:
+            st.plotly_chart(plot_south_pole_map(key), width="stretch")
 
     st.subheader("☀️ Sunlight and 📡 Earth visibility")
     date, days = window_inputs("explorer")
     df = load(site["lat"], site["lon"], date, days)
     if df is not None:
         site_analysis("explorer", df)
+
+    st.subheader("🗓️ Seasons")
+    full_period = (CACHE_END - CACHE_START).days
+    seasons = load(site["lat"], site["lon"], CACHE_START, full_period)
+    if seasons is not None:
+        st.caption(f"{CACHE_START} to {CACHE_END - datetime.timedelta(days=1)}, at {catalog.ASSET_HEIGHT_M:g} m "
+                   "Asset Height with terrain. The Moon's small axial tilt still shifts polar sunlight by season.")
+        st.plotly_chart(plot_monthly(monthly_summary(seasons), full_month_hours=28 * 24), width="stretch",
+                        key="explorer_seasons")
 
     st.subheader("⚖️ Compare Catalog Sites")
     st.caption(f"Same window ({date}, {days} days) at {catalog.ASSET_HEIGHT_M:g} m Asset Height, with terrain. "
@@ -169,7 +216,8 @@ with tab_explorer:
             catalog_comparison(date, days), hide_index=True, width="stretch",
             column_config={
                 "Sunlight (%)": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.0f%%"),
-                "Earth visibility (%)": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.0f%%"),            },
+                "Earth visibility (%)": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.0f%%"),
+            },
         )
     else:
         st.info(f"The comparison uses pre-computed data only. Pick a window between {CACHE_START} and {CACHE_END}.")
@@ -192,6 +240,31 @@ with tab_planner:
         mask = st.number_input("Elevation Mask (°)", 0.0, 20.0, 0.0, 0.5, key="planner_mask",
                                help="Minimum angle Earth must clear above the terrain horizon to count as visible.")
     date, days = window_inputs("planner")
-    df = load(lat, lon, date, days, height)
+    if key != CUSTOM_SITE and height == catalog.ASSET_HEIGHT_M:
+        st.subheader("🧭 Site Neighborhood")
+        layer = st.radio("Color by", ["Sunlight", "Earth visibility"], horizontal=True, key="planner_layer")
+        column = "sunlight_pct" if layer == "Sunlight" else "earth_visible_pct"
+        try:
+            points = get_neighborhood(key, str(date), days, mask)
+        except Exception as e:
+            st.error(f"Could not compute the Site Neighborhood: {e}")
+            points = None
+        if points is not None:
+            event = st.plotly_chart(plot_neighborhood(points, column, layer), width="stretch", on_select="rerun",
+                                    selection_mode="points", key=f"planner_neighborhood_{key}")
+            picked = event.selection.points
+            match = points[(points["east_m"] == picked[0]["x"]) & (points["north_m"] == picked[0]["y"])] \
+                if picked else points.iloc[0:0]
+            if not match.empty:
+                point = match.iloc[0]
+                lat, lon = float(point["lat"]), float(point["lon"])
+                st.caption(f"Analyzing the selected point: {point['east_m']:+.0f} m east, {point['north_m']:+.0f} m "
+                           f"north of {site_label(key)} · Lat {lat:.5f}° · Lon {lon:.5f}° E")
+            else:
+                st.caption(f"Click a cell (or the ★ best point) to analyze that exact point. "
+                           f"Showing {site_label(key)} at (0, 0).")
+    elif key != CUSTOM_SITE:
+        st.caption(f"The Site Neighborhood map is pre-computed for {catalog.ASSET_HEIGHT_M:g} m Asset Height only.")
+    df = load(lat, lon, date, days, height, catalog_site=key != CUSTOM_SITE)
     if df is not None:
         site_analysis("planner", df, mask)

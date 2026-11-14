@@ -68,14 +68,75 @@ calculation is not an exact reproduction of that method.
 
 The time windows differ (2017–2037 versus 2027–2028), and both calculations use
 LOLA-derived terrain. Agreement is therefore not independent of the underlying
-source data. Horizon construction, reference-frame realization and the remaining
-differences still warrant scientific review. No permanent illumination, landing
+source data. Reference-frame compatibility is confirmed as described below. Horizon
+construction, terrain uncertainty and remaining differences still warrant review. No permanent illumination, landing
 safety, measured energy yield or radio-link performance is established.
 
 Suggested pitch wording: “With finer local terrain, our four mean illumination
 estimates are within 1.2 percentage points of published values. This supports
 consistency with the literature, rather than independent validation, because the
 periods differ and both calculations use LOLA-derived terrain.”
+
+## Coordinate-frame compatibility
+
+Horizons lunar orientation, the PGDA DEMs and the LOLA-derived study coordinates
+use the DE421 mean-Earth frame (MOON_ME) with a 1737.4 km reference sphere.
+The [Horizons manual, Lunar Mean-Earth Frame of DE421](https://ssd.jpl.nasa.gov/horizons/manual.html#lunar-mean-earth-frame-of-de421)
+specifies this orientation for 1550–2650, covering our analysis. A fresh observer
+request at S1 for 2027-01-01 to 2027-01-02 returned these header fields:
+
+```text
+Center pole/equ : MEAN_ME (high precision)
+Center radii    : 1737.4, 1737.4, 1737.4 km
+```
+
+The header's body-ephemeris source is DE441; that is distinct from the DE421
+mean-Earth cartographic frame and does not imply a frame mismatch.
+[PGDA region metadata](https://pgda.gsfc.nasa.gov/products/78) identifies
+MOON_ME/DE421; [LOLA product documentation](https://pgda.gsfc.nasa.gov/products/69)
+identifies the same reference radius. The study coordinates retain their
+LOLA-derived provenance. No coordinate transformation or change to catalog
+positions is needed for this compatibility check. This resolves the earlier
+frame-reconciliation item, not complete terrain or landing-safety validation.
+
+## Earth Visibility: qualitative comparison
+
+For the same 2027–2028 window, 2 m Asset Height and 0° Elevation Mask, the
+Malapert regional center has 48.90% Earth Visibility. At the pre-computed point
+**1600 m west and 100 m north** of that center, it is 100% of the 17,544 hourly
+samples. Its coordinates are approximately latitude -85.99115552°, longitude
+-0.99054738°. This point is not a new Catalog Site or a verified summit.
+Exactly 1600 m west with no north offset gives 65.93%, so the north offset must
+be included when reproducing the example.
+
+The four Shackleton / Connecting Ridge study points have 49.97–55.22% Earth
+Visibility. These results are **consistent with published descriptions**, not
+numerically validated by a matching external site-by-site percentage table:
+
+- [NASA's Malapert region description](https://science.nasa.gov/image-detail/20100618/)
+  describes favorable Earth visibility at the massif; it does not identify our
+  catalog center or our selected cell as a summit.
+- [Moonbase Mons Malapert, hosted by ILOA](https://iloa.org/media/Moonbase_Mons_Malapert.pdf)
+  is a secondary source (Aerospace America, October 2008). It describes probable
+  continuous Earth views from the summit and roughly half-month views from
+  Shackleton's rim. Those descriptions are qualitative, not measurements at our
+  model coordinates, and do not guarantee a radio link.
+- [Mazarico et al. (2011), PGDA products](https://pgda.gsfc.nasa.gov/products/69)
+  provides Earth-visibility maps, not a numerical benchmark here. Those maps
+  count any exposed part of Earth's disk; our Earth Visibility criterion uses
+  its center, so the definitions differ. The [paper record](https://ui.adsabs.harvard.edu/abs/2011Icar..211.1066M)
+  is retained as a bibliographic reference.
+
+“100%” here means all modeled hourly samples in the stated two-year window,
+not guaranteed uninterrupted visibility at finer time scales or for all time.
+Libration changes Earth's apparent elevation near the pole; terrain makes the
+result strongly position-dependent. No antenna, receiving station, link budget,
+or operational communications availability is evaluated.
+
+To reproduce the Malapert example without network calls, select the exact row
+from `neighborhood_summary("Malapert Massif (Summit)", "2027-01-01", 731)` where
+`east_m == -1600` and `north_m == 100`, then pass its `lat`/`lon` to
+`get_conditions` at the default 2 m height. Keep `elevation_mask=0.0`.
 
 ## Reproduction without remote requests
 
@@ -101,4 +162,4 @@ with patch("requests.sessions.Session.request", side_effect=RuntimeError("Networ
 ```
 
 Before publication, ask Gabriel to review the comparison method, source-frame
-alignment and remaining differences. Do not change coordinates to force agreement.
+evidence and remaining differences. Do not change coordinates to force agreement.

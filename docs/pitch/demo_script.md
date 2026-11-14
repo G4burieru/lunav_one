@@ -11,6 +11,13 @@ them in the actual run. Recheck this script when the interface changes.
 - In Explorer, select Shackleton Rim S1 (internal key `Shackleton Crater (Rim)`).
 - Choose 2027-01-01 and a 14-day window at the default 2 m Asset Height, then
   let loading finish before recording. Covered scenarios use committed data.
+- For the communications example, select Malapert Massif in Site Planner, keep
+  Asset Height at 2 m and Elevation Mask at 0°, choose a covered 2027–2028 window,
+  and set the Site Neighborhood layer to Earth visibility. Select the cell at
+  -1600 m east, +100 m north (1600 m west and 100 m north). Its approximate
+  coordinates are -85.99115552, -0.99054738. The separate two-year check finds
+  100% of hourly samples; the on-screen percentage refers to its selected window.
+  Do not substitute the cell at (-1600, 0), which has a different result.
 - Export the map in advance: `python -m src.site_map --site 'Connecting Ridge C1'`.
 - Keep the exported file open in the browser as a fallback. If a live case fails,
   return to the covered catalog window or show the offline map. Do not
@@ -54,25 +61,26 @@ without substituting invented mission results.”]
 
 ## 1:40–2:20 — Site Planner and scientific checks
 
-[Show Site Planner at a Catalog Site, 2 m Asset Height and zero Elevation Mask.
-Point out the controls without triggering a slower live request during narration.]
+[Show Site Planner at Malapert, 2 m Asset Height and zero Elevation Mask.
+Select the Earth visibility heatmap cell prepared above.]
 
-“Site Planner accepts a Custom Site, Asset Height and Elevation Mask. Some changes
-require live calculations. Polar terrain now uses twenty-metre data close to
-the point. Comparing our four study points with the literature, their average
-illumination differs by less than 1.2 percentage points. The earlier Shackleton
-S2 discrepancy fell substantially. This is consistent with terrain resolution
-mattering, but shared LOLA data and different time periods mean this remains a
-consistency check, not independent validation.”
+“Site Planner lets us inspect nearby positions. This Malapert cell is sixteen
+hundred metres west and one hundred metres north of the catalog center. Our
+separate two-year calculation finds Earth visible in every hourly sample here,
+compared with about forty-nine percent at the center. That is consistent with
+published regional descriptions, not numerical validation or a working radio-link
+guarantee. For sunlight, all four study points differ from published means by
+less than one point two percentage points. Shared LOLA data and different time
+periods make that a consistency check, rather than independent validation.”
 
 ## 2:20–3:00 — Purpose and next steps
 
 [Return to the map and its legend.]
 
 “Explorer supports learning; Site Planner helps investigate a Surface Asset's
-modeled environment. Monthly and Site Neighborhood summaries are available in
-the science modules, but their visual presentation is still future work. Our
-next steps include further scientific review, uncertainty assessment and interface
+modeled environment. Monthly charts and the neighborhood heatmap help inspect
+variation over time and location. The lunar coordinate frame is aligned across
+our sources. Our next steps include scientific review, uncertainty assessment and interface
 refinement. We want users to understand why a promising position needs further
 investigation. A complete landing assessment must also consider slopes,
 obstacles, vehicle requirements and operational constraints. Our catalog and
