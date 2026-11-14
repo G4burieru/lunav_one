@@ -25,6 +25,12 @@
 .info-name { font-weight: 600; font-size: 1.05rem; }
 .info-text { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; line-height: 1.35; }
 
+/* globe.gl's hover label. Its library puts this CSS in the page's <head>, which does not reach the component's
+   shadow root; without it the label sits in the page flow and flashes at the top instead of following the mouse. */
+.globe .float-tooltip-kap { position: absolute; width: max-content; max-width: max(50%, 150px); padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; background: rgba(10, 12, 18, 0.85); color: #fff;
+  font: 12px/1.35 sans-serif; pointer-events: none; }
+
 /* South polar map (Leaflet's own stylesheet is linked in the component's HTML). */
 .polar-map.leaflet-container { background: #000005; font-family: sans-serif; }
 .polar-map { user-select: none; -webkit-user-select: none; }  /* else a drag selects the zoom buttons' text */
