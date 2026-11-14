@@ -7,26 +7,33 @@ safe or optimal landing sites or certify mission operations.
 
 The project is being developed for the
 [2026 NASA Space Apps Challenge: Lunar Landing Site Navigator](https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/).
-The current interface combines a documented catalog, a schematic polar map and
-terrain-aware Sun/Earth charts in Explorer and Site Planner, plus a Catalog Site
-comparison for windows covered by pre-computed data.
+The current application uses one screen: a full-page **Moon View** behind a rail
+and floating panels. Explorer combines a searchable catalog and Site Cards;
+Site Planner evaluates a Surface Asset through four steps. The former comparison
+table is replaced by sortable catalog cards and metric-specific ranks.
 
 ## Implementation status
 
-| Capability | State in this branch |
+| Capability | Current branch |
 |---|---|
-| Catalog Site or Custom Site, date and duration selection | Available in Streamlit |
-| Sun/Earth elevation curves | Available with Terrain Horizon through get_conditions; pre-computed or live |
-| Schematic polar map and independent HTML export | Available without Horizons |
-| Terrain Horizon and Illumination Fraction | Integrated into charts and indicators; Ideal Horizon fallback is identified |
-| Countdown metrics | Time to Sunset and Earthset shown at a selected instant |
-| Pre-computed catalog data | Eight sites, 2027–2028 hourly ephemerides and Terrain Horizons at 2 m Asset Height; available through get_conditions |
-| Streamlit request cache | Caches get_conditions results |
-| Explorer and Site Planner modes | Available; Site Planner accepts Asset Height and Elevation Mask |
-| Catalog Site comparison | Available for pre-computed date windows at 2 m Asset Height |
-| Monthly and Site Neighborhood summaries | Available in charts and the selectable Site Planner heatmap |
-| Full scientific validation | Pending |
-| Automatic data regeneration | Workflow opens a data PR after relevant changes on main; requires review and merge |
+| Moon View | Interactive 3D globe and south polar map with real NASA imagery |
+| Base layers | Globe imagery/elevation; polar Photos (LROC NAC/WAC) and Relief (LOLA) |
+| Explorer catalog | Name/coordinate search, type labels, sorting and compact cards |
+| Site Card | 2027–2028 averages, Longest Night, Longest Earth Absence, metric ranks, source context |
+| Site Card tabs | Overview, Sun & Earth (28-day charts), Seasons (monthly summaries) |
+| Site Planner | Where, Surface Asset, When, Results; Asset Height, Elevation Mask and countdowns |
+| Site Neighborhood | Selectable Plotly heatmap for covered Catalog Sites at 2 m; not an in-map overlay yet |
+| Custom Site | Coordinate search or confirmed point selection on globe/map; live calculation where needed |
+| Offline alternative | src/site_map.py exports a schematic Plotly map, separate from the Moon View |
+| Data pipeline | Eight sites pre-computed hourly for 2027–2028 at 2 m, automatic regeneration workflow |
+| Time playback and map overlays | Planned integration; no working time-bar playback or Layers panel in this checkout |
+| Full scientific/operational validation | Not completed |
+
+The Explorer's Site Card summary always covers 2027–2028 at 2 m. The selected-instant
+line and its 28-day charts describe a shorter interval. The Moon View time-bar
+integration is pending: without an instant event, the Site Card uses the first
+2027 sample. Site Planner currently uses its own Instant slider and Analysis Window.
+These scopes must not be confused with each other or with NASA's long-term layers.
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
 The eight entries now have pre-computed data. Numerical comparison with the
@@ -57,7 +64,7 @@ python -m pytest -q
 
 ```text
 lunav_one/
-├── app.py                       # Streamlit: Explorer and Site Planner
+├── app.py                       # Shell: rail, panel routing and Moon View
 ├── requirements.txt
 ├── pytest.ini
 ├── GLOSSARY.md                  # Shared terminology
@@ -68,7 +75,19 @@ lunav_one/
 ├── src/
 │   ├── sites.py                 # Sourced Catalog Sites
 │   ├── site_map.py              # Schematic polar map and offline HTML export
-│   ├── globe.py                 # 3D globe with streamed lunar textures
+│   ├── moon_view/               # Streamlit browser component
+│   │   ├── __init__.py          # Component contract and asset loading
+│   │   ├── globe.js             # 3D Moon, NASA textures and markers
+│   │   ├── polar_map.js         # Leaflet + Moon Trek south polar tiles
+│   │   ├── view.js              # Shared view state and events
+│   │   └── view.css
+│   ├── panels/                 # Floating panels
+│   │   ├── catalog_list.py     # Search and sorted catalog cards
+│   │   ├── site_card.py        # Metrics, context and chart tabs
+│   │   ├── planner.py          # Four-step Site Planner
+│   │   ├── about.py
+│   │   ├── common.py           # Shared helpers and cached data
+│   │   └── texts.py            # Scientific explanatory copy
 │   ├── charts.py                # Conditions, monthly and neighborhood charts
 │   ├── horizons_api.py          # JPL observer ephemerides
 │   ├── terrain.py               # LOLA access and Terrain Horizon
@@ -76,7 +95,12 @@ lunav_one/
 │   ├── metrics.py               # Countdowns, durations and monthly summary
 │   └── catalog.py               # Pre-computed data loader
 ├── scripts/
-│   └── precompute.py            # Generates data/catalog/
+│   ├── precompute.py            # Generates data/catalog/
+│   ├── compare_pgda.py          # Numerical PGDA consistency check
+│   └── render_sun_overlay.py    # Prepares a NASA-derived overlay asset
+├── static/
+│   ├── icons/                  # SVG interface icons
+│   └── overlays/               # Prepared Sun visibility image and metadata
 ├── data/
 │   └── catalog/                 # Pre-computed ephemerides and terrain horizons
 │       ├── manifest.json        # Coordinates, date coverage and terrain source
@@ -89,9 +113,13 @@ lunav_one/
 │   ├── test_terrain.py
 │   ├── test_conditions.py
 │   ├── test_metrics.py
-│   └── test_catalog.py
+│   ├── test_catalog.py
+│   ├── test_app.py              # Panel smoke tests
+│   ├── test_panels.py           # Search, formatting and state contracts
+│   └── test_sun_overlay.py
 └── docs/
     ├── TEAM_PLAN.md             # Ownership and workflow
+    ├── UI_OVERHAUL.md           # Interface plan and integration tasks
     ├── agents/                 # Repository instructions
     ├── adr/                    # Data architecture decisions
     └── pitch/
@@ -105,7 +133,7 @@ lunav_one/
 
 - [JPL Horizons System](https://ssd.jpl.nasa.gov/horizons/): Observer ephemerides for specified lunar coordinates.
 - [LOLA terrain products](https://pgda.gsfc.nasa.gov/products/78): elevation data for terrain calculations.
-- [LROC QuickMap](https://quickmap.lroc.asu.edu/) and [Moon Trek](https://trek.nasa.gov/moon/): cartographic and texture sources; the 3D globe streams imagery, while the standalone polar map remains schematic.
+- [LROC QuickMap](https://quickmap.lroc.asu.edu/) and [Moon Trek](https://trek.nasa.gov/moon/): the Moon View uses NASA imagery tiles and LOLA shaded relief; QuickMap is a reference, and the standalone Plotly map remains schematic.
 - [Canadian Space Agency: Moon Exploration](https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/).
 
 ## Team
@@ -120,7 +148,8 @@ See [docs/TEAM_PLAN.md](docs/TEAM_PLAN.md) for details.
 
 ## Standalone south-pole map (offline)
 
-The catalog and map run independently of Streamlit, Horizons and the other science modules:
+This schematic alternative runs independently of Streamlit, Horizons and the
+Moon View's remote imagery/CDN services:
 
 ```bash
 .venv/bin/python -m src.site_map --site 'Haworth'
@@ -223,6 +252,20 @@ independent mission validation.
 - [Submission draft](docs/pitch/submission_draft.md): current work, intended impact and pending details.
 - [Three-minute demo script](docs/pitch/demo_script.md): demonstrated features versus planned work.
 
+## External services and integration status
+
+The Moon View uses browser libraries from a CDN and remote NASA Moon Trek tiles.
+A tile or CDN failure can prevent the globe/map from displaying even when cached
+science panels work. The standalone Plotly export is the recording fallback;
+it is not a local copy of the real imagery or the full application.
+
+`docs/UI_OVERHAUL.md` is a plan as well as a status record. The current rail opens
+Catalog, Plan and About. Time-bar playback, in-map Site Neighborhood cells,
+full in-view navigation and NASA Sunlight/Earth visibility layer controls require
+verification after their integration. Prepared data, helper functions and legend
+text do not by themselves make these controls available. No side-by-side comparison
+table is present in the current interface; the catalog is sortable by metric.
+
 ## Current limitations
 
 The interface now uses Terrain Horizon, Illumination Fraction and terrain-aware
@@ -239,11 +282,13 @@ nearby coordinates use the nearest supported point. Other heights and dates can
 require live requests. Custom Sites outside the south-pole DEM use the Ideal
 Horizon if no pre-computed neighborhood is available, with a warning.
 
-Monthly charts and the selectable Site Neighborhood heatmap are now exposed in
-the interface. Reference-frame compatibility has been checked; a complete
+Monthly charts are in Site Card → Seasons; Site Planner retains the Plotly
+Site Neighborhood heatmap until in-map integration is complete. Reference-frame compatibility has been checked; a complete
 uncertainty, vehicle-safety or operational assessment has not been performed. The literature
 comparison is a consistency check using related LOLA-derived inputs, not an
 independent validation. This is an educational prototype, not a mission safety
 tool. The schematic map itself does not calculate terrain or illumination.
 
-Application and demonstration-video links: pending publication.
+Application: [Lunav One](https://lunavone.streamlit.app/).
+
+Demonstration video: pending publication.
