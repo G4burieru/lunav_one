@@ -9,7 +9,7 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
 
 ## Status
 
-- **Done: T0a, T0b, A1 and A2.** The app is one screen with the rail and the panels, and the globe lives in
+- **Done: T0a, T0b, A1, A2, A3 and A4.** The app is one screen with the rail and the panels, and the globe lives in
   `src/moon_view/`. `tests/test_app.py` opens every panel. The `.js` and `.css` files are read on every run, so
   pressing R in the app shows edits without a restart. Adding a file to `_JS_FILES` needs a restart.
 - **A2 result:** the south polar map is `src/moon_view/polar_map.js`. It replaces the Plotly south pole map, which
@@ -27,6 +27,27 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   - A click on a marker, or Enter or Space on a focused marker, sends `site`. The map centers the selected site in
     the area to the right of the panel. It centers again when the panel changes width, unless the user has moved
     the map.
+- **A4 result:** the globe stops turning for good at the first drag or zoom on it, or at the first click or key
+  press anywhere on the page. Key presses count too, so keyboard users can stop the motion. With reduced motion it
+  never turns.
+- **A3 result:** the time bar is `src/moon_view/time_bar.js`.
+  - `app.py` passes `catalog_time()` with the last instant in the Explorer. A panel that returns its own `time`
+    replaces it: the Site Planner does, and so does a Custom Site's Site Card, which adds the Custom Site's states
+    under `"custom"`.
+  - The bar sends `instant` when it is released or paused. It reaches `st.session_state["moon_view"]` only because
+    `app.py` registers `on_instant`: components v2 keep only the state keys that have a callback.
+  - Playback runs at 72 hours per second over 2027–2028 (a lunar day in about ten seconds) and covers a Site
+    Planner window in about 40 seconds.
+  - Markers are the same SVG on the globe, where they are now HTML elements, and on the map. The shape is the
+    coordinate kind. The fill rises with the Illumination Fraction, and the dot at the top right is filled while
+    Earth is visible. The selected site or the Custom Site has an orange ring and its name. A click on a marker
+    never reaches the Moon below it, so it does not open the "Analyze this point?" balloon.
+  - In the Site Planner, the Surface Asset (a cross in a circle) carries the `asset` states and is the only marker
+    highlighted. The map centers on it.
+  - The Explorer's `time` is 183 KB on every rerun. The view decodes it only when it changes, and no lag was
+    visible locally.
+  - **For B3:** the bar now spans the Site Planner window, so the Planner's own Instant slider can go. Read the
+    bar's instant with `selected_instant()`.
 - **A1 result:** Leaflet and Proj4Leaflet work inside the component's shadow DOM, so `isolate_styles` stays on. The
   Moon Trek NAC tiles line up with the sites (Shackleton Rim S1 sits on the crater rim), and clicks on a site or on
   the map reach Python. Notes for A2:
@@ -73,13 +94,6 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   change, and Streamlit Cloud updates the code without restarting Python, so new sessions could mix a new
   `app.py` with old `src` modules (the ImportError after PR #24). `app.py` now drops every `src` module when a
   `src/*.py` file changed since they were imported.
-- **For A3** (helpers in `src/panels/common.py`):
-  - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
-    `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
-    and uses 2027-01-01 00:00 until the bar sends one.
-  - In `app.py` the keyword arguments of `moon_view` are defaults that a panel's `render()` overrides. A Custom
-    Site's Site Card returns `time` with the Catalog Sites' states, the Custom Site's states under `"custom"`, and
-    its instant.
 - **For A7:** while the panel is hidden, the globe/map switch at its top is out of reach, so the in-view switch
   matters.
 
