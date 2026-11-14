@@ -1,6 +1,8 @@
 """Smoke test: the app and every panel render without exceptions, using pre-computed catalog data only."""
 from streamlit.testing.v1 import AppTest
 
+from src.panels.common import VIEW_CHOICE, VIEWS
+
 
 def test_every_panel_renders():
     at = AppTest.from_file("../app.py", default_timeout=120).run()
@@ -16,3 +18,17 @@ def test_every_panel_renders():
         at.button(key=f"rail_{panel}").click().run()
         assert not at.exception, panel
         assert at.session_state["panel"] == panel
+
+
+def test_choosing_a_site_switches_the_view():
+    """Polar sites open on the south polar map and other sites on the globe; the catalog keeps the view."""
+    at = AppTest.from_file("../app.py", default_timeout=120).run()
+    assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[0], 1)
+    at.button(key="explorer_pick_Connecting Ridge C1").click().run()
+    assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[1], 2)
+    at.button(key="rail_about").click().run()  # a panel without the switch
+    at.button(key="rail_catalog").click().run()
+    assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[1], 2)
+    at.button(key="explorer_pick_Apollo 11 (Tranquility Base)").click().run()
+    assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[0], 3)
+    assert not at.exception

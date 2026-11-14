@@ -1,14 +1,21 @@
 .moon-view { position: relative; width: 100%; height: var(--view-height, 100vh); background: #000005;
   overflow: hidden; font-family: sans-serif; color: #e8e8e8; }
-.globe { position: absolute; inset: 0; }
+.globe, .polar-map { position: absolute; inset: 0; z-index: 0; }  /* keeps Leaflet's z-indexes under the overlays */
+/* Only one view shows. The other stays laid out, keeping its size, and its overlays are removed. */
+.moon-view[data-view="map"] .globe, .moon-view[data-view="globe"] .polar-map { visibility: hidden; }
+.moon-view[data-view="map"] [data-for="globe"], .moon-view[data-view="globe"] [data-for="map"] { display: none; }
 .overlay { position: absolute; pointer-events: none; text-shadow: 0 1px 3px #000; }
-.hint { bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; opacity: 0.75; text-align: center; }
+/* Centered in the part of the view the app's panel leaves uncovered (--panel-right is set by view.js). */
+.hint, .status { left: calc(var(--panel-right, 0px) + (100% - var(--panel-right, 0px)) / 2);
+  transform: translateX(-50%); text-align: center; white-space: nowrap; }
+.hint { bottom: 34px; font-size: 0.85rem; opacity: 0.75; }  /* one line above the credit */
+.status { bottom: 58px; font-size: 0.8rem; opacity: 0.85; }
 .layers { top: 14px; right: 14px; pointer-events: auto; display: flex; gap: 4px; }
+.choices { display: flex; gap: 4px; }
 .layers button { background: rgba(20, 22, 30, 0.75); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.25);
   border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; cursor: pointer; }
 .layers button.active { background: #e66b27; border-color: #e66b27; color: #fff; }
 .layers button.fullscreen { margin-left: 8px; }
-.status { bottom: 14px; left: 18px; font-size: 0.8rem; opacity: 0.8; }
 .credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
 /* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
 .moon-view:fullscreen { height: 100vh; }
@@ -17,3 +24,25 @@
 .moon-view:fullscreen .info.has-site { display: block; }
 .info-name { font-weight: 600; font-size: 1.05rem; }
 .info-text { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; line-height: 1.35; }
+
+/* globe.gl's hover label. Its library puts this CSS in the page's <head>, which does not reach the component's
+   shadow root; without it the label sits in the page flow and flashes at the top instead of following the mouse. */
+.globe .float-tooltip-kap { position: absolute; width: max-content; max-width: max(50%, 150px); padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; background: rgba(10, 12, 18, 0.85); color: #fff;
+  font: 12px/1.35 sans-serif; pointer-events: none; }
+
+/* South polar map (Leaflet's own stylesheet is linked in the component's HTML). */
+.polar-map.leaflet-container { background: #000005; font-family: sans-serif; }
+.polar-map { user-select: none; -webkit-user-select: none; }  /* else a drag selects the zoom buttons' text */
+.polar-map .leaflet-bottom.leaflet-right { bottom: 26px; }  /* above the credit line */
+.polar-map .leaflet-bar { border: 1px solid rgba(255,255,255,0.25); box-shadow: none; }
+.polar-map .leaflet-bar a { background: rgba(20, 22, 30, 0.85); color: #e8e8e8; border-bottom-color: rgba(255,255,255,0.2); }
+.polar-map .leaflet-bar a:hover, .polar-map .leaflet-bar a:focus { background: #2b2f3b; color: #fff; }
+.polar-map .leaflet-control-scale-line { background: rgba(10, 12, 18, 0.6); color: #e8e8e8; border-color: #e8e8e8;
+  text-shadow: none; }
+.site-marker svg { display: block; overflow: visible; fill: #4ba3d3; stroke: #0b0d12; stroke-width: 2; }
+.site-marker.selected svg { fill: #e66b27; stroke: #fff; stroke-width: 2.5; }
+.site-marker:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 3px; }
+.polar-map .leaflet-tooltip.site-label { background: rgba(10, 12, 18, 0.85); color: #fff; border: 1px solid
+  rgba(255,255,255,0.25); box-shadow: none; font: 600 12px sans-serif; padding: 2px 8px; }
+.polar-map .leaflet-tooltip-top.site-label::before { border-top-color: rgba(10, 12, 18, 0.85); }

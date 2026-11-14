@@ -9,9 +9,24 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
 
 ## Status
 
-- **Done: T0a, T0b and A1.** The app is one screen with the rail and the panels, and the globe lives in
+- **Done: T0a, T0b, A1 and A2.** The app is one screen with the rail and the panels, and the globe lives in
   `src/moon_view/`. `tests/test_app.py` opens every panel. The `.js` and `.css` files are read on every run, so
-  pressing R in the app shows edits without a restart.
+  pressing R in the app shows edits without a restart. Adding a file to `_JS_FILES` needs a restart.
+- **A2 result:** the south polar map is `src/moon_view/polar_map.js`. It replaces the Plotly south pole map, which
+  is gone from `app.py` and `src/charts.py`. Notes for A3 and A5–A8:
+  - Every Moon Trek south polar layer uses one tile grid. The projection is
+    `+proj=stere +lat_0=-90 +lon_0=0 +k=1 +R=1737400`. Tiles are 256 px with the origin at (−1,095,930 m,
+    1,095,930 m), and level 0 is 8,561.95 m per pixel.
+  - Photos stacks the WAC mosaic to 60°S (levels 0–4) under the NAC mosaic to 85.5°S (0–11). Relief stacks the LOLA
+    color shaded relief to 55°S (0–4), to 75°S (0–6) and to 87.5°S (0–9). The Earth visibility tiles for A8 use the
+    same grid, with levels 0–6.
+  - The globe/map switch is still the segmented control at the top of the Explorer panels. Choosing a site moves
+    it: polar sites (south of 80°S) open the map and the others open the globe (`view_request` in `app.py`). An
+    in-view switch (A7) only needs to change the view in JavaScript, because the view keeps its own choice until
+    `view_id` changes.
+  - A click on a marker, or Enter or Space on a focused marker, sends `site`. The map centers the selected site in
+    the area to the right of the panel. It centers again when the panel changes width, unless the user has moved
+    the map.
 - **A1 result:** Leaflet and Proj4Leaflet work inside the component's shadow DOM, so `isolate_styles` stays on. The
   Moon Trek NAC tiles line up with the sites (Shackleton Rim S1 sits on the crater rim), and clicks on a site or on
   the map reach Python. Notes for A2:
@@ -253,7 +268,7 @@ merged. A1 then A2 is the critical path: start the spike as early as possible.
 | ID | Pri | Task | Size | Needs |
 |---|---|---|---|---|
 | B1 | P1 | Catalog panel: search (catalog names; coordinates create a Custom Site, via `st.selectbox(accept_new_options=True)`), intro text, compact cards with kind and the two averages, sort control. | 1.5 | T0b; C2 (placeholder numbers until then) |
-| B2 | P1 | Site Card: header, grid, rank sentence, selected-instant line, "Plan here", tabs with chart summary sentences. Delete the comparison table and the Plotly south pole map (`catalog_comparison`, `plot_south_pole_relief_map`, `load_south_pole_relief`). | 2.5 | T0b, C1, C2 |
+| B2 | P1 | Site Card: header, grid, rank sentence, selected-instant line, "Plan here", tabs with chart summary sentences. Delete the comparison table (`catalog_comparison`). | 2.5 | T0b, C1, C2 |
 | B3 | P1 | Site Planner panel: four steps, Asset Height presets, Elevation Mask, window; time bar on the Planner window with states for the Surface Asset; results with sentences. Keeps the Plotly neighborhood heatmap for now. | 2 | T0b, C3 |
 | B4 | P1 | About panel showing `texts.ABOUT`. | 0.5 | T0b |
 | B5 | P2 | Custom Site flow from the search and the `point` event: live computation with a progress message and cache; Site Card with "would be Nth of 8" and the terrain warning outside 80°S; its time bar states. | 1.5 | B2; A5 for clicks |
