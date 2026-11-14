@@ -46,7 +46,12 @@ POLAR_LAT = -80.0  # choosing a site south of this opens the south polar map; ot
 # The view is pinned behind everything and the rail and the panel float over it. The rest of the page ignores the
 # pointer so drags and clicks reach the view. `st-key-<key>` classes come from st.container(key=).
 CSS = f"""<style>
-  [data-testid="stHeader"] {{ display: none; }}
+  /* Streamlit's header stays only for its "Running..." indicator, the one sign that a click is being processed. */
+  [data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
+  [data-testid="stToolbarActions"], [data-testid="stAppDeployButton"], [data-testid="stMainMenu"] {{ display: none; }}
+  [data-testid="stStatusWidget"] {{ position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 3;
+    pointer-events: auto; padding: 2px 12px; border-radius: 999px; background: rgba(14, 17, 23, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12); }}
   [data-testid="stApp"], [data-testid="stMain"], [data-testid="stMainBlockContainer"] {{ background: #000005; }}
   [data-testid="stMainBlockContainer"] {{ pointer-events: none; }}
   .st-key-view {{ position: fixed; inset: 0; z-index: 0; width: auto !important; pointer-events: auto; }}

@@ -84,6 +84,12 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   also works from the keyboard. The map frames the whole Site Neighborhood and stays put while the Surface Asset
   moves. The Plotly heatmap (`plot_neighborhood`) is gone. The Site Planner returns `view` and `view_id`
   (`"planner:<site>"`), so the map opens for polar sites and the globe for the others.
+- **Site Neighborhood for any polar point:** for a Custom Site, or an Asset Height other than 2 m, the Site Planner
+  offers "Paint the Site Neighborhood (computed live, about 30 s)": `live_neighborhood_horizons()` and
+  `live_neighborhood_summary()` in `src/conditions.py` build the same grid live. At Connecting Ridge C1 the live
+  horizons match the pre-computed ones within 0.005°. When every cell has the same value, no best cell is marked.
+- **Busy indicator:** Streamlit's header is transparent instead of hidden, so its Running and Stop indicator shows at
+  the top center while a click is processed; without it a slow click looked ignored.
 - **Stale modules after a deploy:** Streamlit drops changed modules only for the browser sessions that saw the
   change, and Streamlit Cloud updates the code without restarting Python, so new sessions could mix a new
   `app.py` with old `src` modules (the ImportError after PR #24). `app.py` now drops every `src` module when a
