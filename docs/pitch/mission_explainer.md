@@ -49,8 +49,9 @@ Horizon by the chosen Elevation Mask. This geometric test is useful, but a worki
 radio link also needs compatible equipment, antenna pointing, adequate signal
 strength and an available receiving system. An elevation curve alone cannot
 prove communication performance. Likewise, **Sunset** in the glossary occurs
-when Illumination Fraction reaches zero; the current countdown functions instead
-use a simplified crossing of the Ideal Horizon.
+when Illumination Fraction reaches zero; the countdown functions now account for the solar disk and Terrain Horizon
+when terrain columns are supplied, with an Ideal Horizon fallback. The current
+interface does not yet use these functions.
 
 ## What Lunav One can explain today
 
@@ -70,7 +71,9 @@ not an image layer currently embedded in our map.
 **Explorer** is the planned mode for learning about Catalog Sites and their
 context. **Site Planner** is the planned mode for evaluating a precisely placed
 Surface Asset. Neither is a separate working mode in this version. Pre-computed
-Terrain Horizons and ephemerides are also pending for this branch's catalog.
+Terrain Horizons and ephemerides now cover the eight Catalog Sites for 2027–2028
+at a 2 m Asset Height. Their availability is distinct from full scientific
+validation; see the [preliminary literature comparison](illumination_comparison.md).
 
 Illumination and Earth Visibility are two factors in exploration planning. A
 complete landing assessment must also address slopes, obstacles, terrain

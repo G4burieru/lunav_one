@@ -1,0 +1,58 @@
+{
+  "Shackleton Crater (Rim)": {
+    "lat": -89.6866,
+    "lon": -162.81,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Connecting Ridge C1": {
+    "lat": -89.4398,
+    "lon": -137.17,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Connecting Ridge C2": {
+    "lat": -89.313,
+    "lon": -114.02,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Shackleton Rim S2": {
+    "lat": -89.7815,
+    "lon": -155.3,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Malapert Massif (Summit)": {
+    "lat": -85.9948,
+    "lon": -0.23578,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Faustini Crater (Rim)": {
+    "lat": -87.8897,
+    "lon": 90.0,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Haworth": {
+    "lat": -86.7639,
+    "lon": -22.777,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Apollo 11 (Tranquility Base)": {
+    "lat": 0.67416,
+    "lon": 23.47314,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 118 m global DEM"
+  }
+}

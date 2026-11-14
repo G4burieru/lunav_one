@@ -1,0 +1,66 @@
+# Regenerates data/catalog/ and opens a pull request when it changes (docs/adr/0001). Owner: Gabriel.
+name: Pre-compute catalog data
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/sites.py
+      - src/terrain.py
+      - src/horizons_api.py
+      - src/catalog.py
+      - scripts/precompute.py
+  schedule:
+    - cron: "0 6 1 * *"  # monthly, to pick up DEM or ephemeris revisions
+  workflow_dispatch:
+
+concurrency:
+  group: precompute
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  precompute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BRANCH: precompute/catalog-data
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Pre-compute catalog data
+        run: python -m scripts.precompute
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Open or update the data pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- data/catalog)" ]; then
+            echo "Catalog data is up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add data/catalog
+          git commit -m "Regenerate pre-computed catalog data"
+          git push --force origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base main --head "$BRANCH" \
+              --title "Regenerate pre-computed catalog data" \
+              --body "Automated run of \`python -m scripts.precompute\` after changes to the catalog or the data pipeline (see docs/adr/0001). Tests passed on the regenerated data."
+          fi

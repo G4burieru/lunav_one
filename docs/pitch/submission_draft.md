@@ -35,7 +35,7 @@ Height. Their published results are context, not computed outputs or a safety
 ranking from our tool. The coordinates await checks against the project DEM.
 
 Separate science modules implement Terrain Horizon calculations, Illumination
-Fraction and simplified Ideal Horizon countdowns. These calculations are covered
+Fraction and terrain-aware countdowns with an Ideal Horizon fallback. These calculations are covered
 by automated tests but are not yet integrated into the main interface's charts
 and indicators. Synthetic tests check computational behavior; they do not
 constitute validation of real Catalog Site terrain.
@@ -64,14 +64,24 @@ from a working communications link. This benefit has not yet been measured in
 user studies or operational use.
 
 Planned Explorer and Site Planner modes will organize learning and Surface Asset
-analysis. Next steps include DEM/frame validation, pre-computed catalog data,
-terrain-aware chart integration and comparisons between scenarios. These are
+analysis. Pre-computed catalog data and an automatic regeneration workflow are
+now present. Next steps include DEM/frame validation, investigation of the
+Shackleton S2 discrepancy, terrain-aware chart integration and scenario comparisons. These are
 planned capabilities, not completed features.
 
 The current prototype does not certify landing safety, locate ice deposits,
 calculate electrical power or validate radio links. It does not identify an
 optimal landing location. Historical Artemis III region references do not imply
 selection for any current mission.
+
+## Preliminary numerical comparison
+
+[Comparison with published results](illumination_comparison.md) checks mean
+Illumination Fraction for four study points using committed 2027–2028 data.
+C1 and Shackleton S1 are close to the literature values; S2 differs substantially.
+This supports further investigation, not a completed independent validation.
+The literature and prototype share LOLA-derived terrain and use different DEM
+resolutions and time windows. Do not omit S2 when presenting the comparison.
 
 ## Publication details to complete
 

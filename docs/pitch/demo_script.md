@@ -59,8 +59,9 @@ catalog and its assumptions, without substituting simulated mission results.”]
 calculations. Illumination Fraction describes how much of the solar disk clears
 the terrain; it does not measure generated electricity. These functions are not
 yet connected to the interface. The team still needs to validate the Catalog
-Sites against its elevation model, reconcile coordinate frames and prepare
-pre-computed data. Side-by-side comparisons are also still in development.”
+Sites against its elevation model, reconcile coordinate frames and investigate
+the remaining differences from published illumination estimates. Pre-computed
+data for all eight sites is available, but is not yet used by this interface. Side-by-side comparisons are also still in development.”
 
 ## 2:20–3:00 — Purpose and next steps
 

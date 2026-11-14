@@ -18,14 +18,17 @@ live Sun/Earth elevation charts. Site comparison remains planned.
 | Sun/Earth elevation curves | Available through live Horizons requests; relative to the Ideal Horizon |
 | Schematic polar map and independent HTML export | Available without Horizons |
 | Terrain Horizon and Illumination Fraction | Implemented in science functions; not integrated into interface results |
-| Countdown metrics | Implemented as Ideal Horizon crossings; not integrated into the interface |
-| Streamlit request cache | In-memory cache present; no committed pre-computed catalog data in this checkout |
+| Countdown metrics | Terrain-aware functions implemented, with Ideal Horizon fallback; not integrated into the interface |
+| Pre-computed catalog data | Eight sites, 2027–2028 hourly ephemerides and Terrain Horizons at 2 m Asset Height; available through get_conditions |
+| Streamlit request cache | In-memory cache present; app.py still requests ephemerides directly |
 | Explorer and Site Planner modes | Planned; not separate working interface modes yet |
-| Scenario comparison, validated catalog pre-computation | Pending |
+| Scenario comparison and full scientific validation | Pending |
+| Automatic data regeneration | Workflow opens a data PR after relevant changes on main; requires review and merge |
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
-The eight entries are the catalog being prepared for that workflow; their DEM
-validation and pre-computed data are pending. Automated tests check software
+The eight entries now have pre-computed data. Numerical comparison with the
+literature is documented below; complete topographic and scientific validation
+is still pending. Automated tests check software
 behavior, including synthetic terrain cases, rather than scientific validation
 of the real Catalog Sites. See [GLOSSARY.md](GLOSSARY.md) and [design decisions](docs/adr/).
 
@@ -57,10 +60,15 @@ src/metrics.py               Ideal Horizon countdown functions
 src/charts.py                Ephemeris charts
 src/site_map.py              Schematic polar map and offline HTML export
 src/sites.py                 Sourced coordinate catalog
-data/                        Reserved for data; only .gitkeep in this checkout
+data/                        Pre-computed ephemerides and terrain horizons for catalog sites
+data/catalog/                Eight sites and coordinate manifest, 2027–2028
+scripts/precompute.py        Generates data/catalog/ (Gabriel)
+.github/workflows/precompute.yml  Regenerates data and opens a review PR (Gabriel)
 tests/test_horizons_api.py    Ephemeris parsing tests
 tests/test_terrain.py         Synthetic terrain and illumination tests
-tests/test_metrics.py         Ideal Horizon countdown tests
+tests/test_metrics.py         Terrain-aware countdown and duration tests
+tests/test_catalog.py         Pre-computed data loading tests
+tests/test_conditions.py      Conditions entry-point tests
 tests/test_sites.py           Coordinate provenance and compatibility tests
 tests/test_site_map.py        Map integration and offline export tests
 docs/pitch/                  Science explainer, submission draft and demo script
@@ -138,7 +146,8 @@ frame and topographic validation against the project's LOLA DEM remain pending.
 
 Existing dictionary keys are retained for compatibility. **The key
 `Shackleton Crater (Rim)` now uses S1 instead of the previous Site04 region center
-(-89.7668, -171.87); invalidate any cached data for this key before pre-computation.**
+(-89.7668, -171.87).** The current manifest matches S1. The loader rejects
+pre-computed entries whose manifest coordinates differ from the catalog.
 The legacy key `Malapert Massif (Summit)` remains a region center, not a verified
 summit. Regional centers are from NASA's Lunar Surface Data Book ACD-50044 Rev A
 (2023), Table A2-2, printed pages 57–58. Each entry records its source, coordinate
@@ -159,6 +168,24 @@ selection is implied by this catalog.
 - [NASA Apollo coordinates](https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html): Apollo 11 lunar module reference location.
 - [NASA 2022 candidate-region announcement](https://www.nasa.gov/centers-and-facilities/marshall/the-marshall-star-361/): historical Artemis context, not a statement of current mission selection.
 
+## Pre-computed data workflow
+
+`src/conditions.py` exposes `get_conditions` for interface integration; the current
+`app.py` still calls Horizons directly. The conditions entry point uses committed
+catalog data for covered dates and locations at the supported Asset Height,
+and falls back to live calculation where supported. Custom locations outside the
+south-pole DEM use the Ideal Horizon when no catalog neighborhood is available.
+
+Changes to coordinates should be grouped into one PR. After relevant source
+changes reach `main`, `.github/workflows/precompute.yml` regenerates data and
+opens or updates **Regenerate pre-computed catalog data**. That data PR needs
+review and merge. A monthly schedule and manual trigger are also configured.
+There is no need to run pre-computation for documentation-only changes.
+
+[Preliminary literature comparison](docs/pitch/illumination_comparison.md) records
+four study points and the remaining discrepancy at Shackleton S2. This is a
+consistency check, not a claim of independent mission validation.
+
 ## Scientific explanation and presentation drafts
 
 - [Mission explainer](docs/pitch/mission_explainer.md): accessible scientific background.
@@ -172,9 +199,9 @@ The main app requests Horizons elevations and plots Sun/Earth curves. Its
 simplified geometric indicators, not power estimates or verified radio links.
 The "Sunlight in Window" card counts positive-elevation hourly samples; it is
 not a terrain-corrected duration or an energy calculation.
-Terrain-horizon calculations and ideal-horizon countdown functions exist in the
-science modules, but are not yet integrated into the main interface. Ephemeris
-disk cache and site comparison are not implemented in this checkout. Visibility relative to a geometric horizon does not account
+Terrain Horizon, Illumination Fraction, terrain-aware metrics and pre-computed
+data are available through the science modules, but the main interface does not
+yet use that entry point. Site comparison is not implemented in this checkout. Visibility relative to a geometric horizon does not account
 for LOLA terrain, power availability or communication link performance. No frame
 transformation or observer height from a terrain model is applied by the catalog
 or map; the science module must reconcile its ephemeris frame with the source coordinate frames before

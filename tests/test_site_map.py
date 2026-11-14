@@ -36,7 +36,7 @@ def test_map_exports_without_network_assets(tmp_path, monkeypatch):
     monkeypatch.setattr(socket.socket, "connect", network_unavailable)
     output = tmp_path / "map.html"
     plot_south_pole_map().write_html(output, include_plotlyjs=True)
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert "Catalog Sites" in html
     assert '<script src=' not in html
 
