@@ -14,6 +14,10 @@ LONGEST_NIGHT_HELP = ("Longest stretch in 2027–2028 with the Sun completely hi
                       "last. Nights at the lunar equator last about 15 days.")
 LONGEST_EARTH_ABSENCE_HELP = ("Longest stretch in 2027–2028 without Earth in view: how long direct-to-Earth "
                               "communication would be impossible.")
+ASSET_HEIGHT_HELP = ("Height of the solar panel or antenna above the ground. 2 m is pre-computed and instant; other "
+                     "heights compute the terrain horizon live, in about 30 s.")
+ELEVATION_MASK_HELP = ("Minimum angle Earth's center must clear above the terrain horizon to count as visible, for "
+                       "example to keep an antenna's beam clear of the ground.")
 CUSTOM_SITE = "A location you picked. Its conditions are computed live from NASA JPL Horizons and LOLA terrain."
 NO_TERRAIN = "No terrain data here (outside 80°S): these figures use the ideal horizon of a smooth Moon."
 

@@ -76,9 +76,13 @@ with st.container(key="rail"):
         st.button(label, icon=icon, key=f"rail_{name}", on_click=open_panel, args=(name,),
                   type="primary" if active else "secondary", width="stretch")
 
-with st.container(key="view"):  # neither view needs Horizons, so it opens even if Horizons is down
+view = st.container(key="view")  # filled after the panel, whose render() can return what the view shows
+with st.container(key="panel"):
+    view_data = PANELS[panel]() or {}
+
+with view:  # neither view needs Horizons, so it opens even if Horizons is down
     if (st.session_state.get(VIEW_CHOICE) or VIEWS[0]) == VIEWS[0]:
-        moon_view(LUNAR_SITES, selected, key="moon_view", on_site=on_view_site)
+        moon_view(LUNAR_SITES, selected, key="moon_view", on_site=on_view_site, **view_data)
     else:
         # Unlike the globe, the flat map is not a background: start it at the panel's right edge.
         st.html(f"<style>.st-key-view {{ left: calc({PANEL_LEFT} + {PANEL_WIDTH[panel]} + 14px); }}</style>")
@@ -91,6 +95,3 @@ with st.container(key="view"):  # neither view needs Horizons, so it opens even 
         st.plotly_chart(plot_south_pole_relief_map(LUNAR_SITES, selected, relief, height=None), width="stretch",
                         height="stretch", on_select=lambda: on_map_select(map_key), selection_mode="points",
                         key=map_key, config={"scrollZoom": True})
-
-with st.container(key="panel"):
-    PANELS[panel]()

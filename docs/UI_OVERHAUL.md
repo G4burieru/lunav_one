@@ -22,6 +22,10 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   and the sorted compact cards; the Site Card has the grid, the rank sentence, the selected-instant line and the
   three tabs, for Catalog Sites and Custom Sites. The comparison table is gone; the Plotly south pole map stays until
   A2 replaces it.
+- **Done: B3.** The Site Planner has the four steps and the Asset Height presets. A panel's `render()` can return
+  keyword arguments for `moon_view`, so `app.py` now fills the view after the panel. The Site Planner returns
+  `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. It keeps its own
+  Instant slider until A3 covers the Planner window.
 - **For A3 and A5** (helpers in `src/panels/common.py`):
   - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
     `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
