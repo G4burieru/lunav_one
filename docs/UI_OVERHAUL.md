@@ -49,6 +49,9 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   top navigation bar goes away; Explorer and Site Planner stay as modes, shown as panels instead of pages.
 - A rail of icons on the left opens the panels: Catalog, Plan, Layers, About. Search sits at the top of the panel.
 - No welcome pop-up. The first screen shows the search, a two-sentence introduction and the catalog cards.
+- No emojis. Icons are SVG files in `static/icons/`, served by Streamlit (`server.enableStaticServing`, which the
+  Sunlight overlay also needs) and placed in text with `icon(name)` from `src/panels/common.py`. Buttons keep
+  Streamlit's Material Symbols.
 - The globe rotates slowly when the app opens and stops for good at the first interaction: dragging or zooming the
   globe, or any click on the page. It never rotates when the system asks for reduced motion.
 

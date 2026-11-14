@@ -17,7 +17,8 @@ get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
 # Session state: the open panel, the selected Catalog Site key, and the Custom Site ({"lat", "lon"}) if any.
 PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
 MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
-VIEW_CHOICE, VIEWS = "view_choice", ("🌕 Globe", "🗺️ South pole map")
+VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")
+VIEW_ICONS = {"Globe": "moon", "South pole map": "pole-map"}
 CUSTOM_SITE = "Custom Site"
 KIND_LABELS = {
     "studied_point": "◆ Studied point",
@@ -31,6 +32,12 @@ EXPLORER_DAYS = (CACHE_END - CACHE_START).days  # the Explorer's Analysis Window
 DATE_HELP = (f"Catalog Sites are pre-computed from {CACHE_START} to {CACHE_END - datetime.timedelta(days=1)} "
              "and load instantly. Other dates and Custom Sites query JPL Horizons and the LOLA DEM live.")
 _COORDINATES = re.compile(r"^\s*(-?\d+(?:\.\d+)?)\s*°?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*(?:E)?\s*$", re.IGNORECASE)
+
+
+def icon(name):
+    """Markdown for an SVG icon in static/icons/ (served with server.enableStaticServing), shown at text height.
+    Empty alt text: the icons are decorative, the words next to them carry the meaning."""
+    return f"![](app/static/icons/{name}.svg)"
 
 
 def open_panel(name):
@@ -125,9 +132,10 @@ def selected_instant(df):
 
 def header():
     """App title and the globe/map switch, at the top of the Explorer panels."""
-    st.markdown("### 🌕 Lunar Landing Site Navigator")
+    st.markdown(f"### {icon('moon')} Lunar Landing Site Navigator")
     st.caption("Solar power and direct-to-Earth communication for lunar south pole landings · NASA Space Apps 2026")
-    st.segmented_control("View", VIEWS, default=VIEWS[0], key=VIEW_CHOICE, label_visibility="collapsed")
+    st.segmented_control("View", VIEWS, default=VIEWS[0], key=VIEW_CHOICE, label_visibility="collapsed",
+                         format_func=lambda view: f"{icon(VIEW_ICONS[view])} {view}")
 
 
 def site_label(key):

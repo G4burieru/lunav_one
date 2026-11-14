@@ -12,7 +12,7 @@ from src.panels import about, catalog_list, planner, site_card
 from src.panels.common import CUSTOM, PANEL, SELECTED, VIEW_CHOICE, VIEWS, open_panel, select_site
 from src.sites import LUNAR_SITES
 
-st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="🌕", layout="wide")
+st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
 PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render, "about": about.render}
 RAIL = [("catalog", "Catalog", ":material/public:"), ("planner", "Plan", ":material/edit_location_alt:"),
@@ -37,6 +37,7 @@ CSS = f"""<style>
   .st-key-rail button > div, .st-key-rail button > div > span {{ flex-direction: column; gap: 2px; }}
   .st-key-rail button p {{ font-size: 0.72rem; }}
   .st-key-panel {{ left: {PANEL_LEFT}; bottom: 14px; overflow-y: auto; padding: 16px 18px; }}
+  img[src*="static/icons/"] {{ height: 1.15em; width: auto; vertical-align: -0.2em; }}  /* icons at text size */
   @media (max-width: 760px) {{  /* phones: stack the rail, a shorter view and the panel instead of floating them */
     .st-key-rail, .st-key-view, .st-key-panel {{ position: relative; inset: auto; width: auto !important; }}
     .st-key-view {{ height: 60vh; overflow: hidden; }}

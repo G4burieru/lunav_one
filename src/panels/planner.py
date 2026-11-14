@@ -9,7 +9,7 @@ from src.charts import plot_earth_visibility, plot_neighborhood, plot_sun_elevat
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
 from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, data_note, format_countdown, get_neighborhood,
-                               load, site_label, time_payload)
+                               icon, load, site_label, time_payload)
 from src.sites import LUNAR_SITES
 
 HEIGHTS = {"Rover or lander · 2 m": catalog.ASSET_HEIGHT_M, "Mast · 10 m": 10.0, "Other height": None}
@@ -47,7 +47,7 @@ def when():
 
 def neighborhood(key, date, days, mask):
     """The Site Neighborhood heatmap (moves onto the map in task B6). Returns the clicked cell's (lat, lon)."""
-    st.markdown("**🧭 Site Neighborhood**: click a cell to move the Surface Asset there.")
+    st.markdown(f"{icon('neighborhood')} **Site Neighborhood**: click a cell to move the Surface Asset there.")
     layer = st.radio("Color by", ["Sunlight", "Earth visibility"], horizontal=True, key="planner_layer")
     column = "sunlight_pct" if layer == "Sunlight" else "earth_visible_pct"
     try:
@@ -61,7 +61,7 @@ def neighborhood(key, date, days, mask):
     match = points[(points["east_m"] == picked[0]["x"]) & (points["north_m"] == picked[0]["y"])] \
         if picked else points.iloc[0:0]
     if match.empty:
-        st.caption(f"Showing {site_label(key)} itself, at (0, 0). The ★ marks the best cell.")
+        st.caption(f"Showing {site_label(key)} itself, at (0, 0). The star marks the best cell.")
         return None
     point = match.iloc[0]
     st.caption(f"Surface Asset {point['east_m']:+.0f} m east and {point['north_m']:+.0f} m north of "
@@ -78,10 +78,10 @@ def results(df, mask, days):
     sunset, earthset = hours_until_sunset(df, at), hours_until_earthset(df, at, mask)
     sun_hours, earth_hours = sunlight_hours(df), earth_visible_hours(df, mask)
     cols = [*st.columns(2), *st.columns(2)]
-    cols[0].metric("Time to Sunset", format_countdown(sunset, "🌑 Sun set"),
+    cols[0].metric(f"{icon('sun')} Time to Sunset", format_countdown(sunset, "Sun down"),
                    f"{row['illumination_fraction']:.0%} of the solar disk visible", delta_color="off",
                    delta_arrow="off", border=True)
-    cols[1].metric("Time to Earthset", format_countdown(earthset, "🚫 Not visible"),
+    cols[1].metric(f"{icon('earth')} Time to Earthset", format_countdown(earthset, "Not visible"),
                    f"Earth {row['earth_elevation'] - row['earth_horizon'] - mask:+.2f}° vs horizon"
                    + (" + mask" if mask else ""), delta_color="off", delta_arrow="off", border=True)
     cols[2].metric("Sunlight", f"{100 * sun_hours / len(df):.0f}%", f"{sun_hours:.0f} h of full Sun",
@@ -103,7 +103,7 @@ def results(df, mask, days):
 
 def render():
     """The four steps. Returns what the Moon View should show: the Surface Asset and its time bar states."""
-    st.markdown("### 📍 Site Planner")
+    st.markdown(f"### {icon('planner')} Site Planner")
     st.caption("Place a Surface Asset precisely and evaluate its sunlight and Earth visibility.")
     st.markdown("**1 · Where**")
     key, lat, lon = where()

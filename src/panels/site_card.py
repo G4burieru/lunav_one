@@ -8,7 +8,7 @@ from src.metrics import (earth_visible_hours, hours_until_earthset, hours_until_
                          site_summary, sunlight_hours)
 from src.panels import texts
 from src.panels.common import (CUSTOM, KIND_LABELS, SELECTED, data_note, format_countdown, format_duration, header,
-                               open_panel, ordinal, rank, select_site, selected_instant, two_years)
+                               icon, open_panel, ordinal, rank, select_site, selected_instant, two_years)
 from src.sites import LUNAR_SITES
 
 CHART_DAYS = 28  # the Sun & Earth tab shows this many days around the selected instant
@@ -22,10 +22,13 @@ def grid(summary):
     average, worst = st.columns(2)
     average.caption("On average")
     worst.caption("Worst case")
-    average.metric("☀️ Sunlight", f"{summary['sunlight_pct']:.0f}%", help=texts.SUNLIGHT_HELP, border=True)
-    worst.metric("🌑 Longest night", night, help=texts.LONGEST_NIGHT_HELP, border=True)
-    average.metric("🌍 Earth visible", f"{summary['earth_visible_pct']:.0f}%", help=texts.EARTH_HELP, border=True)
-    worst.metric("📡 Longest without Earth", absence, help=texts.LONGEST_EARTH_ABSENCE_HELP, border=True)
+    average.metric(f"{icon('sun')} Sunlight", f"{summary['sunlight_pct']:.0f}%", help=texts.SUNLIGHT_HELP,
+                   border=True)
+    worst.metric(f"{icon('night')} Longest night", night, help=texts.LONGEST_NIGHT_HELP, border=True)
+    average.metric(f"{icon('earth')} Earth visible", f"{summary['earth_visible_pct']:.0f}%", help=texts.EARTH_HELP,
+                   border=True)
+    worst.metric(f"{icon('no-earth')} Longest without Earth", absence, help=texts.LONGEST_EARTH_ABSENCE_HELP,
+                 border=True)
 
 
 def rank_sentence(summary, custom):

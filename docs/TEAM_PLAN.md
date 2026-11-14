@@ -44,7 +44,7 @@ Each member edits only the files they own. This keeps merges conflict-free.
 | Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `src/conditions.py`, `src/panels/` (except `texts.py`), `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py`, `tests/test_conditions.py`, `tests/test_panels.py` |
 | Igor | `app.py`, `src/moon_view/`, `src/charts.py`, `.streamlit/` |
 | Renata | `src/sites.py`, `src/site_map.py`, `src/panels/texts.py`, `README.md`, `docs/pitch/` |
-| Shared | `requirements.txt`, `pytest.ini`, `docs/TEAM_PLAN.md`, `docs/UI_OVERHAUL.md`, `GLOSSARY.md`, `docs/adr/`, `tests/test_app.py` |
+| Shared | `requirements.txt`, `pytest.ini`, `static/`, `docs/TEAM_PLAN.md`, `docs/UI_OVERHAUL.md`, `GLOSSARY.md`, `docs/adr/`, `tests/test_app.py` |
 
 If you need a change in a file you do not own, ask its owner.
 
