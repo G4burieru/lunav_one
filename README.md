@@ -8,21 +8,24 @@ safe or optimal landing sites or certify mission operations.
 The project is being developed for the
 [2026 NASA Space Apps Challenge: Lunar Landing Site Navigator](https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/).
 The current interface combines a documented catalog, a schematic polar map and
-live Sun/Earth elevation charts. Site comparison remains planned.
+terrain-aware Sun/Earth charts in Explorer and Site Planner, plus a Catalog Site
+comparison for windows covered by pre-computed data.
 
 ## Implementation status
 
 | Capability | State in this branch |
 |---|---|
 | Catalog Site or Custom Site, date and duration selection | Available in Streamlit |
-| Sun/Earth elevation curves | Available through live Horizons requests; relative to the Ideal Horizon |
+| Sun/Earth elevation curves | Available with Terrain Horizon through get_conditions; pre-computed or live |
 | Schematic polar map and independent HTML export | Available without Horizons |
-| Terrain Horizon and Illumination Fraction | Implemented in science functions; not integrated into interface results |
-| Countdown metrics | Terrain-aware functions implemented, with Ideal Horizon fallback; not integrated into the interface |
+| Terrain Horizon and Illumination Fraction | Integrated into charts and indicators; Ideal Horizon fallback is identified |
+| Countdown metrics | Time to Sunset and Earthset shown at a selected instant |
 | Pre-computed catalog data | Eight sites, 2027–2028 hourly ephemerides and Terrain Horizons at 2 m Asset Height; available through get_conditions |
-| Streamlit request cache | In-memory cache present; app.py still requests ephemerides directly |
-| Explorer and Site Planner modes | Planned; not separate working interface modes yet |
-| Scenario comparison and full scientific validation | Pending |
+| Streamlit request cache | Caches get_conditions results |
+| Explorer and Site Planner modes | Available; Site Planner accepts Asset Height and Elevation Mask |
+| Catalog Site comparison | Available for pre-computed date windows at 2 m Asset Height |
+| Monthly and Site Neighborhood summaries | Science functions available; not yet displayed in app.py |
+| Full scientific validation | Pending |
 | Automatic data regeneration | Workflow opens a data PR after relevant changes on main; requires review and merge |
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
@@ -56,7 +59,9 @@ python -m pytest -q
 app.py                       Streamlit interface
 src/horizons_api.py          Live Sun/Earth azimuth and elevation
 src/terrain.py               LOLA DEM access, Terrain Horizon, Illumination Fraction
-src/metrics.py               Ideal Horizon countdown functions
+src/metrics.py               Terrain-aware countdowns, durations and monthly summary
+src/conditions.py            Conditions entry point and Site Neighborhood summary
+src/catalog.py               Pre-computed data loader
 src/charts.py                Ephemeris charts
 src/site_map.py              Schematic polar map and offline HTML export
 src/sites.py                 Sourced coordinate catalog
@@ -122,7 +127,7 @@ selecting one displays an explanation.
 
 Coordinates use degrees, north-positive latitude and east-positive longitude in
 [-180, 180]. The initial set has eight Catalog Sites for Explorer context and
-future Site Planner data preparation. Four specific study points are prioritized;
+Site Planner analysis. Four specific study points are prioritized;
 no pre-computation is performed by the catalog module itself.
 
 | Catalog display name | Latitude | East longitude | Coordinate meaning |
@@ -170,8 +175,8 @@ selection is implied by this catalog.
 
 ## Pre-computed data workflow
 
-`src/conditions.py` exposes `get_conditions` for interface integration; the current
-`app.py` still calls Horizons directly. The conditions entry point uses committed
+`app.py` uses `src/conditions.py:get_conditions` for both Explorer and Site
+Planner. The conditions entry point uses committed
 catalog data for covered dates and locations at the supported Asset Height,
 and falls back to live calculation where supported. Custom locations outside the
 south-pole DEM use the Ideal Horizon when no catalog neighborhood is available.
@@ -183,7 +188,8 @@ review and merge. A monthly schedule and manual trigger are also configured.
 There is no need to run pre-computation for documentation-only changes.
 
 [Preliminary literature comparison](docs/pitch/illumination_comparison.md) records
-four study points and the remaining discrepancy at Shackleton S2. This is a
+four study points. With the combined 20 m/80 m terrain, all four mean
+illumination estimates differ from the paper by less than two percentage points. This is a
 consistency check, not a claim of independent mission validation.
 
 ## Scientific explanation and presentation drafts
@@ -194,17 +200,24 @@ consistency check, not a claim of independent mission validation.
 
 ## Current limitations
 
-The main app requests Horizons elevations and plots Sun/Earth curves. Its
-"Solar Power" and "Earth Communication" cards use a 0° threshold. These are
-simplified geometric indicators, not power estimates or verified radio links.
-The "Sunlight in Window" card counts positive-elevation hourly samples; it is
-not a terrain-corrected duration or an energy calculation.
-Terrain Horizon, Illumination Fraction, terrain-aware metrics and pre-computed
-data are available through the science modules, but the main interface does not
-yet use that entry point. Site comparison is not implemented in this checkout. Visibility relative to a geometric horizon does not account
-for LOLA terrain, power availability or communication link performance. No frame
-transformation or observer height from a terrain model is applied by the catalog
-or map; the science module must reconcile its ephemeris frame with the source coordinate frames before
-precision analysis. This is an educational prototype, not a mission safety tool.
+The interface now uses Terrain Horizon, Illumination Fraction and terrain-aware
+countdowns through `get_conditions`. “Sunlight in window” means equivalent
+full-Sun hours (the integral of Illumination Fraction), not hours with any part
+of the Sun visible and not generated electrical energy. Earth Visibility is a
+geometric criterion; it does not establish a working radio link.
+
+Polar terrain calculations combine 20 m LOLA data within 10 km with 80 m data
+farther away. Apollo 11 uses the pre-computed global DEM. Pre-computed Site
+Neighborhoods sample a 2 km radius at 100 m spacing and 2 m Asset Height;
+nearby coordinates use the nearest supported point. Other heights and dates can
+require live requests. Custom Sites outside the south-pole DEM use the Ideal
+Horizon if no pre-computed neighborhood is available, with a warning.
+
+Monthly and Site Neighborhood summaries exist as science functions but are not
+yet exposed by the current interface. No complete reference-frame, uncertainty,
+vehicle-safety or operational assessment has been performed. The literature
+comparison is a consistency check using related LOLA-derived inputs, not an
+independent validation. This is an educational prototype, not a mission safety
+tool. The schematic map itself does not calculate terrain or illumination.
 
 Application and demonstration-video links: pending publication.
