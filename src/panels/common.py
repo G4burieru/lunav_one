@@ -145,7 +145,8 @@ def header():
     """App title and the globe/map switch, at the top of the Explorer panels."""
     st.markdown(f"### {icon('moon')} Lunar Landing Site Navigator")
     st.caption("Solar power and direct-to-Earth communication for lunar south pole landings · NASA Space Apps 2026")
-    st.segmented_control("View", VIEWS, default=VIEWS[0], key=VIEW_CHOICE, label_visibility="collapsed",
+    # No default: view_request() in app.py always sets the value first, and a default too makes Streamlit warn.
+    st.segmented_control("View", VIEWS, key=VIEW_CHOICE, label_visibility="collapsed",
                          format_func=lambda view: f"{icon(VIEW_ICONS[view])} {view}")
 
 

@@ -4,13 +4,33 @@ The Moon View (src/moon_view) fills the page with the 3D globe or the south pola
 opens one floating panel at a time (src/panels): the catalog, a Site Card, the Site Planner or About. Explorer and
 Site Planner are the two modes in GLOSSARY.md.
 """
+import sys
+from pathlib import Path
+
 import streamlit as st
 
-from src.moon_view import moon_view
-from src.panels import about, catalog_list, planner, site_card
-from src.panels.common import (CUSTOM, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, open_panel, rail_active,
-                               select_custom, select_site)
-from src.sites import LUNAR_SITES
+
+@st.cache_resource
+def _imported_src():
+    """Process-wide record of the src code that the imported src modules come from."""
+    return {}
+
+
+# Streamlit drops changed modules only for the browser sessions that saw the change, and Streamlit Cloud updates the
+# code in place without restarting Python. A new session could then run this app.py with old src modules: the
+# ImportError after PR #24. So whenever a src/*.py file changed since the src modules were imported, drop them all;
+# the imports below then load the current code.
+_stamp = max(path.stat().st_mtime for path in (Path(__file__).parent / "src").rglob("*.py"))
+if _imported_src().get("stamp") != _stamp:
+    for name in [name for name in sys.modules if name == "src" or name.startswith("src.")]:
+        del sys.modules[name]
+    _imported_src()["stamp"] = _stamp
+
+from src.moon_view import moon_view  # noqa: E402 (imports after the check above)
+from src.panels import about, catalog_list, planner, site_card  # noqa: E402
+from src.panels.common import (  # noqa: E402
+    CUSTOM, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, open_panel, rail_active, select_custom, select_site)
+from src.sites import LUNAR_SITES  # noqa: E402
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
@@ -104,5 +124,5 @@ with st.container(key="panel"):
 with view_slot:  # the view needs no Horizons data, so it opens even if Horizons is down
     # A panel's render() can override any of these, e.g. the Site Planner's view, Surface Asset and time bar data.
     moon_view(LUNAR_SITES, selected, key="moon_view", **{"on_site": on_view_site, "on_point": on_view_point,
-                                                         "view": view, "view_id": view_id, "custom": custom,
-                                                         **view_data})
+                                                         "on_cell": planner.on_map_cell, "view": view,
+                                                         "view_id": view_id, "custom": custom, **view_data})

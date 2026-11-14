@@ -5,14 +5,18 @@ import datetime
 import streamlit as st
 
 from src import catalog
-from src.charts import plot_earth_visibility, plot_neighborhood, plot_sun_elevation
+from src.charts import plot_earth_visibility, plot_sun_elevation
+from src.colors import EARTH_RAMP, SUN_RAMP, css_gradient, ramp_hex
+from src.conditions import cell_corners
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
-from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, data_note, format_countdown, get_neighborhood,
-                               icon, load, site_label, time_payload)
+from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, data_note, format_countdown,
+                               get_neighborhood, icon, load, site_label, time_payload)
 from src.sites import LUNAR_SITES
 
 HEIGHTS = {"Rover or lander · 2 m": catalog.ASSET_HEIGHT_M, "Mast · 10 m": 10.0, "Other height": None}
+CELL = "planner_cell"  # {"site", "index"}: the Site Neighborhood cell holding the Surface Asset, None at the site
+POLAR_LAT = -80.0  # south of this, the Site Planner shows the south polar map
 
 
 def where():
@@ -45,28 +49,60 @@ def when():
     return date, days
 
 
+def choose_cell(key, index):
+    st.session_state[CELL] = {"site": key, "index": index} if index is not None else None
+
+
+def on_map_cell():
+    """Moon View callback: a click on a Site Neighborhood cell moves the Surface Asset there."""
+    index = st.session_state[MOON_VIEW].get("cell")
+    if index is not None:
+        choose_cell(st.session_state.get("planner_site"), int(index))
+
+
 def neighborhood(key, date, days, mask):
-    """The Site Neighborhood heatmap (moves onto the map in task B6). Returns the clicked cell's (lat, lon)."""
-    st.markdown(f"{icon('neighborhood')} **Site Neighborhood**: click a cell to move the Surface Asset there.")
+    """The Site Neighborhood, painted on the south polar map (task B6). A click on a cell, or the "best cell" button,
+    moves the Surface Asset there. Returns ((lat, lon) of the Surface Asset, the Moon View's neighborhood data)."""
+    site = LUNAR_SITES[key]
+    st.markdown(f"{icon('neighborhood')} **Site Neighborhood**: click a cell on the map to move the Surface Asset "
+                "there.")
     layer = st.radio("Color by", ["Sunlight", "Earth visibility"], horizontal=True, key="planner_layer")
-    column = "sunlight_pct" if layer == "Sunlight" else "earth_visible_pct"
+    column, ramp = ("sunlight_pct", SUN_RAMP) if layer == "Sunlight" else ("earth_visible_pct", EARTH_RAMP)
+    measure = "sunlight" if layer == "Sunlight" else "Earth visibility"  # mid-sentence
     try:
         points = get_neighborhood(key, str(date), days, mask)
     except Exception as e:
         st.error(f"Could not compute the Site Neighborhood: {e}")
-        return None
-    event = st.plotly_chart(plot_neighborhood(points, column, layer), width="stretch", on_select="rerun",
-                            selection_mode="points", key=f"planner_neighborhood_{key}")
-    picked = event.selection.points
-    match = points[(points["east_m"] == picked[0]["x"]) & (points["north_m"] == picked[0]["y"])] \
-        if picked else points.iloc[0:0]
-    if match.empty:
-        st.caption(f"Showing {site_label(key)} itself, at (0, 0). The star marks the best cell.")
-        return None
-    point = match.iloc[0]
-    st.caption(f"Surface Asset {point['east_m']:+.0f} m east and {point['north_m']:+.0f} m north of "
-               f"{site_label(key)} · Lat {point['lat']:.5f}° · Lon {point['lon']:.5f}° E")
-    return float(point["lat"]), float(point["lon"])
+        return (site["lat"], site["lon"]), None
+    st.html(f'<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;opacity:0.8">0%'
+            f'<div style="flex:1;height:10px;border-radius:5px;background:{css_gradient(ramp)}"></div>100%</div>')
+    best = int(points[column].to_numpy().argmax())
+    chosen = st.session_state.get(CELL) or {}
+    index = chosen.get("index") if chosen.get("site") == key and (chosen.get("index") or 0) < len(points) else None
+    best_point = points.iloc[best]
+    use_best, use_site = st.columns(2)
+    use_best.button(f"Best cell: {best_point[column]:.0f}%", key="planner_best", on_click=choose_cell,
+                    args=(key, best), width="stretch", disabled=index == best)
+    use_site.button("Back to the site", key="planner_center", on_click=choose_cell, args=(key, None),
+                    width="stretch", disabled=index is None)
+    if index is None:
+        st.caption(f"Surface Asset at {site_label(key)} itself. Darker cells get less {measure}; the dashed "
+                   f"outline marks the best cell, {best_point['east_m']:+.0f} m east and "
+                   f"{best_point['north_m']:+.0f} m north.")
+        lat, lon = site["lat"], site["lon"]
+    else:
+        point = points.iloc[index]
+        st.caption(f"Surface Asset {point['east_m']:+.0f} m east and {point['north_m']:+.0f} m north of "
+                   f"{site_label(key)}: {point[column]:.0f}% {measure} · Lat {point['lat']:.5f}° · "
+                   f"Lon {point['lon']:.5f}° E")
+        lat, lon = float(point["lat"]), float(point["lon"])
+    corners = cell_corners(site, points["east_m"], points["north_m"]).round(6).tolist()
+    colors = ramp_hex(points[column] / 100, ramp)
+    data = {"site": key, "center": {"lat": site["lat"], "lon": site["lon"]}, "label": measure, "selected": index,
+            "best": best, "reach_m": catalog.NEIGHBORHOOD_RADIUS_M + catalog.NEIGHBORHOOD_SPACING_M,
+            "cells": [{"corners": c, "value": round(float(v), 1), "color": color}
+                      for c, v, color in zip(corners, points[column], colors)]}
+    return (lat, lon), data
 
 
 def results(df, mask, days):
@@ -102,7 +138,8 @@ def results(df, mask, days):
 
 
 def render():
-    """The four steps. Returns what the Moon View should show: the Surface Asset and its time bar states."""
+    """The four steps. Returns what the Moon View should show: the map or the globe for the site, the Surface Asset,
+    the Site Neighborhood and the Surface Asset's time bar states."""
     st.markdown(f"### {icon('planner')} Site Planner")
     st.caption("Place a Surface Asset precisely and evaluate its sunlight and Earth visibility.")
     st.markdown("**1 · Where**")
@@ -111,15 +148,19 @@ def render():
     height, mask = surface_asset()
     st.markdown("**3 · When**")
     date, days = when()
-    if key != CUSTOM_SITE and height == catalog.ASSET_HEIGHT_M:
-        lat, lon = neighborhood(key, date, days, mask) or (lat, lon)
+    hood = None
+    polar = lat <= POLAR_LAT
+    if key != CUSTOM_SITE and height == catalog.ASSET_HEIGHT_M and polar:
+        (lat, lon), hood = neighborhood(key, date, days, mask)
     elif key != CUSTOM_SITE:
-        st.caption(f"The Site Neighborhood is pre-computed for {catalog.ASSET_HEIGHT_M:g} m Asset Height only.")
+        st.caption(f"The Site Neighborhood is drawn on the south polar map, for sites south of 80°S at "
+                   f"{catalog.ASSET_HEIGHT_M:g} m Asset Height, where it is pre-computed.")
+    view = {"mode": "planner", "asset": {"lat": lat, "lon": lon}, "neighborhood": hood,
+            "view": "map" if polar else "globe", "view_id": f"planner:{key}"}
 
     st.markdown("**4 · Results**")
     df = load(lat, lon, date, days, height, catalog_site=key != CUSTOM_SITE)
     if df is None:
-        return None
+        return view
     results(df, mask, days)
-    return {"mode": "planner", "asset": {"lat": lat, "lon": lon},
-            "time": time_payload({"asset": df}, elevation_mask=mask)}
+    return {**view, "time": time_payload({"asset": df}, elevation_mask=mask)}

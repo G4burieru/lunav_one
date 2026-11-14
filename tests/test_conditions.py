@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from src import catalog
-from src.conditions import get_conditions, offset_from
+from src.conditions import cell_corners, get_conditions, offset_from
 from src.sites import LUNAR_SITES
 from src.terrain import MOON_RADIUS_M
 
@@ -64,3 +64,11 @@ def test_catalog_site_outside_the_pole_keeps_terrain_at_other_heights():
     df = get_conditions(site["lat"], site["lon"], "2027-03-01", 7, asset_height=5.0)
     assert df.attrs["source"] == "pre-computed"
     assert "pre-computed for 2 m Asset Height" in df.attrs["terrain"]
+
+
+def test_cell_corners_surround_each_neighborhood_point():
+    site = LUNAR_SITES["Connecting Ridge C1"]
+    corners = cell_corners(site, [0.0, 300.0], [0.0, -200.0])
+    assert corners.shape == (2, 4, 2)
+    offsets = np.array([offset_from(site, lat, lon) for lat, lon in corners[1]])
+    np.testing.assert_allclose(offsets, [[250, -250], [350, -250], [350, -150], [250, -150]], atol=0.01)
