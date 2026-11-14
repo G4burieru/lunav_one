@@ -51,26 +51,29 @@ strength and an available receiving system. An elevation curve alone cannot
 prove communication performance. Likewise, **Sunset** in the glossary occurs
 when Illumination Fraction reaches zero; the countdown functions now account for the solar disk and Terrain Horizon
 when terrain columns are supplied, with an Ideal Horizon fallback. The current
-interface does not yet use these functions.
+interface uses these functions for its countdowns.
 
 ## What Lunav One can explain today
 
 A **Catalog Site** has a documented identity and coordinate meaning. Some entries
 are specific illumination-study points, others are regional centers, and Apollo
 11 is a historical landing location. A region center must not be presented as a
-verified summit. All project-specific topographic checks remain pending.
+verified summit. Terrain calculations and the literature consistency check are
+available, while complete topographic validation remains pending.
 
-The prototype displays a schematic polar map and live Sun/Earth elevation curves
-from [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html). Separate science
-functions calculate Terrain Horizon and Illumination Fraction using terrain
-arrays; the interface does not yet apply them to its displayed curves.
+The prototype displays a schematic polar map and terrain-aware Sun/Earth curves
+using ephemerides from [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html). Science
+functions calculate Terrain Horizon and Illumination Fraction, which are now
+used in the interface. Polar calculations combine 20 m terrain within 10 km
+with 80 m terrain farther away.
 [LOLA products](https://pgda.gsfc.nasa.gov/products/78) provide topographic context,
 while [LROC QuickMap](https://quickmap.lroc.im-ldi.com/) is a cartographic reference,
 not an image layer currently embedded in our map.
 
-**Explorer** is the planned mode for learning about Catalog Sites and their
-context. **Site Planner** is the planned mode for evaluating a precisely placed
-Surface Asset. Neither is a separate working mode in this version. Pre-computed
+**Explorer** provides Catalog Site context, conditions and comparison for covered
+dates. **Site Planner** evaluates a chosen location, Asset Height and Elevation
+Mask. Pre-computed neighborhoods use 100 m spacing: a chosen location is snapped
+to the nearest supported point, rather than evaluated with unlimited precision. Pre-computed
 Terrain Horizons and ephemerides now cover the eight Catalog Sites for 2027–2028
 at a 2 m Asset Height. Their availability is distinct from full scientific
 validation; see the [preliminary literature comparison](illumination_comparison.md).

@@ -23,41 +23,50 @@ and `100 * mean(illumination_fraction > 0)` for any-Sun visibility.
 
 ## Reproduced project values
 
-Calculated locally from the committed catalog data introduced by main through
-fb8d2d4, using `get_conditions` at each site's exact coordinates, Asset Height
+Calculated locally from the regenerated catalog data in PR #9 (main merge
+d22dca2), present in the main snapshot 283aa8f, using `get_conditions` at each site's exact coordinates, Asset Height
 2 m, and the half-open interval [2027-01-01, 2029-01-01). All eight calls returned
 `source = pre-computed`. Each returned 17,544 hourly samples (731 days, including
 leap year 2028). No live network or DEM regeneration was required.
 
 | Point | Project average (%) | Difference from paper (percentage points) | Project any-Sun visibility (%) |
 |---|---:|---:|---:|
-| Connecting Ridge C1 | 89.94 | +1.94 | 93.61 |
-| Connecting Ridge C2 | 75.43 | -2.67 | 80.65 |
-| Shackleton Rim S1 | 85.64 | +0.14 | 89.60 |
-| Shackleton Rim S2 | 69.77 | -12.33 | 76.05 |
+| Connecting Ridge C1 | 89.72 | +1.72 | 93.45 |
+| Connecting Ridge C2 | 79.00 | +0.90 | 82.79 |
+| Shackleton Rim S1 | 85.90 | +0.40 | 89.71 |
+| Shackleton Rim S2 | 80.99 | -1.11 | 87.57 |
 
 These are combined two-year averages, not claims about each year individually.
-Malapert regional center (21.56%), Faustini Rim A regional center (26.43%) and
-Haworth regional center (15.76%) also reproduce the approximate project values
-Gabriel reported. They do not have matching points in Table 2 and must not be
+The recalculated means for the other polar sites are Malapert regional center
+15.41%, Faustini Rim A regional center 26.32%, and Haworth regional center 12.64%.
+Apollo 11 remains 49.74% (global 118 m DEM). They do not have matching points in Table 2 and must not be
 presented as validated by that table.
 
 ## Interpretation for the pitch
 
-C1 and S1 show close numerical agreement; C2 differs by a few percentage points.
-S2 has a substantial discrepancy that must remain visible in any summary.
-There is no defined scientific acceptance tolerance for this comparison.
+All four mean Illumination Fraction estimates differ from the published values
+by less than 2 percentage points. This is a descriptive result, not a predefined
+scientific acceptance tolerance or proof of full model accuracy.
 
-The study uses 20 m terrain sampling; the polar project data uses an 80 m DEM.
-The time windows also differ. Both use LOLA-derived terrain, so agreement is not
-independent of the underlying source data. Differences in horizon construction,
-coordinate-frame realization and local terrain sampling require investigation;
-we have not established which explains the S2 result. Do not attribute that
-result to a specific cause or accept it solely on an order-of-magnitude basis.
+The previous 80 m-only result for Shackleton S2 was 69.77%, a difference of
+-12.33 percentage points. With 20 m terrain within the first 10 km, combined
+with 80 m terrain farther away, it is 80.99%, a difference of -1.11 percentage
+points. The coordinates, 2 m Asset Height and comparison interval are unchanged.
+This improvement is consistent with near-field terrain resolution contributing
+to the earlier discrepancy. It does not establish resolution as the sole cause
+or certify the modeled point. The paper uses a 20 m DTM; our combined-resolution
+calculation is not an exact reproduction of that method.
 
-Suggested pitch wording: “We compared four modeled illumination estimates with
-published values. Several are close, while one discrepancy remains under
-investigation. This is a preliminary consistency check, not full validation.”
+The time windows differ (2017–2037 versus 2027–2028), and both calculations use
+LOLA-derived terrain. Agreement is therefore not independent of the underlying
+source data. Horizon construction, reference-frame realization and the remaining
+differences still warrant scientific review. No permanent illumination, landing
+safety, measured energy yield or radio-link performance is established.
+
+Suggested pitch wording: “With finer local terrain, our four mean illumination
+estimates are within two percentage points of published values. This supports
+consistency with the literature, rather than independent validation, because the
+periods differ and both calculations use LOLA-derived terrain.”
 
 ## Reproduction without remote requests
 
@@ -69,8 +78,7 @@ from unittest.mock import patch
 from src.conditions import get_conditions
 from src.sites import LUNAR_SITES
 
-names = ["Connecting Ridge C1", "Connecting Ridge C2",
-         "Shackleton Crater (Rim)", "Shackleton Rim S2"]
+names = list(LUNAR_SITES)  # Include the regional centers before quoting their values.
 with patch("requests.sessions.Session.request", side_effect=RuntimeError("Network disabled")):
     for name in names:
         site = LUNAR_SITES[name]
@@ -82,4 +90,4 @@ with patch("requests.sessions.Session.request", side_effect=RuntimeError("Networ
 ```
 
 Before publication, ask Gabriel to review the comparison method, source-frame
-alignment and S2 discrepancy. Do not change coordinates to force agreement.
+alignment and remaining differences. Do not change coordinates to force agreement.

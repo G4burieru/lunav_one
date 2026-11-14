@@ -16,6 +16,8 @@ MOON_RADIUS_M = 1737400.0
 SUN_RADIUS_DEG = 0.2665  # apparent solar disk radius from the Moon
 AZIMUTHS = np.arange(360.0)
 SOUTH_POLE_80M = "/vsicurl/https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF"
+SOUTH_POLE_20M = "/vsicurl/https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF"
+NEAR_FIELD_M = 10_000.0  # inside 80°S, terrain closer than this uses SOUTH_POLE_20M
 GLOBAL_118M = "/vsicurl/https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"
 SOUTH_POLE_DEM_LIMIT = -80.0  # SOUTH_POLE_80M covers 80°S to the pole
 MOON_GEOGRAPHIC = CRS.from_proj4(f"+proj=longlat +R={MOON_RADIUS_M} +no_defs")
@@ -36,21 +38,26 @@ def elevation_angle(distance, target_height, observer_height):
     return np.degrees(np.arctan2(up, along))
 
 
+def ground_height(dem, dem_transform, x, y):
+    col, row = ~dem_transform * (x, y)
+    return dem[int(row), int(col)]
+
+
 def horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height=2.0, max_distance=150_000.0,
-                    azimuths=AZIMUTHS):
+                    azimuths=AZIMUTHS, min_distance=0.0, ground=None):
     """Terrain horizon (deg) per azimuth from a DEM array of heights relative to the reference sphere.
 
     `north` and `east` are the map displacements of one surface metre north and east at (x0, y0) (see local_axes).
-    Directions that leave the DEM use the terrain seen so far.
+    Only terrain between `min_distance` and `max_distance` is considered; `ground` overrides the observer's ground
+    height (used when a finer DEM knows it better). Directions that leave the DEM use the terrain seen so far.
     shortcut: the map scale is taken at the site; in the global (cylindrical) DEM it drifts over 150 km at high
     latitudes. Fine below ~60° and inside the south pole DEM.
     """
     inverse = ~dem_transform
     step = abs(dem_transform.a) / max(np.linalg.norm(north), np.linalg.norm(east))  # about one pixel per sample
-    distances = np.arange(step, max_distance, step)
-
-    col0, row0 = inverse * (x0, y0)
-    ground = dem[int(row0), int(col0)]
+    distances = np.arange(max(step, min_distance), max_distance, step)
+    if ground is None:
+        ground = ground_height(dem, dem_transform, x0, y0)
 
     az = np.radians(np.asarray(azimuths))[:, None]
     dx = np.sin(az) * east[0] + np.cos(az) * north[0]
@@ -81,7 +88,7 @@ def local_axes(crs, lat, lon):
 def dem_for(lat):
     """DEM URL and description used for a latitude."""
     if lat <= SOUTH_POLE_DEM_LIMIT:
-        return SOUTH_POLE_80M, "LOLA 80 m south pole DEM"
+        return SOUTH_POLE_80M, "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
     return GLOBAL_118M, "LOLA 118 m global DEM"
 
 
@@ -122,8 +129,7 @@ def _read_around(url, lat, lon, radius):
 
 def site_horizon(lat, lon, asset_height=2.0, max_distance=150_000.0):
     """Terrain horizon (deg, per 1° azimuth) at a lunar site, reading only the needed part of the DEM."""
-    dem, dem_transform, (x0, y0), north, east = _read_around(dem_for(lat)[0], lat, lon, max_distance)
-    return horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height, max_distance)
+    return _horizons(lat, lon, np.zeros(1), np.zeros(1), asset_height, max_distance)[0]
 
 
 def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.0, max_distance=150_000.0):
@@ -132,13 +138,29 @@ def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.
     Azimuths stay in the site's frame (the site's north), so they match the site's ephemerides; near the pole the
     local north of a point 2 km away can differ by ~10°.
     """
-    reach = max_distance + np.hypot(east_offsets, north_offsets).max()
-    dem, dem_transform, (x0, y0), north, east = _read_around(dem_for(lat)[0], lat, lon, reach)
-    return np.array([
-        horizon_profile(dem, dem_transform, x0 + e * east[0] + n * north[0], y0 + e * east[1] + n * north[1],
-                        north, east, asset_height, max_distance)
-        for e, n in zip(east_offsets, north_offsets)
-    ])
+    return _horizons(lat, lon, np.asarray(east_offsets), np.asarray(north_offsets), asset_height, max_distance)
+
+
+def _horizons(lat, lon, east_offsets, north_offsets, asset_height, max_distance):
+    """Horizons at points offset from a site. Inside 80°S, terrain within NEAR_FIELD_M (and the ground height) comes
+    from the 20 m DEM and farther terrain from the 80 m DEM; elsewhere the global DEM is used throughout."""
+    reach = np.hypot(east_offsets, north_offsets).max()
+    far_dem, far_transform, (x0, y0), north, east = _read_around(dem_for(lat)[0], lat, lon, max_distance + reach)
+    near = _read_around(SOUTH_POLE_20M, lat, lon, NEAR_FIELD_M + reach) if lat <= SOUTH_POLE_DEM_LIMIT else None
+    horizons = []
+    for e, n in zip(east_offsets, north_offsets):
+        x, y = x0 + e * east[0] + n * north[0], y0 + e * east[1] + n * north[1]
+        if near is None:
+            horizons.append(horizon_profile(far_dem, far_transform, x, y, north, east, asset_height, max_distance))
+            continue
+        near_dem, near_transform = near[0], near[1]
+        ground = ground_height(near_dem, near_transform, x, y)
+        close = horizon_profile(near_dem, near_transform, x, y, north, east, asset_height, NEAR_FIELD_M,
+                                ground=ground)
+        distant = horizon_profile(far_dem, far_transform, x, y, north, east, asset_height, max_distance,
+                                  min_distance=NEAR_FIELD_M, ground=ground)
+        horizons.append(np.fmax(close, distant))
+    return np.array(horizons)
 
 
 def apply_terrain(ephemerides, horizon, east_m=0.0, north_m=0.0):
