@@ -12,6 +12,7 @@ import rasterio
 import rasterio.errors
 from affine import Affine
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.warp import transform as warp_transform
 from rasterio.windows import Window, from_bounds
 
@@ -115,10 +116,11 @@ def dem_for(lat):
 CHUNK_ROWS = 512
 
 
-def _read_chunk(src, window, out_shape, attempts=6):
+def _read_chunk(src, window, out_shape, attempts=6, resampling=Resampling.nearest):
     for attempt in range(attempts):
         try:
-            return src.read(1, window=window, out_shape=out_shape, masked=True).astype(np.float32)
+            return src.read(1, window=window, out_shape=out_shape, masked=True,
+                            resampling=resampling).astype(np.float32)
         except rasterio.errors.RasterioIOError:
             if attempt == attempts - 1:
                 raise
