@@ -2,7 +2,7 @@
 import streamlit as st
 
 from src.panels import texts
-from src.panels.common import (KIND_LABELS, catalog_summaries, format_duration, header, parse_coordinates,
+from src.panels.common import (KIND_LABELS, catalog_summaries, format_duration, header, icon, parse_coordinates,
                                select_custom, select_site, site_label)
 from src.sites import LUNAR_SITES
 
@@ -40,8 +40,9 @@ def render():
         site, summary = LUNAR_SITES[key], summaries.loc[key]
         with st.container(border=True):
             st.markdown(f"**{site_label(key)}**  \n{KIND_LABELS.get(site.get('coordinate_kind'), 'Unspecified')}")
-            stats = f"☀️ Sunlight {summary['sunlight_pct']:.0f}% · 🌍 Earth visible {summary['earth_visible_pct']:.0f}%"
+            stats = (f"{icon('sun')} Sunlight {summary['sunlight_pct']:.0f}% · {icon('earth')} Earth visible "
+                     f"{summary['earth_visible_pct']:.0f}%")
             if sort == "Longest night":
-                stats += f" · 🌑 Longest night {format_duration(summary['longest_night_h'])}"
+                stats += f" · {icon('night')} Longest night {format_duration(summary['longest_night_h'])}"
             st.caption(stats)
             st.button("Explore", key=f"explorer_pick_{key}", on_click=select_site, args=(key,), width="stretch")

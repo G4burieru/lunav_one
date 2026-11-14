@@ -22,6 +22,10 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   and the sorted compact cards; the Site Card has the grid, the rank sentence, the selected-instant line and the
   three tabs, for Catalog Sites and Custom Sites. The comparison table is gone; the Plotly south pole map stays until
   A2 replaces it.
+- **Done: B3.** The Site Planner has the four steps and the Asset Height presets. A panel's `render()` can return
+  keyword arguments for `moon_view`, so `app.py` now fills the view after the panel. The Site Planner returns
+  `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. It keeps its own
+  Instant slider until A3 covers the Planner window.
 - **For A3 and A5** (helpers in `src/panels/common.py`):
   - `catalog_time()` is the Explorer's `time` data (every Catalog Site, 2027–2028). Pass it to `moon_view` in
     `app.py` with the current instant. The Site Card reads the bar's `instant` event through `selected_instant()`
@@ -45,6 +49,9 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   top navigation bar goes away; Explorer and Site Planner stay as modes, shown as panels instead of pages.
 - A rail of icons on the left opens the panels: Catalog, Plan, Layers, About. Search sits at the top of the panel.
 - No welcome pop-up. The first screen shows the search, a two-sentence introduction and the catalog cards.
+- No emojis. Icons are SVG files in `static/icons/`, served by Streamlit (`server.enableStaticServing`, which the
+  Sunlight overlay also needs) and placed in text with `icon(name)` from `src/panels/common.py`. Buttons keep
+  Streamlit's Material Symbols.
 - The globe rotates slowly when the app opens and stops for good at the first interaction: dragging or zooming the
   globe, or any click on the page. It never rotates when the system asks for reduced motion.
 

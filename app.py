@@ -12,7 +12,7 @@ from src.panels import about, catalog_list, planner, site_card
 from src.panels.common import CUSTOM, PANEL, SELECTED, VIEW_CHOICE, VIEWS, open_panel, select_site
 from src.sites import LUNAR_SITES
 
-st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="🌕", layout="wide")
+st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
 PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render, "about": about.render}
 RAIL = [("catalog", "Catalog", ":material/public:"), ("planner", "Plan", ":material/edit_location_alt:"),
@@ -37,6 +37,7 @@ CSS = f"""<style>
   .st-key-rail button > div, .st-key-rail button > div > span {{ flex-direction: column; gap: 2px; }}
   .st-key-rail button p {{ font-size: 0.72rem; }}
   .st-key-panel {{ left: {PANEL_LEFT}; bottom: 14px; overflow-y: auto; padding: 16px 18px; }}
+  img[src*="static/icons/"] {{ height: 1.15em; width: auto; vertical-align: -0.2em; }}  /* icons at text size */
   @media (max-width: 760px) {{  /* phones: stack the rail, a shorter view and the panel instead of floating them */
     .st-key-rail, .st-key-view, .st-key-panel {{ position: relative; inset: auto; width: auto !important; }}
     .st-key-view {{ height: 60vh; overflow: hidden; }}
@@ -76,9 +77,13 @@ with st.container(key="rail"):
         st.button(label, icon=icon, key=f"rail_{name}", on_click=open_panel, args=(name,),
                   type="primary" if active else "secondary", width="stretch")
 
-with st.container(key="view"):  # neither view needs Horizons, so it opens even if Horizons is down
+view = st.container(key="view")  # filled after the panel, whose render() can return what the view shows
+with st.container(key="panel"):
+    view_data = PANELS[panel]() or {}
+
+with view:  # neither view needs Horizons, so it opens even if Horizons is down
     if (st.session_state.get(VIEW_CHOICE) or VIEWS[0]) == VIEWS[0]:
-        moon_view(LUNAR_SITES, selected, key="moon_view", on_site=on_view_site)
+        moon_view(LUNAR_SITES, selected, key="moon_view", on_site=on_view_site, **view_data)
     else:
         # Unlike the globe, the flat map is not a background: start it at the panel's right edge.
         st.html(f"<style>.st-key-view {{ left: calc({PANEL_LEFT} + {PANEL_WIDTH[panel]} + 14px); }}</style>")
@@ -91,6 +96,3 @@ with st.container(key="view"):  # neither view needs Horizons, so it opens even 
         st.plotly_chart(plot_south_pole_relief_map(LUNAR_SITES, selected, relief, height=None), width="stretch",
                         height="stretch", on_select=lambda: on_map_select(map_key), selection_mode="points",
                         key=map_key, config={"scrollZoom": True})
-
-with st.container(key="panel"):
-    PANELS[panel]()
