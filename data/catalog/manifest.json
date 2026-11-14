@@ -1,0 +1,30 @@
+{
+  "Shackleton Crater (Rim)": {
+    "lat": -89.9,
+    "lon": 0.0,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Malapert Massif (Summit)": {
+    "lat": -85.9,
+    "lon": 2.9,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Faustini Crater (Rim)": {
+    "lat": -87.3,
+    "lon": 77.0,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 80 m south pole DEM"
+  },
+  "Apollo 11 (Tranquility Base)": {
+    "lat": 0.67,
+    "lon": 23.47,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": null
+  }
+}

@@ -35,3 +35,10 @@ def test_horizon_at_interpolates_and_wraps():
 ])
 def test_illumination_fraction(offset, expected):
     assert illumination_fraction(10.0 + offset, 10.0) == pytest.approx(expected)
+
+
+def test_moving_toward_the_sun_raises_it():
+    from src.terrain import MOON_RADIUS_M, elevation_at_offset
+    one_km_in_degrees = np.degrees(1000 / MOON_RADIUS_M)
+    assert elevation_at_offset(5.0, 90.0, 1000.0, 0.0) == pytest.approx(5.0 + one_km_in_degrees)
+    assert elevation_at_offset(5.0, 90.0, 0.0, 1000.0) == pytest.approx(5.0)

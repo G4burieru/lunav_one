@@ -108,6 +108,31 @@ def site_horizon(lat, lon, asset_height=2.0, max_distance=150_000.0, url=SOUTH_P
     return horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height, max_distance)
 
 
+def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.0, max_distance=150_000.0,
+                          url=SOUTH_POLE_80M):
+    """Terrain horizons (N x 360, deg) at points offset (east, north) metres from a site.
+
+    Azimuths stay in the site's frame (the site's north), so they match the site's ephemerides; near the pole the
+    local north of a point 2 km away can differ by ~10°.
+    """
+    reach = max_distance + np.hypot(east_offsets, north_offsets).max()
+    dem, dem_transform, (x0, y0), north, east = _read_around(url, lat, lon, reach)
+    return np.array([
+        horizon_profile(dem, dem_transform, x0 + e * east[0] + n * north[0], y0 + e * east[1] + n * north[1],
+                        north, east, asset_height, max_distance)
+        for e, n in zip(east_offsets, north_offsets)
+    ])
+
+
+def elevation_at_offset(elevation, azimuth, east_m, north_m):
+    """Elevation (deg) of a distant body seen from a point offset (east_m, north_m) from where it was computed.
+
+    Moving over the curved surface tilts the local vertical by distance / radius toward the direction of travel.
+    """
+    az = np.radians(azimuth)
+    return elevation + np.degrees((east_m * np.sin(az) + north_m * np.cos(az)) / MOON_RADIUS_M)
+
+
 def horizon_at(horizon, azimuth):
     """Terrain horizon elevation at arbitrary azimuths (deg), interpolating the 1° profile."""
     return np.interp(np.mod(azimuth, 360.0), np.append(AZIMUTHS, 360.0), np.append(horizon, horizon[0]))
