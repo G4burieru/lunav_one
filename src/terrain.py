@@ -16,6 +16,8 @@ MOON_RADIUS_M = 1737400.0
 SUN_RADIUS_DEG = 0.2665  # apparent solar disk radius from the Moon
 AZIMUTHS = np.arange(360.0)
 SOUTH_POLE_80M = "/vsicurl/https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF"
+GLOBAL_118M = "/vsicurl/https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"
+SOUTH_POLE_DEM_LIMIT = -80.0  # SOUTH_POLE_80M covers 80°S to the pole
 MOON_GEOGRAPHIC = CRS.from_proj4(f"+proj=longlat +R={MOON_RADIUS_M} +no_defs")
 GDAL_ENV = {
     "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
@@ -38,13 +40,13 @@ def horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height=2.0, m
                     azimuths=AZIMUTHS):
     """Terrain horizon (deg) per azimuth from a DEM array of heights relative to the reference sphere.
 
-    `north` and `east` are unit vectors of the local directions in map coordinates at (x0, y0).
+    `north` and `east` are the map displacements of one surface metre north and east at (x0, y0) (see local_axes).
     Directions that leave the DEM use the terrain seen so far.
-    shortcut: map distance is used as surface distance (polar stereographic scale error < 1% inside 80°S);
-    fine for horizon angles, revisit if sub-0.01° accuracy matters.
+    shortcut: the map scale is taken at the site; in the global (cylindrical) DEM it drifts over 150 km at high
+    latitudes. Fine below ~60° and inside the south pole DEM.
     """
     inverse = ~dem_transform
-    step = abs(dem_transform.a)
+    step = abs(dem_transform.a) / max(np.linalg.norm(north), np.linalg.norm(east))  # about one pixel per sample
     distances = np.arange(step, max_distance, step)
 
     col0, row0 = inverse * (x0, y0)
@@ -64,23 +66,34 @@ def horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height=2.0, m
 
 
 def local_axes(crs, lat, lon):
-    """Map position and unit north/east vectors at a lunar lat/lon in a projected CRS."""
+    """Map position of a lunar lat/lon, and the map displacements of one surface metre north and east."""
     lat = max(min(lat, 89.9999), -89.9999)  # north/east are undefined exactly at a pole
-    d = 1e-4
-    xs, ys = warp_transform(MOON_GEOGRAPHIC, crs, [lon, lon, lon + d], [lat, lat + d, lat])
+    step_m = 100.0
+    dlat = np.degrees(step_m / MOON_RADIUS_M)
+    dlon = dlat / np.cos(np.radians(lat))
+    xs, ys = warp_transform(MOON_GEOGRAPHIC, crs, [lon, lon, lon + dlon], [lat, lat + dlat, lat])
     origin = np.array([xs[0], ys[0]])
-    north = np.array([xs[1], ys[1]]) - origin
-    east = np.array([xs[2], ys[2]]) - origin
-    return origin, north / np.linalg.norm(north), east / np.linalg.norm(east)
+    north = (np.array([xs[1], ys[1]]) - origin) / step_m
+    east = (np.array([xs[2], ys[2]]) - origin) / step_m
+    return origin, north, east
 
 
-CHUNK = 1024  # pixels per side; PGDA intermittently returns empty tiles on large reads, so read small and retry
+def dem_for(lat):
+    """DEM URL and description used for a latitude."""
+    if lat <= SOUTH_POLE_DEM_LIMIT:
+        return SOUTH_POLE_80M, "LOLA 80 m south pole DEM"
+    return GLOBAL_118M, "LOLA 118 m global DEM"
+
+
+# Read in bands of full window width: PGDA intermittently returns empty tiles on large reads (so read small and
+# retry), and the global DEM is stored in full-width rows (so column chunks would re-download the same rows).
+CHUNK_ROWS = 512
 
 
 def _read_chunk(src, window, attempts=4):
     for attempt in range(attempts):
         try:
-            return src.read(1, window=window)
+            return src.read(1, window=window, masked=True).astype(float)
         except rasterio.errors.RasterioIOError:
             if attempt == attempts - 1:
                 raise
@@ -88,24 +101,65 @@ def _read_chunk(src, window, attempts=4):
 
 
 def _read_around(url, lat, lon, radius):
-    """DEM heights in a square of `radius` m around a site; cells outside the DEM are NaN."""
+    """DEM heights (m, relative to the reference sphere) within `radius` surface metres of a site; NaN outside.
+
+    shortcut: windows are not wrapped across the ±180° meridian of the global DEM; add it if a catalog site needs it.
+    """
     with rasterio.Env(**GDAL_ENV), rasterio.open(url) as src:
         (x0, y0), north, east = local_axes(src.crs, lat, lon)
-        window = from_bounds(x0 - radius, y0 - radius, x0 + radius, y0 + radius,
-                             src.transform).round_offsets().round_lengths()
+        rx = radius * max(abs(north[0]), abs(east[0]))
+        ry = radius * max(abs(north[1]), abs(east[1]))
+        window = from_bounds(x0 - rx, y0 - ry, x0 + rx, y0 + ry, src.transform).round_offsets().round_lengths()
         r0, c0, h, w = int(window.row_off), int(window.col_off), int(window.height), int(window.width)
+        c_start, c_stop = max(c0, 0), min(c0 + w, src.width)
         dem = np.full((h, w), np.nan)
-        for r in range(max(r0, 0), min(r0 + h, src.height), CHUNK):
-            for c in range(max(c0, 0), min(c0 + w, src.width), CHUNK):
-                rows, cols = min(CHUNK, r0 + h - r, src.height - r), min(CHUNK, c0 + w - c, src.width - c)
-                dem[r - r0:r - r0 + rows, c - c0:c - c0 + cols] = _read_chunk(src, Window(c, r, cols, rows))
+        for r in range(max(r0, 0), min(r0 + h, src.height), CHUNK_ROWS):
+            rows = min(CHUNK_ROWS, r0 + h - r, src.height - r)
+            band = _read_chunk(src, Window(c_start, r, c_stop - c_start, rows))
+            dem[r - r0:r - r0 + rows, c_start - c0:c_stop - c0] = band.filled(np.nan) * src.scales[0] + src.offsets[0]
         return dem, src.window_transform(window), (x0, y0), north, east
 
 
-def site_horizon(lat, lon, asset_height=2.0, max_distance=150_000.0, url=SOUTH_POLE_80M):
+def site_horizon(lat, lon, asset_height=2.0, max_distance=150_000.0):
     """Terrain horizon (deg, per 1° azimuth) at a lunar site, reading only the needed part of the DEM."""
-    dem, dem_transform, (x0, y0), north, east = _read_around(url, lat, lon, max_distance)
+    dem, dem_transform, (x0, y0), north, east = _read_around(dem_for(lat)[0], lat, lon, max_distance)
     return horizon_profile(dem, dem_transform, x0, y0, north, east, asset_height, max_distance)
+
+
+def neighborhood_horizons(lat, lon, east_offsets, north_offsets, asset_height=2.0, max_distance=150_000.0):
+    """Terrain horizons (N x 360, deg) at points offset (east, north) metres from a site.
+
+    Azimuths stay in the site's frame (the site's north), so they match the site's ephemerides; near the pole the
+    local north of a point 2 km away can differ by ~10°.
+    """
+    reach = max_distance + np.hypot(east_offsets, north_offsets).max()
+    dem, dem_transform, (x0, y0), north, east = _read_around(dem_for(lat)[0], lat, lon, reach)
+    return np.array([
+        horizon_profile(dem, dem_transform, x0 + e * east[0] + n * north[0], y0 + e * east[1] + n * north[1],
+                        north, east, asset_height, max_distance)
+        for e, n in zip(east_offsets, north_offsets)
+    ])
+
+
+def apply_terrain(ephemerides, horizon, east_m=0.0, north_m=0.0):
+    """Copy of an ephemerides DataFrame seen from a point offset from where it was computed, with the terrain
+    horizon in the direction of each body and the Illumination Fraction."""
+    out = ephemerides.copy()
+    for body in ("sun", "earth"):
+        azimuth = out[f"{body}_azimuth"]
+        out[f"{body}_elevation"] = elevation_at_offset(out[f"{body}_elevation"], azimuth, east_m, north_m)
+        out[f"{body}_horizon"] = horizon_at(horizon, azimuth)
+    out["illumination_fraction"] = illumination_fraction(out["sun_elevation"], out["sun_horizon"])
+    return out
+
+
+def elevation_at_offset(elevation, azimuth, east_m, north_m):
+    """Elevation (deg) of a distant body seen from a point offset (east_m, north_m) from where it was computed.
+
+    Moving over the curved surface tilts the local vertical by distance / radius toward the direction of travel.
+    """
+    az = np.radians(azimuth)
+    return elevation + np.degrees((east_m * np.sin(az) + north_m * np.cos(az)) / MOON_RADIUS_M)
 
 
 def horizon_at(horizon, azimuth):
