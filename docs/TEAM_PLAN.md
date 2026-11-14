@@ -41,10 +41,10 @@ Each member edits only the files they own. This keeps merges conflict-free.
 
 | Owner | Files |
 |---|---|
-| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `data/`, `tests/test_horizons_api.py`, `tests/test_metrics.py` |
+| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py` |
 | Igor | `app.py`, `src/charts.py`, `.streamlit/` |
 | Renata | `src/sites.py`, `src/site_map.py`, `README.md`, `docs/pitch/` |
-| Shared | `requirements.txt`, `docs/TEAM_PLAN.md` |
+| Shared | `requirements.txt`, `docs/TEAM_PLAN.md`, `GLOSSARY.md`, `docs/adr/` |
 
 If you need a change in a file you do not own, ask its owner.
 
@@ -56,6 +56,12 @@ Do not change these without telling the team:
   `earth_elevation`.
 - `hours_until_sunset(df, at)` and `hours_until_earthset(df, at)` in `src/metrics.py`.
 - `LUNAR_SITES[name] = {"lat", "lon", "description"}` in `src/sites.py`.
+
+### Shared Vocabulary and Decisions
+
+- Use the terms defined in [`GLOSSARY.md`](../GLOSSARY.md) in code, UI, and the pitch (e.g. Explorer, Site Planner,
+  Surface Asset, Illumination Fraction).
+- Key data decisions are recorded in [`docs/adr/`](adr/). Read them before changing how data is fetched or stored.
 
 ## Git Workflow
 

@@ -3,11 +3,12 @@
 Contract used by app.py and charts.py; coordinate any change with the team:
     get_ephemerides_data(lat, lon, start_date, days) -> DataFrame with columns
         time            datetime (UTC), 1-hour step
-        sun_elevation   degrees above the horizon
-        earth_elevation degrees above the horizon
+        sun_azimuth     degrees clockwise from north
+        sun_elevation   degrees above the ideal horizon
+        earth_azimuth   degrees clockwise from north
+        earth_elevation degrees above the ideal horizon
 
-shortcut: elevation is relative to the ideal ellipsoid horizon, without terrain. At the pole the Sun
-stays ~1.5° above it, so terrain decides real visibility. Next step: terrain horizon from the LOLA DEM.
+Elevations are relative to the ideal horizon; compare them with src/terrain.py for real visibility.
 """
 import pandas as pd
 import requests
@@ -23,6 +24,7 @@ def parse_elevation(text):
     rows = [line.split(",") for line in block.strip().splitlines()]
     return pd.DataFrame({
         "time": pd.to_datetime([r[0].strip() for r in rows], format="%Y-%b-%d %H:%M"),
+        "azimuth": [float(r[3]) for r in rows],
         "elevation": [float(r[4]) for r in rows],
     })
 
@@ -53,6 +55,8 @@ def get_ephemerides_data(lat, lon, start_date, days):
     earth = _fetch_elevation(EARTH, lat, lon, start.date(), stop.date())
     return pd.DataFrame({
         "time": sun["time"],
+        "sun_azimuth": sun["azimuth"],
         "sun_elevation": sun["elevation"],
+        "earth_azimuth": earth["azimuth"],
         "earth_elevation": earth["elevation"],
     })

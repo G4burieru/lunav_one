@@ -12,4 +12,5 @@ footer"""
 def test_parse_elevation():
     df = parse_elevation(SAMPLE)
     assert list(df["elevation"]) == [1.487607, -1.480977]
+    assert list(df["azimuth"]) == [280.061257, 277.021323]
     assert str(df["time"].iloc[1]) == "2026-12-01 06:00:00"
