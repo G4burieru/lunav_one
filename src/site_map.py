@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Export an offline interactive lunar map.")
     parser.add_argument("--site", choices=list(LUNAR_SITES), default=None)
-    parser.add_argument("--output", default="/tmp/lunar_south_pole.html")
+    parser.add_argument("--output", default="lunar_south_pole.html")
     args = parser.parse_args()
     plot_south_pole_map(args.site).write_html(args.output, include_plotlyjs=True, auto_open=False)
     print(f"Map saved to {Path(args.output).resolve()}")

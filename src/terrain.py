@@ -115,14 +115,14 @@ def dem_for(lat):
 CHUNK_ROWS = 512
 
 
-def _read_chunk(src, window, out_shape, attempts=4):
+def _read_chunk(src, window, out_shape, attempts=6):
     for attempt in range(attempts):
         try:
             return src.read(1, window=window, out_shape=out_shape, masked=True).astype(np.float32)
         except rasterio.errors.RasterioIOError:
             if attempt == attempts - 1:
                 raise
-            time.sleep(2 * (attempt + 1))
+            time.sleep(5 * 2 ** attempt)  # 5, 10, 20, 40, 80 s: PGDA outages can last over a minute
 
 
 def _read_around(url, lat, lon, radius, decimation=1):
