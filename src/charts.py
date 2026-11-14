@@ -64,3 +64,4 @@ def plot_neighborhood(points, column, label):
                       yaxis=dict(title="North (m)", scaleanchor="x"), legend=dict(orientation="h", y=-0.15),
                       clickmode="event+select")
     return fig
+

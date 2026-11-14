@@ -98,12 +98,15 @@ cell 1600 m west and 100 m north gives 100% of hourly samples in 2027–2028 at
 2 m Asset Height and 0° Elevation Mask. It is an example of terrain sensitivity,
 not a confirmed summit or a guarantee of a working communications link.
 
-These results are consistent with published descriptions of favorable Malapert
-Earth visibility and roughly half-month visibility from Shackleton. The
-[comparison document](illumination_comparison.md) distinguishes NASA's regional
-context, the secondary ILOA-hosted article, and Mazarico's maps from numerical
-validation at matching coordinates. Both the exact offset and the analysis
-window must accompany the percentage.
+Earth visibility is checked numerically against NASA Goddard's PGDA average
+Earth visibility map (Mazarico et al., 2011), the reference product named in
+NASA's Lunar Surface Data Book. Using the map's definition (any part of Earth's
+disk), six of seven catalog points are within 1.3 percentage points of the map,
+and C1 and S2 within 4.6, always slightly higher as expected for a 2 m observer
+versus the map's surface level. The
+[comparison document](illumination_comparison.md) gives the table, the remaining
+differences and the reproduction command. Both the exact offset and the analysis
+window must accompany the Malapert percentage.
 
 ## Publication details to complete
 

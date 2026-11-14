@@ -211,8 +211,11 @@ There is no need to run pre-computation for documentation-only changes.
 
 [Preliminary literature comparison](docs/pitch/illumination_comparison.md) records
 four study points. With the combined 20 m/80 m terrain, all four mean
-illumination estimates differ from the paper by less than 1.2 percentage points. This is a
-consistency check, not a claim of independent mission validation.
+illumination estimates differ from the paper by less than 1.2 percentage points. Earth
+visibility at all seven polar Catalog Sites is compared with NASA's PGDA average Earth
+visibility map: six are within 1.3 percentage points and all within 4.6
+(`python -m scripts.compare_pgda`). These are consistency checks, not a claim of
+independent mission validation.
 
 ## Scientific explanation and presentation drafts
 

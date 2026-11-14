@@ -41,10 +41,10 @@ Each member edits only the files they own. This keeps merges conflict-free.
 
 | Owner | Files |
 |---|---|
-| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `src/conditions.py`, `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py`, `tests/test_conditions.py` |
-| Igor | `app.py`, `src/charts.py`, `.streamlit/` |
-| Renata | `src/sites.py`, `src/site_map.py`, `README.md`, `docs/pitch/` |
-| Shared | `requirements.txt`, `pytest.ini`, `docs/TEAM_PLAN.md`, `GLOSSARY.md`, `docs/adr/` |
+| Gabriel | `src/horizons_api.py`, `src/metrics.py`, `src/terrain.py`, `src/catalog.py`, `src/conditions.py`, `src/panels/` (except `texts.py`), `scripts/`, `data/`, `.github/workflows/precompute.yml`, `tests/test_horizons_api.py`, `tests/test_metrics.py`, `tests/test_terrain.py`, `tests/test_catalog.py`, `tests/test_conditions.py`, `tests/test_panels.py`, `tests/test_sun_overlay.py` |
+| Igor | `app.py`, `src/moon_view/`, `src/charts.py`, `.streamlit/` |
+| Renata | `src/sites.py`, `src/site_map.py`, `src/panels/texts.py`, `README.md`, `docs/pitch/` |
+| Shared | `requirements.txt`, `pytest.ini`, `static/`, `docs/TEAM_PLAN.md`, `docs/UI_OVERHAUL.md`, `GLOSSARY.md`, `docs/adr/`, `tests/test_app.py` |
 
 If you need a change in a file you do not own, ask its owner.
 
@@ -58,11 +58,16 @@ Do not change these without telling the team:
   sites return instantly; other points are computed live (up to ~2 min), so cache the call in the app.
 - `src/metrics.py`: `hours_until_sunset(df, at)`, `hours_until_earthset(df, at, elevation_mask=0.0)`,
   `sunlight_hours(df)`, `earth_visible_hours(df, elevation_mask=0.0)`, and `monthly_summary(df, elevation_mask=0.0)`
-  (per-month `sunlight_pct`, `earth_visible_pct`, `hours`) for seasonal views.
+  (per-month `sunlight_pct`, `earth_visible_pct`, `hours`) for seasonal views. For the Site Card:
+  `longest_night(df)` and `longest_earth_absence(df, elevation_mask=0.0)` (hours) and `site_summary(df,
+  elevation_mask=0.0)` (`sunlight_pct`, `earth_visible_pct`, `longest_night_h`, `longest_earth_absence_h`); for the
+  time bar, `hourly_states(df, elevation_mask=0.0)` (one byte per hour, see docs/UI_OVERHAUL.md).
 - `neighborhood_summary(site_key, start_date, days, elevation_mask=0.0)` in `src/conditions.py`: one row per Site
   Neighborhood point (`east_m`, `north_m`, `lat`, `lon`, `sunlight_pct`, `earth_visible_pct`) for a heatmap; takes
   ~0.1 s for 14 days and ~3 s for 2 years. Pass a row's `lat`/`lon` to `get_conditions` for that point.
 - `LUNAR_SITES[name] = {"lat", "lon", "description"}` in `src/sites.py`.
+- `moon_view(sites, selected, *, key, on_site, ...)` in `src/moon_view/`: the data going in and the events coming
+  out are listed in [`docs/UI_OVERHAUL.md`](UI_OVERHAUL.md).
 
 ### Shared Vocabulary and Decisions
 

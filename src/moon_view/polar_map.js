@@ -1,0 +1,195 @@
+// South polar map: Leaflet with Proj4Leaflet on NASA Moon Trek south polar stereographic tiles (served with CORS *).
+// The globe's tiles are too coarse near the pole (docs/adr/0003-one-screen-moon-view.md). All Moon Trek south polar
+// layers share one tile grid. Each base layer stacks finer data over coarser data, and Moon Trek tiles are
+// transparent where a layer has no data, so the coarser layer shows through there.
+const polarMap = (() => {
+  const LEAFLET_URL = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";  // CSS: _HTML in __init__.py
+  const PROJ4_URL = "https://cdn.jsdelivr.net/npm/proj4@2.20.8/dist/proj4.js";
+  const PROJ4LEAFLET_URL = "https://cdn.jsdelivr.net/npm/proj4leaflet@1.0.2/src/proj4leaflet.js";
+  const TILE_URL = "https://trek.nasa.gov/tiles/Moon/SP/{layer}/1.0.0/default/default028mm/{z}/{y}/{x}.png";
+  const MOON_RADIUS_M = 1737400;
+  // The tile grid is a square reaching GRID_M meters from the pole on each side (about 55°S). Level 0 is one 256 px
+  // tile across it, and each level halves the pixel size: about 4 m at level 11.
+  const GRID_M = 1095930, RES0 = 2 * GRID_M / 256, MAX_ZOOM = 13;
+  const MAP_M = 931100;  // the map stops where the Photos layer does: 60°S
+  // Base layers, coarse to fine: [Moon Trek layer, highest tile level, meters from the pole to the edge of its data].
+  const BASES = {
+    Photos: [
+      ["LRO_WAC_Mosaic_SPole60_100mp", 4, MAP_M],  // LROC WAC mosaic, to 60°S
+      ["LRO_NAC_AvgMosaic_SPole855_1mp", 11, 136526],  // LROC NAC average mosaic, about 4 m per pixel to 85.5°S
+    ],
+    Relief: [
+      ["LRO_LOLA_ClrShade_SPole45_100mp_v04", 4, GRID_M],  // LOLA color shaded relief, about 500 m per pixel
+      ["LRO_LOLA_ClrShade_SPole75_30mp_v04", 6, 457440],  // about 130 m per pixel to 75°S
+      ["LRO_LOLA_ClrShade_SPole875_5mp_v04", 9, 75840],  // about 17 m per pixel to 87.5°S
+    ],
+  };
+  const MAP_LAT = -60;  // sites farther north are off the map
+  const SITE_ZOOM = 8.5;  // about 25 m per pixel: a selected site with the terrain around it
+  const OVERVIEW_M = 135000;  // the overview shows this far from the pole: every polar Catalog Site
+  // Marker shapes by coordinate kind, as in src/site_map.py: ◆ studied point, ● region center, ■ historical landing,
+  // ▲ approximate reference.
+  const SHAPES = {
+    studied_point: '<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>',
+    region_center: '<circle cx="12" cy="12" r="9.5"/>',
+    actual_landing: '<path d="M3 3H21V21H3Z"/>',
+    approximate_reference: '<path d="M12 2 22.5 21H1.5Z"/>',
+    custom: '<circle cx="12" cy="12" r="6"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',  // a picked point
+  };
+  const KINDS = { studied_point: "studied point", region_center: "region center", actual_landing: "historical landing",
+                  approximate_reference: "approximate reference", custom: "custom site" };
+
+  function load() {
+    if (window.L?.Proj) return Promise.resolve();
+    return Promise.all([loadScript(LEAFLET_URL), loadScript(PROJ4_URL)]).then(() => loadScript(PROJ4LEAFLET_URL));
+  }
+
+  // Leaflet bounds for the square reaching `reach` meters from the pole. Leaflet projects a bounds' west corners to
+  // the top left and its east corners to the bottom right here, so all four corners share one latitude.
+  function squareBounds(crs, reach) {
+    const corner = crs.unproject(L.point(-reach, reach));
+    return L.latLngBounds([corner.lat, corner.lng], [corner.lat, corner.lng + 180]);
+  }
+
+  // Center `site`, or the pole for the overview, in the part of the map that the panel leaves uncovered.
+  function centerOn(state, site, animate) {
+    const m = state.map, map = m.leaflet, size = map.getSize(), right = panelRight(state.root);
+    const fit = Math.log2(RES0 * Math.min(size.x - right, size.y) / (2 * OVERVIEW_M));
+    const zoom = site ? SITE_ZOOM : Math.max(map.getMinZoom(), Math.floor(fit * 4) / 4);
+    const point = map.project(site ? [site.lat, site.lon] : [-90, 0], zoom).subtract([right / 2, 0]);
+    const center = map.unproject(point, zoom);
+    m.userMoved = false;
+    if (animate) map.flyTo(center, zoom, { duration: 1.2 });
+    else map.setView(center, zoom, { animate: false });
+  }
+
+  function setBase(state, name) {
+    const m = state.map;
+    Object.entries(m.bases).forEach(([n, group]) => (n === name ? group.addTo(m.leaflet) : group.remove()));
+    state.root.querySelectorAll('.choices[data-for="map"] button')
+      .forEach(b => b.classList.toggle("active", b.dataset.layer === name));
+  }
+
+  // Redraw the site markers (Catalog Sites and the Custom Site) when the sites or the selection change.
+  function drawSites(state, data) {
+    const m = state.map, signature = JSON.stringify([data.selected, data.custom, data.sites]);
+    if (signature === m.signature) return;
+    m.signature = signature;
+    m.sites.clearLayers();
+    const custom = data.custom ? [focusSite(data)] : [];
+    [...data.sites, ...custom].filter(s => s.lat <= MAP_LAT).forEach(site => {
+      const selected = site.key === data.selected || site.key === "custom", size = selected ? 26 : 18;
+      const marker = L.marker([site.lat, site.lon], {
+        icon: L.divIcon({ className: `site-marker${selected ? " selected" : ""}`, iconSize: [size, size],
+          html: `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${SHAPES[site.kind] || SHAPES.region_center}`
+            + "</svg>" }),
+        zIndexOffset: selected ? 1000 : 0, riseOnHover: true,
+      });
+      marker.bindTooltip(escapeHtml(site.name), { direction: "top", offset: [0, -size / 2], permanent: selected,
+                                                   className: "site-label" });
+      const choose = () => site.key !== "custom" && state.setTriggerValue("site", site.key);
+      marker.on("click", choose);
+      marker.on("add", () => {  // Leaflet makes markers focusable buttons; give them a name and Enter or Space
+        const el = marker.getElement();
+        el.setAttribute("aria-label", `${site.name}, ${KINDS[site.kind] || "site"}${selected ? ", selected" : ""}`);
+        el.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
+        });
+      });
+      m.sites.addLayer(marker);
+    });
+  }
+
+  function create(state) {
+    const el = state.root.querySelector(".polar-map");
+    const crs = new L.Proj.CRS("Moon:SouthPolarStereographic",
+      `+proj=stere +lat_0=-90 +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=${MOON_RADIUS_M} +units=m +no_defs`, {
+        origin: [-GRID_M, GRID_M],
+        resolutions: Array.from({ length: MAX_ZOOM + 1 }, (_, z) => RES0 / 2 ** z),
+        bounds: L.bounds([-GRID_M, -GRID_M], [GRID_M, GRID_M]),
+      });
+    crs.R = MOON_RADIUS_M;  // Proj4Leaflet has no distance(); the scale bar needs one, on the Moon
+    crs.distance = L.CRS.Earth.distance;
+    const map = L.map(el, {
+      crs, center: [-90, 0], zoom: 4, minZoom: 2, maxZoom: MAX_ZOOM, zoomSnap: 0.25, wheelPxPerZoomLevel: 100,
+      maxBounds: squareBounds(crs, MAP_M), maxBoundsViscosity: 1, inertiaMaxSpeed: 1500,  // no flinging into space
+      zoomControl: false, attributionControl: false,  // credits are in the view's own overlay
+    });
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+    L.control.scale({ position: "bottomright", imperial: false, maxWidth: 160 }).addTo(map);
+
+    // Skip tiles outside a layer's data square, where Moon Trek answers 404.
+    const Tiles = L.TileLayer.extend({
+      _isValidTile(coords) {
+        const size = 256 * RES0 / 2 ** coords.z, reach = this.options.reach;
+        const left = -GRID_M + coords.x * size, top = GRID_M - coords.y * size;
+        return left < reach && left + size > -reach && top > -reach && top - size < reach
+          && L.TileLayer.prototype._isValidTile.call(this, coords);
+      },
+    });
+    const tiles = ([layer, maxNativeZoom, reach]) => new Tiles(TILE_URL.replace("{layer}", layer),
+      { maxNativeZoom, maxZoom: MAX_ZOOM, reach })
+      .on("loading", () => setStatus(state, "map", ""))
+      .on("tileerror", () => setStatus(state, "map", "Some NASA Moon Trek tiles could not be loaded."));
+    state.map = {
+      leaflet: map, sites: L.layerGroup().addTo(map),
+      bases: Object.fromEntries(Object.entries(BASES).map(([name, layers]) => [name, L.layerGroup(layers.map(tiles))])),
+    };
+
+    map.on("click", e => askToAnalyze(state, e.latlng));  // marker clicks do not reach the map
+    const buttons = state.root.querySelector('.choices[data-for="map"]');
+    Object.keys(BASES).forEach(name => {
+      const b = document.createElement("button");
+      b.textContent = name; b.dataset.layer = name;
+      b.onclick = () => setBase(state, name);
+      buttons.appendChild(b);
+    });
+    setBase(state, Object.keys(BASES)[0]);
+    // Once the user moves the map, a change in the panel's width no longer re-centers it.
+    el.addEventListener("pointerdown", () => { state.map.userMoved = true; });
+    el.addEventListener("wheel", () => { state.map.userMoved = true; }, { passive: true });
+  }
+
+  // A click on the map (not on a site) offers to analyze that point, with a dashed ring as provisional marker.
+  function askToAnalyze(state, latlng) {
+    const map = state.map.leaflet;
+    const ring = L.circleMarker(latlng, { radius: 9, color: "#e66b27", weight: 2, dashArray: "4 3", fill: false,
+                                          interactive: false }).addTo(map);
+    const popup = L.popup({ className: "analyze-popup", closeButton: false, offset: [0, -8] }).setLatLng(latlng);
+    popup.setContent(analyzeBalloon(state, latlng.lat, latlng.lng, () => map.closePopup(popup)));
+    popup.on("remove", () => ring.remove());
+    popup.openOn(map);
+  }
+
+  function update(state, data, active) {
+    const m = state.map;
+    drawSites(state, data);
+    if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
+    const focus = focusSite(data), site = focus && focus.lat <= MAP_LAT ? focus : null;
+    const key = site ? `${site.key}:${site.lat},${site.lon}` : "";
+    if (!m.shown) {  // just switched to the map: start from the overview the first time, then fly to the site
+      m.shown = true;
+      m.leaflet.invalidateSize();
+      const first = !m.placed;
+      m.placed = true;
+      if (first) centerOn(state, null, false);
+      [m.centeredOn, m.centeredSite] = [key, site];
+      if (site || !first) centerOn(state, site, true);
+    } else if (m.centeredOn !== key) {
+      [m.centeredOn, m.centeredSite] = [key, site];
+      centerOn(state, site, true);
+    }
+  }
+
+  // The panel widens when a Site Card opens, so center the site again unless the user has moved the map since.
+  function layout(state) {
+    const m = state.map;
+    m.leaflet.invalidateSize({ pan: false });
+    if (m.shown && !m.userMoved) centerOn(state, m.centeredSite || null, true);
+  }
+
+  const destroy = state => state.map.leaflet.remove();
+
+  return { load, loadError: "Could not load the map (Leaflet and proj4) from the CDN.", exists: state => !!state.map,
+           create, update, layout, destroy };
+})();
