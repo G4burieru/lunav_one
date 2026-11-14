@@ -41,7 +41,7 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   keyword arguments for `moon_view`, so `app.py` now fills the view after the panel. The Site Planner returns
   `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. It keeps its own
   Instant slider until A3 covers the Planner window.
-- **Done: C4.** `python -m scripts.render_sun_overlay` writes the Sunlight overlay for A8:
+- **Done: C4.** `python -m scripts.render_overlays` writes the Sunlight overlay for A8, and since A8 also the Earth one:
   - `static/overlays/sun_85s.png` is 1264 × 1264 px at 240 m per pixel, about 1 MB.
   - `sun_85s.json` holds its bounds, ±151740 m in the same polar stereographic CRS as the Moon Trek tiles.
   - In Leaflet: `L.Proj.imageOverlay("app/static/overlays/sun_85s.png", L.bounds([-151740, -151740], [151740,
@@ -69,6 +69,12 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   horizons match the pre-computed ones within 0.005°. When every cell has the same value, no best cell is marked.
 - **Busy indicator:** Streamlit's header is transparent instead of hidden, so its Running and Stop indicator shows at
   the top center while a click is processed; without it a slow click looked ignored.
+- **Done: A8 and B7.** The rail has a Layers panel with two switches, Sunlight and Earth visibility, each with its
+  legend and Renata's explanation (`texts.SUN_LAYER`, `texts.EARTH_LAYER`). The choice lives in
+  `st.session_state["overlays"]`, so layers stay on in the other panels, and showing one switches to the map.
+  `drawLayers()` in `polar_map.js` places `static/overlays/<name>_85s.png` over ±151740 m in a pane between the
+  photos and the Site Neighborhood cells. Both images come from `python -m scripts.render_overlays`, with the
+  ramps of `src/colors.py` (the Earth one replaces NASA's colored tiles, so both layers read the same way).
 - **Stale modules after a deploy:** Streamlit drops changed modules only for the browser sessions that saw the
   change, and Streamlit Cloud updates the code without restarting Python, so new sessions could mix a new
   `app.py` with old `src` modules (the ImportError after PR #24). `app.py` now drops every `src` module when a

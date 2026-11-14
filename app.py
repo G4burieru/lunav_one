@@ -27,19 +27,22 @@ if _imported_src().get("stamp") != _stamp:
     _imported_src()["stamp"] = _stamp
 
 from src.moon_view import moon_view  # noqa: E402 (imports after the check above)
-from src.panels import about, catalog_list, planner, site_card  # noqa: E402
+from src.panels import about, catalog_list, layers, planner, site_card  # noqa: E402
 from src.panels.common import (  # noqa: E402
-    CUSTOM, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, open_panel, rail_active, select_custom, select_site)
+    CUSTOM, OVERLAYS, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, open_panel, rail_active, select_custom,
+    select_site)
 from src.sites import LUNAR_SITES  # noqa: E402
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
-PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render, "about": about.render}
+PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render,
+          "layers": layers.render, "about": about.render}
 RAIL = [("catalog", "Catalog", ":material/public:"), ("planner", "Plan", ":material/edit_location_alt:"),
-        ("about", "About", ":material/info:")]
+        ("layers", "Layers", ":material/layers:"), ("about", "About", ":material/info:")]
 RAIL_WIDTH = "76px"
 PANEL_LEFT = f"calc({RAIL_WIDTH} + 38px)"  # 14 px margins around the rail, 10 px gap
-PANEL_WIDTH = {"catalog": "380px", "about": "380px", "site": "min(46vw, 760px)", "planner": "min(46vw, 760px)"}
+PANEL_WIDTH = {"catalog": "380px", "layers": "380px", "about": "380px", "site": "min(46vw, 760px)",
+               "planner": "min(46vw, 760px)"}
 POLAR_LAT = -80.0  # choosing a site south of this opens the south polar map; other sites open the globe
 
 # The view is pinned behind everything and the rail and the panel float over it. The rest of the page ignores the
@@ -130,4 +133,6 @@ with view_slot:  # the view needs no Horizons data, so it opens even if Horizons
     # A panel's render() can override any of these, e.g. the Site Planner's view, Surface Asset and time bar data.
     moon_view(LUNAR_SITES, selected, key="moon_view", **{"on_site": on_view_site, "on_point": on_view_point,
                                                          "on_cell": planner.on_map_cell, "view": view,
-                                                         "view_id": view_id, "custom": custom, **view_data})
+                                                         "view_id": view_id, "custom": custom,
+                                                         "overlays": st.session_state.get(OVERLAYS, ()),
+                                                         **view_data})

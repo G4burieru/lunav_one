@@ -98,7 +98,7 @@ lunav_one/
 ├── scripts/
 │   ├── precompute.py            # Generates data/catalog/
 │   ├── compare_pgda.py          # Numerical PGDA consistency check
-│   └── render_sun_overlay.py    # Prepares a NASA-derived overlay asset
+│   └── render_overlays.py       # Prepares the NASA-derived Layers images
 ├── static/
 │   ├── icons/                  # SVG interface icons
 │   └── overlays/               # Prepared Sun visibility image and metadata
@@ -117,7 +117,7 @@ lunav_one/
 │   ├── test_catalog.py
 │   ├── test_app.py              # Panel smoke tests
 │   ├── test_panels.py           # Search, formatting and state contracts
-│   └── test_sun_overlay.py
+│   └── test_overlays.py
 └── docs/
     ├── TEAM_PLAN.md             # Ownership and workflow
     ├── UI_OVERHAUL.md           # Interface plan and integration tasks

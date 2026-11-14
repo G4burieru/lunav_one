@@ -51,6 +51,27 @@ const polarMap = (() => {
     return L.latLngBounds([corner.lat, corner.lng], [corner.lat, corner.lng + 180]);
   }
 
+  // Layers (task A8): the NASA PGDA average Sun and Earth visibility maps, rendered by scripts/render_overlays.py into
+  // static/overlays/ and reaching 85°S. Their pane sits above the photos (tiles: 200) and under the Site Neighborhood
+  // cells (overlays: 400) and the markers (600).
+  const LAYER_M = 151740;
+  function drawLayers(state, data) {
+    const m = state.map, map = m.leaflet, wanted = new Set(data.overlays || []);
+    if (!m.layers) {
+      m.layers = {};
+      map.createPane("layers").style.zIndex = 350;
+    }
+    ["sun", "earth"].forEach(name => {
+      if (wanted.has(name) && !m.layers[name]) {
+        m.layers[name] = L.Proj.imageOverlay(`app/static/overlays/${name}_85s.png`,
+          L.bounds([-LAYER_M, -LAYER_M], [LAYER_M, LAYER_M]), { pane: "layers", opacity: 0.75 }).addTo(map);
+      } else if (!wanted.has(name) && m.layers[name]) {
+        m.layers[name].remove();
+        delete m.layers[name];
+      }
+    });
+  }
+
   // Center `site`, or the pole for the overview, in the part of the map that the panel leaves uncovered.
   // A site with `reach` (meters) is framed so that far around it fits; other sites use SITE_ZOOM.
   function centerOn(state, site, animate) {
@@ -191,6 +212,7 @@ const polarMap = (() => {
     const m = state.map;
     drawSites(state, data);
     drawNeighborhood(state, data);
+    drawLayers(state, data);
     if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
     // The Site Planner frames its whole Site Neighborhood and stays put while the Surface Asset moves inside it.
     const focus = focusSite(data), hood = data.mode === "planner" ? data.neighborhood : null;
