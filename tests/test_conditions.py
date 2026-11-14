@@ -72,3 +72,17 @@ def test_cell_corners_surround_each_neighborhood_point():
     assert corners.shape == (2, 4, 2)
     offsets = np.array([offset_from(site, lat, lon) for lat, lon in corners[1]])
     np.testing.assert_allclose(offsets, [[250, -250], [350, -250], [350, -150], [250, -150]], atol=0.01)
+
+
+def test_live_neighborhood_summary_matches_the_precomputed_one(monkeypatch):
+    """With the pre-computed horizons and ephemerides, the live path gives the pre-computed Site Neighborhood."""
+    from src import conditions
+    key = "Connecting Ridge C1"
+    site = LUNAR_SITES[key]
+    ephemerides, neighborhood = catalog.load_site(key, site)
+    monkeypatch.setattr(conditions, "get_ephemerides_data", lambda lat, lon, start, days: ephemerides)
+    live = conditions.live_neighborhood_summary(site["lat"], site["lon"], neighborhood["horizons"], "2027-03-01", 14)
+    precomputed = conditions.neighborhood_summary(key, "2027-03-01", 14)
+    assert len(live) == len(precomputed)
+    np.testing.assert_allclose(live[["east_m", "north_m", "sunlight_pct", "earth_visible_pct"]],
+                               precomputed[["east_m", "north_m", "sunlight_pct", "earth_visible_pct"]])

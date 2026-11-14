@@ -25,7 +25,7 @@ from src import catalog
 from src.horizons_api import get_ephemerides_data
 from src.sites import LUNAR_SITES
 from src.terrain import (MOON_GEOGRAPHIC, MOON_RADIUS_M, SOUTH_POLE_DEM_LIMIT, apply_terrain, dem_for,
-                         elevation_at_offset, illumination_fraction, site_horizon)
+                         elevation_at_offset, illumination_fraction, neighborhood_horizons, site_horizon)
 
 
 def _local_crs(site):
@@ -130,7 +130,11 @@ def neighborhood_summary(site_key, start_date, days, elevation_mask=0.0, chunk=1
         ephemerides = get_ephemerides_data(site["lat"], site["lon"], start.date(), days)
     window = ephemerides[(ephemerides["time"] >= start) & (ephemerides["time"] < stop)]
 
-    east, north, horizons = neighborhood["east"], neighborhood["north"], neighborhood["horizons"]
+    return _summarize_neighborhood(site, window, neighborhood["horizons"], neighborhood["east"],
+                                   neighborhood["north"], elevation_mask, chunk)
+
+
+def _summarize_neighborhood(site, window, horizons, east, north, elevation_mask, chunk=100):
     sunlight, earth = np.empty(len(east)), np.empty(len(east))
     for i in range(0, len(east), chunk):  # chunks keep (points x hours) arrays small for multi-year windows
         part = slice(i, i + chunk)
@@ -143,3 +147,21 @@ def neighborhood_summary(site_key, start_date, days, elevation_mask=0.0, chunk=1
     lons, lats = warp_transform(_local_crs(site), MOON_GEOGRAPHIC, list(east), list(north))
     return pd.DataFrame({"east_m": east, "north_m": north, "lat": lats, "lon": lons,
                          "sunlight_pct": sunlight, "earth_visible_pct": earth})
+
+
+def live_neighborhood_horizons(lat, lon, asset_height=catalog.ASSET_HEIGHT_M):
+    """Terrain horizons (points x 360, degrees) of a Site Neighborhood grid around any point south of 80°S, in the
+    order of catalog.neighborhood_offsets(), computed live from the DEMs: about 30 s, so cache the result."""
+    east, north = catalog.neighborhood_offsets()
+    return neighborhood_horizons(lat, lon, east, north, asset_height)
+
+
+def live_neighborhood_summary(lat, lon, horizons, start_date, days, elevation_mask=0.0):
+    """neighborhood_summary() around any point, from live_neighborhood_horizons(): for a Custom Site, or an Asset
+    Height other than the pre-computed one. Queries JPL Horizons once, at the center point."""
+    start = pd.Timestamp(start_date)
+    stop = start + pd.Timedelta(days=days)
+    ephemerides = get_ephemerides_data(lat, lon, start.date(), days)
+    window = ephemerides[(ephemerides["time"] >= start) & (ephemerides["time"] < stop)]
+    east, north = catalog.neighborhood_offsets()
+    return _summarize_neighborhood({"lat": lat, "lon": lon}, window, horizons, east, north, elevation_mask)
