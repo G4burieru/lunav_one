@@ -11,23 +11,9 @@ const globeView = (() => {
   const BUMP = ["LRO_LOLA_DEM_Global_128ppd_v04", "png", 2];  // LOLA elevation (grayscale) for bump shading
   const SELECTED_COLOR = "#e66b27", SITE_COLOR = "#4ba3d3";
 
-  const escapeHtml = text => text.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;",
-    "'": "&#39;" })[c]);
   const tooltip = s => `<b>${escapeHtml(s.name)}</b><br>${s.lat.toFixed(4)}°, ${s.lon.toFixed(4)}° E`;
 
-  function load() {
-    if (window.Globe) return Promise.resolve();
-    if (!window.__lunavGlobeGl) {
-      window.__lunavGlobeGl = new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = GLOBE_GL_URL;
-        script.onload = resolve;
-        script.onerror = () => { window.__lunavGlobeGl = null; reject(new Error("globe.gl")); };
-        document.head.appendChild(script);
-      });
-    }
-    return window.__lunavGlobeGl;
-  }
+  const load = () => (window.Globe ? Promise.resolve() : loadScript(GLOBE_GL_URL));
 
   // One equirectangular texture per (layer, level), assembled from Moon Trek tiles on a canvas and kept for the
   // lifetime of the page. Tiles that fail stay black; the promise rejects only if every tile failed.
@@ -61,10 +47,10 @@ const globeView = (() => {
 
   function setLayer(state, name) {
     state.layer = name;
-    state.root.querySelectorAll(".layers button").forEach(b => b.classList.toggle("active", b.dataset.layer === name));
+    state.root.querySelectorAll('.choices[data-for="globe"] button')
+      .forEach(b => b.classList.toggle("active", b.dataset.layer === name));
     const [layer, ext, maxLevel] = LAYERS[name];
-    const status = state.root.querySelector(".status");
-    status.textContent = "Loading NASA Moon Trek imagery…";
+    setStatus(state, "globe", "Loading NASA Moon Trek imagery…");
     // Show a quick low-resolution texture first, then the full one.
     const levels = [...new Set([Math.min(2, maxLevel), maxLevel])];
     let shown = -1;
@@ -72,21 +58,19 @@ const globeView = (() => {
       if (state.layer !== name || level < shown) return;
       shown = level;
       state.globe.globeImageUrl(url);
-      if (level === maxLevel) status.textContent = "";
+      if (level === maxLevel) setStatus(state, "globe", "");
     }).catch(() => {
-      if (state.layer === name) status.textContent = "Could not load NASA Moon Trek imagery.";
+      if (state.layer === name) setStatus(state, "globe", "Could not load NASA Moon Trek imagery.");
     }));
   }
 
-  // The app's floating panel covers the left of the globe, so shift the projection center to the middle of the
-  // uncovered area. The panel is measured on the page (st.container(key="panel") in app.py); phones stack it under
-  // the view instead, and then it is not fixed, so no shift.
-  function applyViewOffset(state) {
+  // Fit the globe to the view and shift the projection center to the middle of the area the panel leaves uncovered.
+  function layout(state) {
     const el = state.root.querySelector(".globe"), w = el.clientWidth, h = el.clientHeight;
-    const panel = document.querySelector(".st-key-panel");
-    const right = panel && getComputedStyle(panel).position === "fixed" ? panel.getBoundingClientRect().right : 0;
-    const camera = state.globe.camera();
-    if (right && w && h) camera.setViewOffset(w, h, -right / 2, 0, w, h);
+    if (!w || !h) return;
+    state.globe.width(w).height(h);
+    const right = panelRight(state.root), camera = state.globe.camera();
+    if (right) camera.setViewOffset(w, h, -right / 2, 0, w, h);
     else camera.clearViewOffset();
     camera.updateProjectionMatrix();
   }
@@ -97,42 +81,20 @@ const globeView = (() => {
     return { lat: Math.max(site.lat, -85), lng: site.lon, altitude: site.lat < -75 ? 0.9 : 1.6 };
   }
 
-  // Re-center whenever the panel changes size. Streamlit renders the panel after the view, so it may not exist yet.
-  function watchPanel(state, tries = 25) {
-    const panel = document.querySelector(".st-key-panel");
-    if (panel && panel !== state.panel) { state.panel = panel; state.observer.observe(panel); }
-    else if (!panel && tries > 0) setTimeout(() => watchPanel(state, tries - 1), 200);
-  }
-
-  function update(state, data) {
+  function update(state, data, active) {
     const globe = state.globe, selected = data.sites.find(s => s.key === data.selected);
-    watchPanel(state);
-    applyViewOffset(state);
     globe.pointsData(data.sites).labelsData(selected ? [selected] : []);
+    if (!active) {  // hidden behind the polar map: stop drawing until shown again
+      if (!state.globePaused) { state.globePaused = true; globe.pauseAnimation(); }
+      return;
+    }
+    if (state.globePaused) { state.globePaused = false; globe.resumeAnimation(); }
     globe.controls().autoRotate = !selected;
     if (state.cameraKey !== (data.selected || "")) {
       state.cameraKey = data.selected || "";
-      globe.pointOfView(cameraFor(selected), state.created ? 1500 : 0);
+      globe.pointOfView(cameraFor(selected), state.globeShown ? 1500 : 0);
     }
-    const info = state.root.querySelector(".info");
-    info.classList.toggle("has-site", !!selected);
-    info.querySelector(".info-name").textContent = selected ? selected.name : "";
-    info.querySelector(".info-text").textContent = selected
-      ? `${selected.lat.toFixed(4)}°, ${selected.lon.toFixed(4)}° E · ${selected.description}` : "";
-    state.created = true;
-  }
-
-  function addFullscreenButton(state) {
-    // The component lives in a shadow root, so ask the root node (not document) which element is full screen.
-    const root = state.root, isFullscreen = () => root.getRootNode().fullscreenElement === root;
-    const button = document.createElement("button");
-    button.className = "fullscreen";
-    const label = () => { button.textContent = isFullscreen() ? "✕ Exit full screen" : "⛶ Full screen"; };
-    button.onclick = () => (isFullscreen() ? document.exitFullscreen() : root.requestFullscreen()).catch(() => {});
-    state.onFullscreenChange = label;
-    document.addEventListener("fullscreenchange", label);
-    label();
-    root.querySelector(".layers").appendChild(button);
+    state.globeShown = true;
   }
 
   function create(state) {
@@ -160,7 +122,7 @@ const globeView = (() => {
       globe.globeMaterial().bumpScale = 6;
     }).catch(() => {});
 
-    const buttons = root.querySelector(".layers");
+    const buttons = root.querySelector('.choices[data-for="globe"]');
     Object.keys(LAYERS).forEach(name => {
       const b = document.createElement("button");
       b.textContent = name; b.dataset.layer = name;
@@ -168,13 +130,10 @@ const globeView = (() => {
       buttons.appendChild(b);
     });
     setLayer(state, Object.keys(LAYERS)[0]);
-    if (root.requestFullscreen) addFullscreenButton(state);
-
-    const resize = () => { globe.width(el.clientWidth).height(el.clientHeight); applyViewOffset(state); };
-    state.observer = new ResizeObserver(resize);
-    state.observer.observe(el);
-    resize();
   }
 
-  return { load, create, update };
+  const destroy = state => state.globe._destructor?.();
+
+  return { load, loadError: "Could not load globe.gl from the CDN.", exists: state => !!state.globe, create, update,
+           layout, destroy };
 })();
