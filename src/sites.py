@@ -151,15 +151,20 @@ LUNAR_SITES = {
         "Representative center of the de Gerlache-Kocher Massif study region, not a measured summit.",
         "Elevated polar terrain supports studies of illumination and Earth line of sight.",
     ),
-    "Leibnitz Beta Plateau": _artemis_region(
+    "Leibnitz Beta Plateau": _region(
         "Leibnitz Beta Plateau", -85.4266, 31.74276, "R20 / Site20", 58,
-        "Representative center of the historical Leibnitz Beta Plateau study region, now known as Mons Mouton. "
-        "The legacy name and coordinates are retained for pre-computed data compatibility.",
+        "Representative center of the historical 2022 Leibnitz Beta Plateau study region. "
+        "Leibnitz Beta was an informal name for the mountain now officially named Mons Mouton; "
+        "the regional center is not a verified summit. The legacy name and coordinates are retained.",
         "Elevated polar terrain supports studies of illumination and Earth line of sight. "
-        "NASA's 2024 list names Mons Mouton and Mons Mouton Plateau separately; this historical "
-        "center does not define the boundaries or center of either revised region. "
+        "The mountain-name correspondence does not establish identical regional boundaries. "
         "Naming reference: https://svs.gsfc.nasa.gov/5074/.",
-        in_2024=True,
+        ARTEMIS_2022 + "NASA revised the regional selection and nomenclature in 2024, listing "
+        "Mons Mouton and Mons Mouton Plateau separately. Equivalence of this older polygon "
+        "with either revised region is not established here; no automatic retention in the "
+        "2024 list is claimed. "
+        f"[NASA 2024 regional update]({ARTEMIS_2024_SOURCE}). " + ARTEMIS_CONTEXT,
+        ARTEMIS_2022_SOURCE,
     ),
     "Nobile Rim 1": _artemis_region(
         "Nobile Rim 1", -85.4381, 37.36667, "R06 / Site06", 58,

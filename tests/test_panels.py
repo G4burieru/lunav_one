@@ -76,3 +76,14 @@ def test_new_overviews_distinguish_regional_imagery_and_link_scientific_sources(
             assert 'Regional context' in caption and 'exact coordinates' in caption
             assert 'NASA/GSFC/Arizona State University' in caption
             assert 'PIA13523' in url and page.endswith('PIA13523')
+
+
+def test_leibnitz_overview_does_not_equate_old_and_revised_regions():
+    from src.panels.places import PLACES
+    from src.sites import ARTEMIS_2022_SOURCE, ARTEMIS_2024_SOURCE
+    title, text, images = PLACES['Leibnitz Beta Plateau']
+    assert 'historical 2022 region center' in text
+    assert 'Mons Mouton Plateau' in text and 'does not establish' in text
+    assert 'associated region also appears' not in text
+    assert all(source in text for source in [ARTEMIS_2022_SOURCE, ARTEMIS_2024_SOURCE,
+                                            'https://svs.gsfc.nasa.gov/5074/'])

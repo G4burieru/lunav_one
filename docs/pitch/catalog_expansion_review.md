@@ -20,7 +20,7 @@ records the nine coordinates and source identifiers.
 | de Gerlache Rim 1 | R11 / Site11 | 58 | 2022 list |
 | de Gerlache Rim 2 | SL2 | 58 | 2022 and 2024 lists |
 | de Gerlache-Kocher Massif | R42 / Site42 | 58 | 2022 list |
-| Leibnitz Beta Plateau | R20 / Site20 | 58 | 2022 name; associated Mons Mouton feature in 2024 |
+| Leibnitz Beta Plateau | R20 / Site20 | 58 | 2022 region; no equivalent 2024 polygon established |
 | Nobile Rim 1 | R06 / Site06 | 58 | 2022 and 2024 lists |
 | Nobile Rim 2 | DM2 | 57 | 2022 and 2024 lists |
 | Amundsen Rim | DM1 | 57 | 2022 list |
@@ -36,7 +36,10 @@ and Connecting Ridge C1/C2; Shackleton S1/S2 are additional study points.
 Leibnitz Beta / official Mons Mouton correspondence. The old key is retained for
 pre-computed file compatibility. NASA lists **Mons Mouton** and **Mons Mouton
 Plateau** separately in 2024; an earlier polygon center is not a new boundary
-measurement or proof of an identical regional footprint. This update adds no
+measurement or proof of an identical regional footprint. Its record therefore
+uses the 2022 association and links the 2024 revision as context, without the
+automatic claim that it was retained. The Overview follows the same distinction.
+This update adds no
 missing 2024 regions and claims no current mission selection.
 
 Connecting Ridge C1/C2 remain the specific Gläser illumination-study points.
@@ -96,7 +99,8 @@ is available; otherwise that one test is explicitly skipped. `NODE_BINARY` may
 point to an existing compatible runtime without adding project dependencies.
 Tests also check real catalog/manifest coordinates, hourly coverage, terrain
 files, all Overview entries, source links and the Planner payload integration.
-The full suite passed **123 tests**, including the JavaScript regression using
+After the Leibnitz historical-association correction, the full suite passed
+**125 tests**, including the JavaScript regression using
 an existing Node-compatible runtime. `git diff --check` also passed.
 
 No identifier, coordinate, pre-computed file or scientific equation was changed.

@@ -1,7 +1,12 @@
-# Three-minute demo — time-aware Moon View
+# Extended Demo — approximately 3 minutes
+
+Complementary material, separate from the [Official Demo of at most 30 seconds](demo_30s.md).
+This extended video will be linked from the GitHub README. It does not replace
+the official submission demo and will not be submitted as that demonstration.
 
 Draft updated for the 17-site catalog introduced by PR #41. Rehearse the
-spoken paragraphs at about 130 words per minute, allowing screen transitions.
+spoken paragraphs at about 130 words per minute: approximately 342 words, or
+2 minutes 38 seconds of narration, plus about 20 seconds for screen interactions.
 Bracketed directions and checklists are not narration. Confirm that the
 [hosted application](https://lunavone.streamlit.app/) has the same build before recording.
 

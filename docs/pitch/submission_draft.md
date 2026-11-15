@@ -75,8 +75,9 @@ coordinate search or an analyzed click on the globe/map.
 Seventeen Catalog Sites have source references and coordinate meanings, including all 13
 historical Artemis III candidate regions NASA named in 2022: Connecting Ridge is
 represented by C1/C2, not its regional center. The Leibnitz Beta identifier is
-retained for Mons Mouton, and Haworth's 2022/2024 associations are documented;
-the 2024 region boundaries are not inferred from older coordinates. All 17 have
+retained as a historical reference associated with the mountain Mons Mouton;
+this does not establish retention or polygon equivalence with either 2024 region.
+Haworth's 2022/2024 associations are documented. All 17 have
 Overviews; the nine new entries use an explicitly labeled regional LROC mosaic.
 Four
 specific study points come from Gläser et al. (2017); other entries are regional
@@ -154,10 +155,16 @@ should not be required by the main recording path.
 
 ## Publication details
 
+The team will use only the short video as its official demonstration. No slide
+presentation is planned; the extended video is complementary GitHub material.
+
 - Application: https://lunavone.streamlit.app/
-- Demonstration video: pending recording and review.
+- Official Demo: at most 30 seconds, pending recording; [script](demo_30s.md).
+- Extended Demo: approximately three minutes of complementary material, pending
+  recording; [script](demo_script.md). This does not replace the official demo.
 - Repository: https://github.com/G4burieru/lunav_one
-- Team: Gabriel (science), Igor (interface), Renata (sites, texts and presentation).
+- Team: Lunav One — João Gabriel Santos (science), Igor Wanderley (interface),
+  Renata Andrade (sites, texts and presentation).
 - Challenge reference: https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/
 
 Confirm the official form's limits and the final deployed feature set before submission.

@@ -121,12 +121,15 @@ PLACES.update({
         "terrain is useful context for exploring how topography changes the visible Sun and Earth.",
     ),
     "Leibnitz Beta Plateau": _regional_overview(
-        "Mons Mouton — historical Leibnitz Beta Plateau region",
+        "Historical Leibnitz Beta Plateau region / Mons Mouton",
         "Leibnitz Beta was an informal name for the mountain now officially named Mons Mouton, "
-        "near Nobile crater. The catalog keeps its historical identifier and center. NASA's 2024 "
-        "list distinguishes Mons Mouton and Mons Mouton Plateau; this older coordinate does not "
-        "define either revised region's boundaries.",
-        in_2024=True, naming_source="https://svs.gsfc.nasa.gov/5074/",
+        "near Nobile crater. The catalog keeps the historical 2022 region center and identifier. "
+        "NASA revised the regional selection and nomenclature in 2024, listing Mons Mouton "
+        "and Mons Mouton Plateau separately. This naming correspondence does not establish "
+        "that the older polygon matches either revised region; its center is not presented "
+        "as the center of either 2024 region. "
+        f"[NASA 2024 regional update]({ARTEMIS_2024_SOURCE}).",
+        naming_source="https://svs.gsfc.nasa.gov/5074/",
     ),
     "Nobile Rim 1": _regional_overview(
         "Nobile Rim 1",

@@ -129,5 +129,6 @@ safety, permanent illumination, usable power, thermal survival or operational co
 [LROC](https://lroc.im-ldi.com/) ·
 [Gläser et al. (2017)](https://ntrs.nasa.gov/citations/20170007365).
 Coordinate references are recorded in each Catalog Site's scientific context.
-Lunav One's team: Gabriel (science), Igor (interface), Renata (sites, text and presentation).
+Team Lunav One: João Gabriel Santos (science), Igor Wanderley (interface),
+Renata Andrade (sites, text and presentation).
 """

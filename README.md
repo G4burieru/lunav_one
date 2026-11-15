@@ -155,7 +155,8 @@ lunav_one/
     └── pitch/
         ├── mission_explainer.md
         ├── submission_draft.md
-        ├── demo_script.md
+        ├── demo_30s.md          # Official short submission demo
+        ├── demo_script.md       # Complementary extended demo
         ├── illumination_comparison.md
         ├── final_science_review.md # Historical scientific and image-source review
         └── catalog_expansion_review.md # 17-site provenance and temporal integration
@@ -170,11 +171,13 @@ lunav_one/
 
 ## Team
 
+Team name: **Lunav One**.
+
 | Member | Role |
 |---|---|
-| Gabriel | Data & Science |
-| Igor | Interface & Deployment |
-| Renata | Sites, Context & Pitch |
+| João Gabriel Santos | Data & Science |
+| Igor Wanderley | Interface & Deployment |
+| Renata Andrade | Sites, Context & Pitch |
 
 See [docs/TEAM_PLAN.md](docs/TEAM_PLAN.md) for details.
 
@@ -225,7 +228,7 @@ no pre-computation is performed by the catalog module itself.
 | de Gerlache Rim 1 | -88.6834 | -67.9321 | NASA Table A2-2 region center, R11 / Site11 |
 | de Gerlache Rim 2 | -88.23 | -64.6284 | NASA Table A2-2 region center, SL2 |
 | de Gerlache-Kocher Massif | -85.8296 | -116.322 | NASA Table A2-2 region center, R42 / Site42 |
-| Leibnitz Beta Plateau (Mons Mouton) | -85.4266 | 31.74276 | NASA Table A2-2 historical region center, R20 / Site20 |
+| Leibnitz Beta Plateau (historical region) | -85.4266 | 31.74276 | NASA Table A2-2 historical region center, R20 / Site20 |
 | Nobile Rim 1 | -85.4381 | 37.36667 | NASA Table A2-2 region center, R06 / Site06 |
 | Nobile Rim 2 | -83.954 | 58.82206 | NASA Table A2-2 region center, DM2 |
 | Amundsen Rim | -84.2287 | 69.44396 | NASA Table A2-2 region center, DM1 |
@@ -261,10 +264,12 @@ locations, not extra 2022 candidate regions. CLPS landings are not added here.
 
 Haworth was listed in both 2022 and the
 [October 2024 revision](https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/).
-Leibnitz Beta is now named [Mons Mouton](https://svs.gsfc.nasa.gov/5074/).
-Its legacy catalog key and coordinates remain unchanged. The 2024 list names
-Mons Mouton and Mons Mouton Plateau separately; the older center does not define
-either revised region's footprint. This catalog is not a complete set of the
+The mountain informally called Leibnitz Beta is now officially named
+[Mons Mouton](https://svs.gsfc.nasa.gov/5074/).
+Its legacy catalog key and coordinates remain unchanged. Regional selection and
+nomenclature changed in 2024: Mons Mouton and Mons Mouton Plateau are listed
+separately. The older polygon is not documented here as equivalent to either
+revised region, so no automatic retention in the 2024 list is claimed. This catalog is not a complete set of the
 nine revised 2024 regional centers. All 17 Overviews now include sourced context;
 the nine new entries explicitly label their shared NASA LROC mosaic as regional
 context rather than a photograph of the exact coordinate. See the
@@ -302,11 +307,30 @@ visibility map: six are within 1.3 percentage points and all within 4.6
 (`python -m scripts.compare_pgda`). These are consistency checks, not a claim of
 independent mission validation.
 
-## Scientific explanation and presentation drafts
+## Scientific explanation and demo scripts
 
 - [Mission explainer](docs/pitch/mission_explainer.md): accessible scientific background.
 - [Submission draft](docs/pitch/submission_draft.md): current work, intended impact and pending details.
-- [Three-minute demo script](docs/pitch/demo_script.md): demonstrated features versus planned work.
+- [Official short demo script](docs/pitch/demo_30s.md): submission video, at most 30 seconds.
+- [Extended demo script](docs/pitch/demo_script.md): approximately three minutes of complementary material.
+
+## Demo Videos
+
+**Official Demo — 30 seconds**
+
+The team will submit only this short video as its official NASA Space Apps
+Challenge demonstration. No slide presentation is planned. Recording and publication are pending. [Recording script](docs/pitch/demo_30s.md).
+
+<!-- When published, add the real public video link here, labeled Official Demo. -->
+
+**Extended Demo — approximately 3 minutes**
+
+Complementary material showing the interface, site selection, temporal indicators
+and Site Planner in more detail, to be shared here on GitHub. It does not replace
+the official short demo and is not the demonstration submitted for judging.
+Recording and publication are pending. [Recording script](docs/pitch/demo_script.md).
+
+<!-- When published, add the real public video link here, labeled Extended Demo. -->
 
 ## External services and integration status
 
@@ -361,4 +385,4 @@ tool. The schematic map itself does not calculate terrain or illumination.
 
 Application: [Lunav One](https://lunavone.streamlit.app/).
 
-Demonstration video: pending publication.
+Demo videos: recording and publication pending; see [Demo Videos](#demo-videos).
