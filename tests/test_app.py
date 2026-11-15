@@ -1,7 +1,15 @@
 """Smoke test: the app and every panel render without exceptions, using pre-computed catalog data only."""
 from streamlit.testing.v1 import AppTest
 
+from src.panels import texts
 from src.panels.common import VIEW_CHOICE, VIEWS
+
+
+def test_about_shows_each_section_in_an_expander():
+    at = AppTest.from_file("../app.py", default_timeout=120).run()
+    at.button(key="rail_about").click().run()
+    assert [expander.label for expander in at.expander] == list(texts.ABOUT_SECTIONS)
+    assert not at.exception
 
 
 def test_every_panel_renders():
