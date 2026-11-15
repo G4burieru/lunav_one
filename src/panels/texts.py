@@ -54,7 +54,7 @@ Lunav One helps you explore sunlight and Earth Visibility near the lunar south p
 at a chosen location, height and Analysis Window. This is an educational prototype.
 
 **Read the Site Card.** Its averages and longest intervals cover **2027–2028 at 2 m
-Asset Height**. Rankings compare only the eight Catalog Sites and the selected metric;
+Asset Height**. Rankings compare only the Catalog Sites and the selected metric;
 they do not rank landing safety. The selected-instant line and 28-day Sun & Earth charts
 describe a shorter interval; the Seasons chart groups results by month.
 

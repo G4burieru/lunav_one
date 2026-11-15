@@ -10,8 +10,8 @@ Compatibility: legacy dictionary keys are retained. In particular, the key
 "Shackleton Crater (Rim)" now identifies Table 2 point 1 (local label S1),
 replacing the old Site04 center (-89.7668, -171.87). Invalidate its cached data.
 
-Keep this initial set small: additional regional centers and CLPS landing
-locations are deferred to avoid increasing automatic pre-computation on main.
+The regional centers cover all 13 Artemis III candidate regions NASA named in 2022
+(ARTEMIS_2022_SOURCE). CLPS landing locations are deferred: no official coordinates.
 """
 
 COORDINATE_CONVENTION = "Lunar coordinates; degrees; north-positive latitude; east-positive longitude [-180, 180]"
@@ -22,6 +22,11 @@ POLAR_SOURCE = (
 
 ILLUMINATION_SOURCE = "https://ntrs.nasa.gov/api/citations/20170007365/downloads/20170007365.pdf"
 ARTEMIS_SOURCE = "https://www.nasa.gov/news-release/nasa-adds-mission-to-artemis-lunar-program-updates-architecture/"
+# NASA's Artemis III candidate landing regions: 13 in August 2022, refined to 9 in October 2024.
+ARTEMIS_2022_SOURCE = "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-moon/"
+ARTEMIS_2024_SOURCE = "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+ARTEMIS_2022 = "Included in NASA's 2022 Artemis III candidate-region list. "
+ARTEMIS_2024 = "Included in NASA's 2022 list and kept in its refined 2024 list of nine regions. "
 ARTEMIS_CONTEXT = (
     "Historical lunar exploration context only; no current landing selection implied. "
     "NASA's 2026 architecture assigns Artemis III an Earth-orbit demonstration in 2027 "
@@ -62,7 +67,7 @@ def _studied_point(name, lat, source_lon, source_row):
     }
 
 
-def _region(name, lat, lon, source_id, page, description, science, exploration):
+def _region(name, lat, lon, source_id, page, description, science, exploration, exploration_source=ARTEMIS_SOURCE):
     return {
         "name": name, "lat": lat, "lon": lon, "description": description,
         "scientific_context": science, "exploration_context": exploration,
@@ -74,8 +79,15 @@ def _region(name, lat, lon, source_id, page, description, science, exploration):
         "coordinate_reference_frame": "Lunar Mean Earth (MOON_ME), PGDA DEM provenance",
         "priority": "context",
         "topographic_validation": "Pending: region center must not be used as a validated summit or landing point",
-        "exploration_source": ARTEMIS_SOURCE,
+        "exploration_source": exploration_source,
     }
+
+
+def _artemis_region(name, lat, lon, source_id, page, description, science, in_2024=False):
+    """One of NASA's 2022 Artemis III candidate regions, at its Table A2-2 center."""
+    return _region(name, lat, lon, source_id, page, description, science,
+                   (ARTEMIS_2024 if in_2024 else ARTEMIS_2022) + ARTEMIS_CONTEXT,
+                   ARTEMIS_2024_SOURCE if in_2024 else ARTEMIS_2022_SOURCE)
 
 
 LUNAR_SITES = {
@@ -97,7 +109,7 @@ LUNAR_SITES = {
         "Malapert Massif", -85.9948, -0.23578, "R23 / Site23", 58,
         "Representative Malapert Massif region center, not a measured summit point.",
         "Elevated polar terrain supports studies of illumination and Earth line of sight.",
-        "Included in NASA's 2022 Artemis III candidate-region list. " + ARTEMIS_CONTEXT,
+        ARTEMIS_2024 + ARTEMIS_CONTEXT, ARTEMIS_2024_SOURCE,
     ),
     "Faustini Crater (Rim)": _region(
         "Faustini Rim A", -87.8897, 90.0, "LM7", 57,
@@ -110,6 +122,55 @@ LUNAR_SITES = {
         "Haworth DEM study-region center; not the crater center or floor.",
         "LOLA topography supports investigation of polar terrain and horizon obstruction.",
         "NASA GSFC south-pole DEM study region; no mission landing designation implied.",
+    ),
+    "Peak Near Shackleton": _artemis_region(
+        "Peak Near Shackleton", -88.811, 123.6901, "R07 / Site07", 58,
+        "Representative center of the Peak Near Shackleton study region.",
+        "Elevated polar terrain supports studies of illumination and Earth line of sight.",
+    ),
+    "Connecting Ridge Extension": _artemis_region(
+        "Connecting Ridge Extension", -89.0324, -101.999, "SL3", 58,
+        "Representative center of the Connecting Ridge Extension study region.",
+        "Elevated polar terrain supports studies of illumination and Earth line of sight.",
+    ),
+    "de Gerlache Rim 1": _artemis_region(
+        "de Gerlache Rim 1", -88.6834, -67.9321, "R11 / Site11", 58,
+        "Representative center of the de Gerlache Rim 1 study region.",
+        "Polar rim terrain provides context for studies of shadow, cold traps and volatiles.",
+    ),
+    "de Gerlache Rim 2": _artemis_region(
+        "de Gerlache Rim 2", -88.23, -64.6284, "SL2", 58,
+        "Representative center of the de Gerlache Rim 2 study region.",
+        "Polar rim terrain provides context for studies of shadow, cold traps and volatiles.",
+        in_2024=True,
+    ),
+    "de Gerlache-Kocher Massif": _artemis_region(
+        "de Gerlache-Kocher Massif", -85.8296, -116.322, "R42 / Site42", 58,
+        "Representative center of the de Gerlache-Kocher Massif study region, not a measured summit.",
+        "Elevated polar terrain supports studies of illumination and Earth line of sight.",
+    ),
+    "Leibnitz Beta Plateau": _artemis_region(
+        "Leibnitz Beta Plateau", -85.4266, 31.74276, "R20 / Site20", 58,
+        "Representative center of the Leibnitz Beta Plateau study region. Leibnitz Beta is now officially "
+        "named Mons Mouton.",
+        "Elevated polar terrain supports studies of illumination and Earth line of sight.",
+    ),
+    "Nobile Rim 1": _artemis_region(
+        "Nobile Rim 1", -85.4381, 37.36667, "R06 / Site06", 58,
+        "Representative center of the Nobile Rim 1 study region.",
+        "Polar rim terrain provides context for studies of shadow, cold traps and volatiles.",
+        in_2024=True,
+    ),
+    "Nobile Rim 2": _artemis_region(
+        "Nobile Rim 2", -83.954, 58.82206, "DM2", 57,
+        "Representative center of the Nobile Rim 2 study region.",
+        "Polar rim terrain provides context for studies of shadow, cold traps and volatiles.",
+        in_2024=True,
+    ),
+    "Amundsen Rim": _artemis_region(
+        "Amundsen Rim", -84.2287, 69.44396, "DM1", 57,
+        "Representative center of the Amundsen Rim study region.",
+        "Polar rim terrain provides context for studies of shadow, cold traps and volatiles.",
     ),
     "Apollo 11 (Tranquility Base)": {
         "name": "Apollo 11 (Tranquility Base)", "lat": 0.67416, "lon": 23.47314,

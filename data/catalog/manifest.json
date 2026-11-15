@@ -48,6 +48,69 @@
     "end": "2029-01-01",
     "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
   },
+  "Peak Near Shackleton": {
+    "lat": -88.811,
+    "lon": 123.6901,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "Connecting Ridge Extension": {
+    "lat": -89.0324,
+    "lon": -101.999,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "de Gerlache Rim 1": {
+    "lat": -88.6834,
+    "lon": -67.9321,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "de Gerlache Rim 2": {
+    "lat": -88.23,
+    "lon": -64.6284,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "de Gerlache-Kocher Massif": {
+    "lat": -85.8296,
+    "lon": -116.322,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "Leibnitz Beta Plateau": {
+    "lat": -85.4266,
+    "lon": 31.74276,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "Nobile Rim 1": {
+    "lat": -85.4381,
+    "lon": 37.36667,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "Nobile Rim 2": {
+    "lat": -83.954,
+    "lon": 58.82206,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
+  "Amundsen Rim": {
+    "lat": -84.2287,
+    "lon": 69.44396,
+    "start": "2027-01-01",
+    "end": "2029-01-01",
+    "terrain": "LOLA 20 m (within 10 km) and 80 m south pole DEMs"
+  },
   "Apollo 11 (Tranquility Base)": {
     "lat": 0.67416,
     "lon": 23.47314,

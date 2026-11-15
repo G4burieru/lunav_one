@@ -28,6 +28,15 @@ def test_table_2_points_and_east_longitude_conversion(key, lat, source_lon):
     ("Malapert Massif (Summit)", -85.9948, -0.23578),
     ("Faustini Crater (Rim)", -87.8897, 90.0),
     ("Haworth", -86.7639, -22.777),
+    ("Peak Near Shackleton", -88.811, 123.6901),
+    ("Connecting Ridge Extension", -89.0324, -101.999),
+    ("de Gerlache Rim 1", -88.6834, -67.9321),
+    ("de Gerlache Rim 2", -88.23, -64.6284),
+    ("de Gerlache-Kocher Massif", -85.8296, -116.322),
+    ("Leibnitz Beta Plateau", -85.4266, 31.74276),
+    ("Nobile Rim 1", -85.4381, 37.36667),
+    ("Nobile Rim 2", -83.954, 58.82206),
+    ("Amundsen Rim", -84.2287, 69.44396),
 ])
 def test_regional_coordinates_are_preserved_without_summit_claims(key, lat, lon):
     site = LUNAR_SITES[key]
