@@ -316,8 +316,9 @@ const globeView = (() => {
     relief.onclick = () => setRelief(state, !state.relief);
     const rotate = document.createElement("button");
     rotate.className = "rotate"; rotate.textContent = "⟳ Rotate";
-    rotate.title = "Zoom out to the whole Moon, keeping the tilt, and turn slowly until you interact again";
+    rotate.title = "Zoom out to the whole Moon, keeping the tilt, and turn slowly; click again to stop";
     rotate.onclick = () => {  // only the altitude changes: the tilt (latitude) the user chose stays
+      if (state.spinning) { state.stopSpin?.(); return; }  // a second click stops it
       state.closeBalloon?.();
       const altitude = globe.pointOfView().altitude, whole = cameraFor(null).altitude;
       if (altitude < whole) globe.pointOfView({ altitude: whole }, 600);  // a flight only when zoomed in
