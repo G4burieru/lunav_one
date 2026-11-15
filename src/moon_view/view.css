@@ -169,3 +169,22 @@
 .polar-map .analyze-popup .leaflet-popup-content-wrapper, .polar-map .analyze-popup .leaflet-popup-tip {
   background: rgba(14, 17, 23, 0.95); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.18); }
 .polar-map .analyze-popup .leaflet-popup-content { margin: 10px 12px; }
+
+/* Phones: app.py stacks the rail, this view and the panel, so the view is shorter and its overlays are laid out for
+   about 340 px instead of beside a floating panel. The switch drops its icons so that it and the layer choices share
+   the first row; Full screen wraps to the second, with the globe's tools on its left. */
+@media (max-width: 760px) {
+  .moon-view { height: 60vh; }  /* :fullscreen still wins, being more specific */
+  .layers:not(.globe-tools) { top: 8px; left: 8px; right: 8px; flex-wrap: wrap; justify-content: flex-end;
+    row-gap: 6px; }
+  .layers button { padding: 4px 9px; white-space: nowrap; }
+  .view-switch img { display: none; }
+  .layers.globe-tools { top: 39px; left: 8px; right: auto; flex-direction: row; }
+  .zones { top: 70px; left: 8px; right: 8px; font-size: 0.68rem; line-height: 1.45; }
+  .bottom { width: calc(100% - 16px); }
+  .hint { white-space: normal; font-size: 0.75rem; }
+  /* The time bar in rows: play and the slider, the date, the speeds, then the readout, which may wrap. */
+  .time-bar { grid-template-columns: auto 1fr; padding: 6px 10px; }
+  .time-label, .time-speed, .time-readout { grid-column: 1 / -1; justify-self: start; }
+  .time-readout { order: 1; }
+}

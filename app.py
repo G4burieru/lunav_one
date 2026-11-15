@@ -68,9 +68,13 @@ CSS = f"""<style>
   .st-key-rail button p {{ font-size: 0.72rem; }}
   .st-key-panel {{ left: {PANEL_LEFT}; bottom: 14px; overflow-y: auto; padding: 16px 18px; }}
   img[src*="static/icons/"] {{ height: 1.15em; width: auto; vertical-align: -0.2em; }}  /* icons at text size */
-  @media (max-width: 760px) {{  /* phones: stack the rail, a shorter view and the panel instead of floating them */
+  /* Phones: stack the rail, the view and the panel instead of floating them. The view makes itself shorter there
+     (view.css): a height set on .st-key-view is ignored, as Streamlit makes it a flex item with flex-basis 0%. */
+  @media (max-width: 760px) {{
+    [data-testid="stMainBlockContainer"] {{ padding-top: 3rem; padding-bottom: 2rem; }}  /* clear of the status pill */
     .st-key-rail, .st-key-view, .st-key-panel {{ position: relative; inset: auto; width: auto !important; }}
-    .st-key-view {{ height: 60vh; overflow: hidden; }}
+    .st-key-rail {{ flex-direction: row; gap: 6px; }}  /* one row of three icons, not three full-width buttons */
+    .st-key-rail > div {{ flex: 1 1 0; width: auto !important; min-width: 0; }}
   }}
 </style>"""
 
