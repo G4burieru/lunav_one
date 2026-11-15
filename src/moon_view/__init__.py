@@ -43,6 +43,8 @@ _HTML = """
     <div><span class="zone-line terrain"></span>Inside 80°S: analyzed live, about 30 s · outside: no terrain data</div>
     <div><span class="zone-line precomputed"></span>Around each Catalog Site: pre-computed, opens at once</div>
   </div>
+  <div class="overlay globe-zoom" data-for="globe"><button type="button" data-zoom="in" aria-label="Zoom in">+</button
+    ><button type="button" data-zoom="out" aria-label="Zoom out">−</button></div>
   <div class="overlay globe-scale" data-for="globe"></div>
   <div class="overlay credit" data-for="globe">Photos: LRO WAC · Relief: LOLA · NASA Moon Trek</div>
   <div class="overlay credit" data-for="map">Photos: LROC NAC and WAC · Relief: LOLA · NASA Moon Trek</div>

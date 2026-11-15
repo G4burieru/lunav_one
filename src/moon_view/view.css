@@ -39,9 +39,17 @@
 .view-nudge.shown { opacity: 1; }
 .credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
 /* The globe's scale bar (globe.js drawScale), styled and placed like the polar map's Leaflet one. */
-.globe-scale { bottom: max(36px, var(--controls-lift, 0px)); right: 10px; padding: 2px 5px 1px; font-size: 11px; line-height: 1.1; white-space: nowrap;
+.globe-scale { bottom: calc(max(36px, var(--controls-lift, 0px)) + 66px); right: 10px; padding: 2px 5px 1px; font-size: 11px; line-height: 1.1; white-space: nowrap;
   color: #e8e8e8; background: rgba(10, 12, 18, 0.6); border: 2px solid #e8e8e8; border-top: none; text-shadow: none; }
 .globe-scale:empty { display: none; }
+/* The globe's zoom buttons (globe.js zoom), under its scale bar like the polar map's Leaflet ones. */
+.globe-zoom { bottom: max(36px, var(--controls-lift, 0px)); right: 10px; pointer-events: auto; display: flex;
+  flex-direction: column; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; overflow: hidden;
+  text-shadow: none; }
+.globe-zoom button { width: 30px; height: 30px; padding: 0; border: none; font: bold 18px/30px sans-serif;
+  cursor: pointer; }
+.globe-zoom button + button { border-top: 1px solid rgba(255,255,255,0.2); }
+.globe-zoom button:disabled { color: #777; cursor: default; }
 /* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
 .moon-view:fullscreen { height: 100vh; }
 .info { display: none; top: 14px; left: 18px; max-width: min(460px, 60%); background: rgba(10, 12, 18, 0.72);
@@ -135,8 +143,9 @@
 /* Zoom and scale: above the credit line, and above the time bar where it reaches under them (view.js). */
 .polar-map .leaflet-bottom.leaflet-right { bottom: max(26px, var(--controls-lift, 0px)); }
 .polar-map .leaflet-bar { border: 1px solid rgba(255,255,255,0.25); box-shadow: none; }
-.polar-map .leaflet-bar a { background: rgba(20, 22, 30, 0.85); color: #e8e8e8; border-bottom-color: rgba(255,255,255,0.2); }
-.polar-map .leaflet-bar a:hover, .polar-map .leaflet-bar a:focus { background: #2b2f3b; color: #fff; }
+.polar-map .leaflet-bar a, .globe-zoom button { background: rgba(20, 22, 30, 0.85); color: #e8e8e8; border-bottom-color: rgba(255,255,255,0.2); }
+.polar-map .leaflet-bar a:hover, .polar-map .leaflet-bar a:focus,
+.globe-zoom button:not(:disabled):hover, .globe-zoom button:focus-visible { background: #2b2f3b; color: #fff; }
 .polar-map .leaflet-control-scale-line { background: rgba(10, 12, 18, 0.6); color: #e8e8e8; border-color: #e8e8e8;
   text-shadow: none; }
 .polar-map .leaflet-tooltip.site-label { background: rgba(10, 12, 18, 0.85); color: #fff; border: 1px solid
