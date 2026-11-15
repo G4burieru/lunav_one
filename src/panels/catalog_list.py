@@ -3,7 +3,7 @@ import streamlit as st
 
 from src.panels import texts
 from src.panels.common import (KIND_LABELS, catalog_summaries, format_duration, header, icon, parse_coordinates,
-                               select_custom, select_site, site_label)
+                               plan_saved, saved_sites, select_custom, select_site, site_label)
 from src.sites import LUNAR_SITES
 
 SEARCH, SEARCH_ERROR = "search", "search_error"
@@ -16,6 +16,8 @@ def on_search():
     st.session_state[SEARCH] = None
     if value in LUNAR_SITES:
         select_site(value)
+    elif value in saved_sites():  # opens where it was named, as a click on its marker does
+        plan_saved(value)
     elif (point := parse_coordinates(value)) is not None:
         select_custom(*point)
     elif value:
@@ -24,11 +26,13 @@ def on_search():
 
 def render():
     header()
-    st.selectbox("Search", list(LUNAR_SITES), index=None, format_func=site_label, accept_new_options=True,
+    saved = saved_sites()
+    label = lambda key: f"{site_label(key)} · your Custom Site" if key in saved else site_label(key)  # noqa: E731
+    st.selectbox("Search", [*LUNAR_SITES, *saved], index=None, format_func=label, accept_new_options=True,
                  placeholder="Search a site, or type coordinates: -89.44, -137.17", key=SEARCH,
                  on_change=on_search, label_visibility="collapsed")
     if error := st.session_state.pop(SEARCH_ERROR, None):
-        st.error(f"“{error}” is neither a Catalog Site nor a latitude, longitude pair such as -89.44, -137.17.")
+        st.error(f"“{error}” is neither a site nor a latitude, longitude pair such as -89.44, -137.17.")
     st.caption(texts.INTRO)
 
     sort = st.segmented_control("Sort by", list(SORTS), default="Sunlight", key="catalog_sort") or "Sunlight"

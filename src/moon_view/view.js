@@ -7,7 +7,8 @@
 const VIEWS = { globe: globeView, map: polarMap };
 
 // Site markers, the same in both views. Every Catalog Site is a circle, whatever its coordinate kind (the panels name
-// the kind); a Custom Site is a ring with ticks and the Site Planner's Surface Asset a cross in a circle. With time
+// the kind); a Custom Site is a ring with ticks, a Custom Site named in the Site Planner (data.saved) a violet diamond,
+// and the Site Planner's Surface Asset a cross in a circle. With time
 // data, a badge beside the marker shows the time bar's hour: a Sun that fills from the bottom with the Illumination
 // Fraction, like a sunrise, and an Earth that is blue while in view and gray, crossed out, while below the horizon:
 // shape as well as color.
@@ -15,9 +16,11 @@ const SHAPES = {
   site: '<circle cx="12" cy="12" r="9.5"/>',
   custom: '<circle cx="12" cy="12" r="6"/><path class="cross" d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
   asset: '<circle cx="12" cy="12" r="9.5"/><path class="cross" d="M12 4v16M4 12h16"/>',
+  saved: '<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>',
 };
 const KINDS = { studied_point: "studied point", region_center: "region center", actual_landing: "historical landing",
-                approximate_reference: "approximate reference", custom: "Custom Site", asset: "Surface Asset" };
+                approximate_reference: "approximate reference", custom: "Custom Site", asset: "Surface Asset",
+                saved: "your Custom Site" };
 
 const SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1'
   + 'M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>';
@@ -26,7 +29,7 @@ const EARTH = '<circle cx="12" cy="12" r="8.5"/><path class="grid" d="M3.5 12h17
 const svg = (cls, body) => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
 
 function markerHtml(kind) {
-  return svg("shape", SHAPES[kind] || SHAPES.site)
+  return svg(`shape ${kind === "saved" ? "saved" : ""}`, SHAPES[kind] || SHAPES.site)
     + `<span class="conditions"><span class="sun">${svg("sun-off", SUN)}${svg("sun-on", SUN)}</span>`
     + `${svg("earth", EARTH)}</span>`;
 }
@@ -107,23 +110,50 @@ function addFullscreenButton(state) {
   root.querySelector(".layers").appendChild(button);
 }
 
-// The globe/map switch, first among the buttons at the top right: one button naming the other view. Python picks
-// the view when a site is chosen (data.view, applied when view_id changes); in between, this button switches it here
-// alone, without a rerun.
+// The globe/map switch, first among the buttons at the top right: two segments, the current view highlighted, so it
+// shows where the user is as well as where they can go. Python picks the view when a site is chosen (data.view,
+// applied when view_id changes); in between, this switch changes it here alone, without a rerun.
+const VIEW_LABELS = { globe: ["Globe", "moon"], map: ["South pole", "pole-map"] };
+
 function addViewSwitch(state) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "view-switch";
-  button.onclick = () => { setView(state, state.view === "map" ? "globe" : "map"); render(state); };
-  state.root.querySelector(".layers").prepend(button);
+  const group = document.createElement("span");
+  group.className = "view-switch";
+  group.setAttribute("role", "group");
+  group.setAttribute("aria-label", "View");
+  Object.entries(VIEW_LABELS).forEach(([name, [label, icon]]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.view = name;
+    b.innerHTML = `<img src="app/static/icons/${icon}.svg" alt="" aria-hidden="true">${label}`;
+    b.onclick = () => { if (state.view !== name) { setView(state, name); render(state); } };
+    group.appendChild(b);
+  });
+  const tip = document.createElement("span");
+  tip.className = "view-nudge";
+  tip.setAttribute("role", "status");
+  group.appendChild(tip);
+  state.root.querySelector(".layers").prepend(group);
 }
 
 function setView(state, name) {
   state.view = name;
   state.root.dataset.view = name;
-  const [label, icon] = name === "map" ? ["Globe", "moon"] : ["South pole map", "pole-map"];
-  state.root.querySelector(".view-switch").innerHTML =
-    `<img src="app/static/icons/${icon}.svg" alt="" aria-hidden="true">${label}`;
+  state.root.querySelectorAll(".view-switch button").forEach(b => {
+    b.classList.toggle("active", b.dataset.view === name);
+    b.setAttribute("aria-pressed", b.dataset.view === name);
+  });
+  nudgeView(state, null);
+}
+
+// Points at view `name`'s segment, with `text` under the switch, when the user pushes past what the current view
+// shows well (the views call it at their zoom limits). It fades by itself; null clears it.
+function nudgeView(state, name, text = "") {
+  clearTimeout(state.nudgeTimer);
+  state.root.querySelectorAll(".view-switch button").forEach(b => b.classList.toggle("nudge", b.dataset.view === name));
+  const tip = state.root.querySelector(".view-nudge");
+  tip.textContent = text;
+  tip.classList.toggle("shown", !!name);
+  if (name) state.nudgeTimer = setTimeout(() => nudgeView(state, null), 5000);
 }
 
 // The site the views focus on: in the Site Planner its Surface Asset (key "asset"); otherwise the Custom Site (key
@@ -158,6 +188,22 @@ function deselect(state) {
   if (data.mode === "planner" || (!data.selected && !data.custom)) return false;
   state.setTriggerValue("site", "");
   return true;
+}
+
+// A right-click on the Moon leaves the Site Planner for browsing (the "site" event with "", which opens the catalog),
+// or clears the selection in the Explorer. A right-drag is not a click: the globe pans with it.
+function addRightClick(state) {
+  let down = null;
+  state.root.addEventListener("pointerdown", e => { if (e.button === 2) down = [e.clientX, e.clientY]; }, true);
+  state.root.addEventListener("contextmenu", e => {
+    if (e.target.closest(".layers, .time-bar, .analyze")) return;  // the controls keep the browser's menu
+    e.preventDefault();
+    const moved = down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5;
+    down = null;
+    if (moved) return;
+    if (state.data.mode === "planner") state.setTriggerValue("site", "");
+    else deselect(state);
+  });
 }
 
 // Great-circle distance (m) on the Moon from a site to a point.
@@ -220,6 +266,7 @@ export default function (component) {
   if (!state.observer) {
     watchLayout(state);
     addViewSwitch(state);
+    addRightClick(state);
     if (root.requestFullscreen) addFullscreenButton(state);
   }
   state.findPanel();
@@ -235,6 +282,7 @@ export default function (component) {
   render(state);
   return () => {
     state.observer.disconnect();
+    clearTimeout(state.nudgeTimer);
     if (state.onFullscreenChange) document.removeEventListener("fullscreenchange", state.onFullscreenChange);
     Object.values(VIEWS).forEach(view => view.exists(state) && view.destroy(state));
     delete root.__lunav;

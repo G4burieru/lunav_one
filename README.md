@@ -31,7 +31,7 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Globe rotation | Starts automatically unless reduced motion is requested; stops at the first interaction |
 | Full scientific/operational validation | Not completed |
 
-The Globe/South pole map button switches views independently of Photos/Relief.
+The Globe | South pole switch changes views independently of Photos/Relief; at a zoom limit it points to the other view.
 Overview includes external site images and descriptions: photographs, composites
 and scientific maps provide context, not original model outputs. See the
 [science and image review](docs/pitch/final_science_review.md) for caption caveats.

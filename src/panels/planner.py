@@ -8,9 +8,9 @@ from src.colors import EARTH_RAMP, SUN_RAMP, css_gradient, ramp_hex
 from src.conditions import cell_corners, live_neighborhood_horizons, live_neighborhood_summary
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
-from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, VIEW_CHOICE, VIEWS, data_note,
-                               format_countdown, get_neighborhood, icon, load, selected_instant, site_label,
-                               time_payload)
+from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, SAVED_PREFIX, VIEW_CHOICE, VIEWS,
+                               data_note, format_countdown, get_neighborhood, icon, load, saved_sites,
+                               selected_instant, site_label, time_payload)
 from src.sites import LUNAR_SITES
 from src.terrain import SOUTH_POLE_DEM_LIMIT
 
@@ -22,12 +22,42 @@ get_live_horizons = st.cache_data(show_spinner=False, max_entries=8)(live_neighb
 get_live_summary = st.cache_data(show_spinner=False, max_entries=32)(live_neighborhood_summary)
 
 
+def save_custom(lat, lon):
+    """Keep the Custom Site on the Moon View under the typed name, and plan it under that name."""
+    name = st.session_state.get("planner_name", "").strip()
+    key = SAVED_PREFIX + name
+    saved_sites()[key] = {"name": name, "lat": lat, "lon": lon}
+    st.session_state.update(planner_site=key, planner_name="")
+
+
+def remove_saved(key):
+    """Back to an unnamed Custom Site at the same place."""
+    site = saved_sites().pop(key)
+    st.session_state.update(planner_site=CUSTOM_SITE, planner_lat=site["lat"], planner_lon=site["lon"])
+
+
 def where():
-    key = st.selectbox("Site", [*LUNAR_SITES, CUSTOM_SITE], format_func=site_label, key="planner_site")
+    saved = saved_sites()
+    key = st.selectbox("Site", [*LUNAR_SITES, *saved, CUSTOM_SITE], format_func=site_label, key="planner_site")
     if key == CUSTOM_SITE:
         col_lat, col_lon = st.columns(2)
         lat = col_lat.number_input("Latitude (°)", -90.0, 90.0, -89.5, 0.01, key="planner_lat")
         lon = col_lon.number_input("East longitude (°)", -180.0, 180.0, 0.0, 0.01, key="planner_lon")
+        col_name, col_save = st.columns([3, 2], vertical_alignment="bottom")
+        name = col_name.text_input("Name", key="planner_name", max_chars=40,
+                                   placeholder="e.g. Ridge east of Shackleton",
+                                   help="Keeps this Custom Site on the Moon View until you reload or close the page.")
+        taken = {s["name"] for s in saved.values()} | {site_label(k) for k in LUNAR_SITES}
+        col_save.button("Keep on the map", key="planner_save", on_click=save_custom, args=(lat, lon),
+                        width="stretch", disabled=not name.strip() or name.strip() in taken)
+        if name.strip() in taken:
+            st.caption("That name is already used.")
+    elif key in saved:
+        lat, lon = saved[key]["lat"], saved[key]["lon"]
+        col_text, col_remove = st.columns([3, 2], vertical_alignment="center")
+        col_text.caption(f"Custom Site · Lat {lat:.4f}° · Lon {lon:.4f}° E")
+        col_remove.button("Remove from the map", key="planner_remove", on_click=remove_saved, args=(key,),
+                          width="stretch")
     else:
         lat, lon = LUNAR_SITES[key]["lat"], LUNAR_SITES[key]["lon"]
         st.caption(f"Lat {lat}° · Lon {lon}° E")
@@ -70,7 +100,7 @@ def on_map_cell():
 def neighborhood_points(key, lat, lon, height, date, days, mask):
     """(id, points) of the Site Neighborhood around (lat, lon): pre-computed for a Catalog Site at 2 m, otherwise
     computed live (about 30 s) once the user asks; points is None until then."""
-    if key != CUSTOM_SITE and height == catalog.ASSET_HEIGHT_M:
+    if key in LUNAR_SITES and height == catalog.ASSET_HEIGHT_M:
         return key, get_neighborhood(key, str(date), days, mask)
     hood = f"{key}:{lat:.5f},{lon:.5f}:{height:g}"
     if st.session_state.get(LIVE_HOOD) != hood:
@@ -153,8 +183,8 @@ def results(df, mask, days):
            else f"the Sun sets in {format_countdown(sunset, '')}")
     earth = ("Earth is out of view" if earthset == 0 else "Earth stays in view to the end of the window"
              if earthset is None else f"Earth sets in {format_countdown(earthset, '')}")
-    st.markdown(f"At **{at:%Y-%m-%d %H:%M} UTC**, {sun} and {earth}. Over the {days} days, the Sun shines "
-                f"{100 * sun_hours / len(df):.0f}% of the time and Earth is in view "
+    st.markdown(f"At **{at:%Y-%m-%d %H:%M} UTC**, {sun} and {earth}. Over the {days} days, the mean Illumination "
+                f"Fraction is {100 * sun_hours / len(df):.0f}% ({sun_hours:.0f} h of full Sun) and Earth is in view "
                 f"{100 * earth_hours / len(df):.0f}% of the time.")
     st.caption("The countdowns follow the time bar at the bottom of the view: move it, type a date or play it, "
                "then release or pause.")
@@ -168,7 +198,8 @@ def render():
     """The four steps. Returns what the Moon View should show: the map or the globe for the site, the Surface Asset,
     the Site Neighborhood and the Surface Asset's time bar states."""
     st.markdown(f"### {icon('planner')} Site Planner")
-    st.caption("Place a Surface Asset precisely and evaluate its sunlight and Earth visibility.")
+    st.caption("Place a Surface Asset precisely and evaluate its sunlight and Earth visibility. Right-click the Moon "
+               "to leave the Planner and browse again.")
     st.markdown("**1 · Where**")
     key, lat, lon = where()
     st.markdown("**2 · Surface Asset**")
@@ -186,7 +217,7 @@ def render():
             "view": "map" if polar else "globe", "view_id": f"planner:{key}"}
 
     st.markdown("**4 · Results**")
-    df = load(lat, lon, date, days, height, catalog_site=key != CUSTOM_SITE)
+    df = load(lat, lon, date, days, height, catalog_site=key in LUNAR_SITES)
     if df is None:
         return view
     at = results(df, mask, days)  # the time bar starts there when its window changes

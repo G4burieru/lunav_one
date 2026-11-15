@@ -28,7 +28,7 @@ starts with name/coordinate search and compact Catalog Site cards, sortable by
 Sunlight, Earth Visibility, Longest Night or name. Selecting a polar site opens
 the south polar map, while nonpolar locations use the globe. The view streams
 LROC imagery and LOLA shaded relief through NASA Moon Trek, with Photos and
-Relief base layers on both the globe and the map. The Globe/South pole map button switches views. These images provide context, not live shadows.
+Relief base layers on both the globe and the map. The Globe | South pole switch changes views. These images provide context, not live shadows.
 
 A Site Card shows coordinate type, source context and 2027–2028 conditions at
 2 m Asset Height: mean Illumination Fraction, Earth Visibility, Longest Night

@@ -270,6 +270,7 @@ Python to Moon View (`data`):
 | `sites` | `[{key, name, lat, lon, kind, description}]` |
 | `selected` | Catalog Site key or `null` |
 | `custom`, `asset` | `{lat, lon}` or `null`: the Custom Site, and the Surface Asset position in the Planner |
+| `saved` | `[{key, name, lat, lon}]`: Custom Sites named in the Site Planner (keys `saved:<name>`), drawn as violet diamonds with their names; kept in session state until the page is reloaded. A click on one sends its key as `site` and opens the Site Planner on it |
 | `time` | `{start, hours, instant, states: {key: base64}}`; one byte per hour: bits 0–6 illumination fraction × 100, bit 7 Earth visible |
 | `zones` | `{terrain_lat, precomputed_m, precomputed: [keys]}`: where a clicked point's analysis comes from, drawn as dashed rings on the map |
 | `neighborhood` | `null` or `{site, center: {lat, lon}, reach_m, label, selected, best, cells: [{corners: [[lat, lon] × 4], value, color}]}` |
@@ -278,7 +279,7 @@ Moon View to Python:
 
 | Event | Kind | Value |
 |---|---|---|
-| `site` | trigger | key of a clicked site, or `""` for a click beside the sites (clears the selection) |
+| `site` | trigger | key of a clicked site, or `""` for a click beside the sites (clears the selection) or a right-click on the Moon (also leaves the Site Planner for the catalog) |
 | `point` | trigger | `{lat, lon}` after Analyze |
 | `cell` | trigger | index of a clicked Site Neighborhood cell |
 | `instant` | state | ISO time, sent when the bar is released or paused |

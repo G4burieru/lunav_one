@@ -31,9 +31,9 @@ sunlight and Earth. Lunav One connects geographic context with modeled condition
 ## 0:20–0:45 — A documented location on real imagery
 
 [Search for Connecting Ridge C1 and select it. The site opens the polar map.
-Indicate Globe/South pole map and Photos/Relief. Briefly show the Overview
-context and ridge map, identifying it as a map, not a photograph.
-Avoid the unverified Apollo 15 Malapert identification.]
+Indicate the Globe | South pole switch and Photos/Relief. Briefly show the
+Overview context and the LRO south pole mosaic (NASA Image Library).
+The Apollo 15 Malapert photo is no longer in the app.]
 
 “The Moon View combines a three-dimensional Moon with a polar map using real
 NASA imagery. We can switch views here. Connecting Ridge C1 is a documented

@@ -63,7 +63,8 @@ to 3 days per second) to explore hourly states. Every Catalog Site is a circle; 
 panels name its location type. The badge beside it shows a Sun that fills from the
 bottom with the visible fraction of the Sun's disk, and an Earth that is blue when
 Earth meets the visibility criterion and gray, crossed out, when it does not.
-A Custom Site is a ticked ring; a Surface Asset is a cross in a circle. On the south
+A Custom Site is a ticked ring; one you named in the Site Planner is a violet diamond
+with its name, kept until you reload the page; a Surface Asset is a cross in a circle. On the south
 polar map, green dashed rings mark pre-computed neighborhoods near covered Catalog
 Sites; a cyan dashed ring marks the 80°S terrain boundary. These are coverage
 boundaries, separate from site markers. Covered scenarios reuse prepared data;

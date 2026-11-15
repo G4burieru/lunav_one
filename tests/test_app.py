@@ -66,3 +66,24 @@ def test_a_second_click_on_the_rail_icon_hides_the_panel():
     assert (at.session_state["panel"], at.session_state["panel_open"]) == ("site", True)
     assert not at.exception
 
+
+
+def test_a_named_custom_site_stays_on_the_map_until_removed():
+    """Keep on the map names the Planner's Custom Site, lists it in the Planner and sends it to the Moon View."""
+    at = AppTest.from_file("../app.py", default_timeout=120).run()
+    at.session_state["custom"] = {"lat": -89.4398, "lon": -137.17}  # offline: inside a pre-computed neighborhood
+    at.button(key="rail_planner").click().run()
+    assert at.selectbox(key="planner_site").value == "Custom Site"
+    at.text_input(key="planner_name").input("Ridge A").run()
+    at.button(key="planner_save").click().run()
+    assert not at.exception
+    assert at.session_state["saved_sites"] == {"saved:Ridge A": {"name": "Ridge A", "lat": -89.4398, "lon": -137.17}}
+    assert at.selectbox(key="planner_site").value == "saved:Ridge A"
+    at.button(key="rail_catalog").click().run()  # still kept outside the Planner, and found by the search
+    assert "Ridge A · your Custom Site" in at.selectbox(key="search").options
+    at.selectbox(key="search").set_value("saved:Ridge A").run()
+    assert (at.session_state["panel"], at.selectbox(key="planner_site").value) == ("planner", "saved:Ridge A")
+    at.button(key="planner_remove").click().run()
+    assert at.session_state["saved_sites"] == {}
+    assert at.selectbox(key="planner_site").value == "Custom Site"
+    assert not at.exception
