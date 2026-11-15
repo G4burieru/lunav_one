@@ -8,7 +8,7 @@ from src.sites import LUNAR_SITES
 
 SEARCH, SEARCH_ERROR = "search", "search_error"
 SORTS = {"Sunlight": ("sunlight_pct", False), "Earth visibility": ("earth_visible_pct", False),
-         "Longest night": ("longest_night_h", True), "Name": (None, True)}  # column, ascending
+         "Longest night": ("longest_night_h", False), "Name": (None, True)}  # column, ascending
 
 
 def on_search():

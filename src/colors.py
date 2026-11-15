@@ -2,7 +2,7 @@
 
 One hue each, lightness rising with the value, so a darker cell always means less. Both pass the dataviz ordinal
 checks on the app's dark surface #0e1117: monotone lightness, visible steps, the 0% end above 2:1 contrast.
-Used by the Sunlight overlay (scripts/render_sun_overlay.py), the Site Neighborhood cells and their legends.
+Used by the Site Neighborhood cells and their legends.
 """
 import numpy as np
 

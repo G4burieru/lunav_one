@@ -1,7 +1,5 @@
 """Site Planner panel: place a Surface Asset and evaluate its sunlight and Earth visibility (docs/UI_OVERHAUL.md,
 task B3). Owner: Gabriel."""
-import datetime
-
 import streamlit as st
 
 from src import catalog
@@ -10,9 +8,11 @@ from src.colors import EARTH_RAMP, SUN_RAMP, css_gradient, ramp_hex
 from src.conditions import cell_corners, live_neighborhood_horizons, live_neighborhood_summary
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
-from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, data_note, format_countdown,
-                               get_neighborhood, icon, load, site_label, time_payload)
+from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, VIEW_CHOICE, VIEWS, data_note,
+                               format_countdown, get_neighborhood, icon, load, selected_instant, site_label,
+                               time_payload)
 from src.sites import LUNAR_SITES
+from src.terrain import SOUTH_POLE_DEM_LIMIT
 
 HEIGHTS = {"Rover or lander · 2 m": catalog.ASSET_HEIGHT_M, "Mast · 10 m": 10.0, "Other height": None}
 CELL = "planner_cell"  # {"hood", "index"}: the Site Neighborhood cell holding the Surface Asset, None at the center
@@ -20,7 +20,6 @@ HOOD, LIVE_HOOD = "planner_hood", "planner_live_hood"  # the Site Neighborhood s
 
 get_live_horizons = st.cache_data(show_spinner=False, max_entries=8)(live_neighborhood_horizons)  # ~3.6 MB each
 get_live_summary = st.cache_data(show_spinner=False, max_entries=32)(live_neighborhood_summary)
-POLAR_LAT = -80.0  # south of this, the Site Planner shows the south polar map
 
 
 def where():
@@ -133,10 +132,8 @@ def neighborhood(key, lat, lon, height, date, days, mask):
 
 
 def results(df, mask, days):
-    # shortcut: keeps its own Instant slider until the Moon View time bar (task A3) covers the Planner window.
-    times = list(df["time"].dt.to_pydatetime())
-    at = st.slider("Instant (UTC)", times[0], times[-1], times[0], datetime.timedelta(hours=1),
-                   format="YYYY-MM-DD HH:mm", key="planner_at")
+    """The Surface Asset at the Moon View time bar's instant, and over the whole window. Returns the instant."""
+    at = selected_instant(df)
     row = df[df["time"] == at].iloc[0]
     sunset, earthset = hours_until_sunset(df, at), hours_until_earthset(df, at, mask)
     sun_hours, earth_hours = sunlight_hours(df), earth_visible_hours(df, mask)
@@ -156,12 +153,15 @@ def results(df, mask, days):
            else f"the Sun sets in {format_countdown(sunset, '')}")
     earth = ("Earth is out of view" if earthset == 0 else "Earth stays in view to the end of the window"
              if earthset is None else f"Earth sets in {format_countdown(earthset, '')}")
-    st.markdown(f"From the selected instant, {sun} and {earth}. Over the {days} days, the Sun shines "
+    st.markdown(f"At **{at:%Y-%m-%d %H:%M} UTC**, {sun} and {earth}. Over the {days} days, the Sun shines "
                 f"{100 * sun_hours / len(df):.0f}% of the time and Earth is in view "
                 f"{100 * earth_hours / len(df):.0f}% of the time.")
+    st.caption("The countdowns follow the time bar at the bottom of the view: move it, type a date or play it, "
+               "then release or pause.")
     data_note(df)
     st.plotly_chart(plot_sun_elevation(df, at), width="stretch", key="planner_sun")
     st.plotly_chart(plot_earth_visibility(df, at, mask), width="stretch", key="planner_earth")
+    return at
 
 
 def render():
@@ -176,7 +176,8 @@ def render():
     st.markdown("**3 · When**")
     date, days = when()
     hood = None
-    polar = lat <= POLAR_LAT
+    polar = lat <= SOUTH_POLE_DEM_LIMIT  # the Site Neighborhood needs the south pole DEMs
+    st.session_state[VIEW_CHOICE] = VIEWS[1] if polar else VIEWS[0]  # leaving the Planner keeps this view
     if polar:
         (lat, lon), hood = neighborhood(key, lat, lon, height, date, days, mask)
     else:
@@ -188,5 +189,5 @@ def render():
     df = load(lat, lon, date, days, height, catalog_site=key != CUSTOM_SITE)
     if df is None:
         return view
-    results(df, mask, days)
-    return {**view, "time": time_payload({"asset": df}, elevation_mask=mask)}
+    at = results(df, mask, days)  # the time bar starts there when its window changes
+    return {**view, "time": time_payload({"asset": df}, instant=f"{at:%Y-%m-%dT%H:%M:%SZ}", elevation_mask=mask)}

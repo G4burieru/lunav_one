@@ -1,14 +1,12 @@
-// Time bar (docs/UI_OVERHAUL.md, task A3): a slider over the window in data.time, play and pause, and the UTC
-// instant. Moving it repaints the markers of both views with each hour's state (src/metrics.hourly_states: one
-// byte per hour, bits 0-6 the Illumination Fraction in percent, bit 7 Earth Visibility). Releasing the slider, or
-// pausing, sends `instant` to Python, where the Site Card follows it.
+// Time bar (docs/UI_OVERHAUL.md, task A3): a slider over the window in data.time, play and pause at a chosen speed,
+// and the UTC instant, which can also be typed. Moving it repaints the markers of both views with each hour's state
+// (src/metrics.hourly_states: one byte per hour, bits 0-6 the Illumination Fraction in percent, bit 7 Earth
+// Visibility). Releasing the slider, pausing or entering a date sends `instant` to Python, where the Site Card
+// follows it. The date is a plain text field and the speed plain buttons: the browser's date picker and drop-down
+// list cannot take the app's theme.
 const timeBar = (() => {
   const HOUR_MS = 3600e3;
   const ICONS = { play: '<path d="M8 5v14l11-7z"/>', pause: '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' };
-  // Playback speed in hours per second: a lunar day in about ten seconds over the Explorer's two years, and about
-  // forty seconds for a whole Site Planner window.
-  const speed = hours => Math.min(72, Math.max(6, hours / 40));
-  const pad = n => String(n).padStart(2, "0");
 
   function decode(base64) {
     const text = atob(base64), bytes = new Uint8Array(text.length);
@@ -26,7 +24,17 @@ const timeBar = (() => {
   }
 
   const at = t => new Date(t.start + t.index * HOUR_MS);
-  const label = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:00 UTC`;
+  const field = d => d.toISOString().slice(0, 13).replace("T", " ") + ":00";  // YYYY-MM-DD HH:00, UTC
+
+  // A typed "YYYY-MM-DD", "YYYY-MM-DD HH" or "YYYY-MM-DD HH:MM", read as UTC: milliseconds, or NaN if it is not a
+  // real date and time.
+  function parse(text) {
+    const m = /^\s*(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T]+(\d{1,2})(?::(\d{2}))?)?\s*$/.exec(text);
+    if (!m) return NaN;
+    const [year, month, day, hour, minute] = m.slice(1).map(v => +(v || 0));
+    const ms = Date.UTC(year, month - 1, day, hour, minute), d = new Date(ms);
+    return d.getUTCMonth() === month - 1 && d.getUTCDate() === day && hour < 24 && minute < 60 ? ms : NaN;
+  }
   const bar = state => state.root.querySelector(".time-bar");
 
   // In words, for the Site Planner's Surface Asset, the Custom Site or the selected site, in the Site Card's terms;
@@ -35,7 +43,7 @@ const timeBar = (() => {
     const data = state.data;
     const key = data.mode === "planner" && data.asset ? "asset" : data.custom ? "custom" : data.selected;
     const s = key ? stateOf(state, key) : null;
-    if (!s) return "Markers fill with sunlight · the dot is filled while Earth is in view";
+    if (!s) return "Beside each site: the Sun fills with sunlight · the Earth is blue while in view";
     const name = { asset: "Surface Asset", custom: "Custom Site" }[key]
       || (data.sites.find(site => site.key === key) || {}).name;
     const sun = s.sun >= 100 ? "Sun up" : s.sun > 0 ? `Sun partly hidden (${s.sun}% of the disk)` : "Sun down";
@@ -45,7 +53,8 @@ const timeBar = (() => {
   function show(state) {
     const t = state.time, el = bar(state);
     el.querySelector(".time-slider").value = t.index;
-    el.querySelector(".time-label").textContent = label(at(t));
+    const date = el.querySelector(".time-date");
+    if (date !== date.getRootNode().activeElement) date.value = field(at(t));  // not while it is being typed in
     el.querySelector(".time-readout").textContent = readout(state);
     paintViews(state);
   }
@@ -72,7 +81,7 @@ const timeBar = (() => {
     let clock = performance.now(), hours = 0;
     const step = now => {
       if (!t.playing || state.time !== t) return;
-      hours += (now - clock) / 1000 * speed(t.hours);
+      hours += (now - clock) / 1000 * state.speed;  // hours per second
       clock = now;
       if (hours >= 1) {
         t.index = Math.min(t.hours - 1, t.index + Math.floor(hours));
@@ -99,6 +108,34 @@ const timeBar = (() => {
       show(state);
     });
     slider.addEventListener("change", () => send(state));  // released, or a key pressed
+    // A typed date goes to its hour, kept within the window, on Enter or when the field is left. A date that cannot
+    // be read is marked on Enter, and put back to the bar's instant when the field is left or on Escape.
+    const date = el.querySelector(".time-date");
+    const revert = () => { date.classList.remove("invalid"); date.value = field(at(state.time)); };
+    date.addEventListener("change", () => {
+      const t = state.time, typed = parse(date.value);
+      if (Number.isNaN(typed)) { date.classList.add("invalid"); return; }
+      if (t.playing) setPlaying(state, false);
+      t.index = Math.min(Math.max(Math.round((typed - t.start) / HOUR_MS), 0), t.hours - 1);
+      revert();  // shows the hour actually reached
+      show(state);
+      send(state);
+    });
+    date.addEventListener("input", () => date.classList.remove("invalid"));
+    date.addEventListener("keydown", e => { if (e.key === "Escape") { revert(); date.blur(); } });
+    date.addEventListener("blur", () => { if (date.classList.contains("invalid")) revert(); });
+    // Playback speed, in hours per second; kept across reruns and windows.
+    state.speed = 6;
+    el.querySelectorAll(".time-speed button").forEach(button => {
+      button.setAttribute("aria-pressed", button.classList.contains("active"));
+      button.addEventListener("click", () => {
+        state.speed = +button.dataset.speed;
+        el.querySelectorAll(".time-speed button").forEach(b => {
+          b.classList.toggle("active", b === button);
+          b.setAttribute("aria-pressed", b === button);
+        });
+      });
+    });
   }
 
   // Called on every rerun. A new window (Explorer and Site Planner differ) starts at Python's instant; the same

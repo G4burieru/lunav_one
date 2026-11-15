@@ -6,26 +6,29 @@
 // layout(state) and destroy(state). The declarations below are shared by the other files (they are hoisted).
 const VIEWS = { globe: globeView, map: polarMap };
 
-// Site markers, the same in both views. The shape shows the coordinate kind, as in src/site_map.py: ◆ studied
-// point, ● region center, ■ historical landing, ▲ approximate reference; a Custom Site is a ring with ticks and the
-// Site Planner's Surface Asset a cross in a circle. With time data, the fill rises with the Illumination Fraction at
-// the time bar's hour, and the dot at the top right is filled while Earth is visible and hollow while it is not:
+// Site markers, the same in both views. Every Catalog Site is a circle, whatever its coordinate kind (the panels name
+// the kind); a Custom Site is a ring with ticks and the Site Planner's Surface Asset a cross in a circle. With time
+// data, a badge beside the marker shows the time bar's hour: a Sun that fills from the bottom with the Illumination
+// Fraction, like a sunrise, and an Earth that is blue while in view and gray, crossed out, while below the horizon:
 // shape as well as color.
 const SHAPES = {
-  studied_point: '<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>',
-  region_center: '<circle cx="12" cy="12" r="9.5"/>',
-  actual_landing: '<path d="M3 3H21V21H3Z"/>',
-  approximate_reference: '<path d="M12 2 22.5 21H1.5Z"/>',
+  site: '<circle cx="12" cy="12" r="9.5"/>',
   custom: '<circle cx="12" cy="12" r="6"/><path class="cross" d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
   asset: '<circle cx="12" cy="12" r="9.5"/><path class="cross" d="M12 4v16M4 12h16"/>',
 };
 const KINDS = { studied_point: "studied point", region_center: "region center", actual_landing: "historical landing",
                 approximate_reference: "approximate reference", custom: "Custom Site", asset: "Surface Asset" };
 
+const SUN = '<circle cx="12" cy="12" r="5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1'
+  + 'M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>';
+const EARTH = '<circle cx="12" cy="12" r="8.5"/><path class="grid" d="M3.5 12h17M12 3.5c-3.2 3-3.2 14 0 17'
+  + 'M12 3.5c3.2 3 3.2 14 0 17"/><path class="slash" d="M4 20 20 4"/>';
+const svg = (cls, body) => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
+
 function markerHtml(kind) {
-  const shape = SHAPES[kind] || SHAPES.region_center;
-  return `<svg class="shape" viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`
-    + `<svg class="lit" viewBox="0 0 24 24" aria-hidden="true">${shape}</svg><span class="earth"></span>`;
+  return svg("shape", SHAPES[kind] || SHAPES.site)
+    + `<span class="conditions"><span class="sun">${svg("sun-off", SUN)}${svg("sun-on", SUN)}</span>`
+    + `${svg("earth", EARTH)}</span>`;
 }
 
 // Show `s` ({sun, earth} from timeBar.stateOf, or null without time data) on a marker element.
@@ -33,7 +36,7 @@ function paintMarker(el, s) {
   if (!el) return;
   el.classList.toggle("timed", !!s);
   if (!s) return;
-  el.querySelector(".lit").style.clipPath = `inset(${100 - s.sun}% 0 0 0)`;
+  el.querySelector(".sun-on").style.clipPath = `inset(${100 - s.sun}% 0 0 0)`;
   el.classList.toggle("earth-up", s.earth);
 }
 
@@ -104,6 +107,25 @@ function addFullscreenButton(state) {
   root.querySelector(".layers").appendChild(button);
 }
 
+// The globe/map switch, first among the buttons at the top right: one button naming the other view. Python picks
+// the view when a site is chosen (data.view, applied when view_id changes); in between, this button switches it here
+// alone, without a rerun.
+function addViewSwitch(state) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "view-switch";
+  button.onclick = () => { setView(state, state.view === "map" ? "globe" : "map"); render(state); };
+  state.root.querySelector(".layers").prepend(button);
+}
+
+function setView(state, name) {
+  state.view = name;
+  state.root.dataset.view = name;
+  const [label, icon] = name === "map" ? ["Globe", "moon"] : ["South pole map", "pole-map"];
+  state.root.querySelector(".view-switch").innerHTML =
+    `<img src="app/static/icons/${icon}.svg" alt="" aria-hidden="true">${label}`;
+}
+
 // The site the views focus on: in the Site Planner its Surface Asset (key "asset"); otherwise the Custom Site (key
 // "custom") if there is one, else the selected Catalog Site.
 function focusSite(data) {
@@ -130,6 +152,31 @@ function updateInfo(state, data) {
     ? `${selected.lat.toFixed(4)}°, ${selected.lon.toFixed(4)}° E · ${selected.description}` : "";
 }
 
+// A click beside the sites first clears the selection (outside the Site Planner); "" is the "site" event for none.
+function deselect(state) {
+  const data = state.data;
+  if (data.mode === "planner" || (!data.selected && !data.custom)) return false;
+  state.setTriggerValue("site", "");
+  return true;
+}
+
+// Great-circle distance (m) on the Moon from a site to a point.
+function surfaceDistance(site, lat, lon) {
+  const rad = Math.PI / 180, dLat = (lat - site.lat) * rad, dLon = (lon - site.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(site.lat * rad) * Math.cos(lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * 1737400 * Math.asin(Math.sqrt(Math.min(1, h)));
+}
+
+// Where a clicked point's analysis comes from, as get_conditions (src/conditions.py) decides it: a Catalog Site's
+// pre-computed Site Neighborhood, else the south pole terrain data (data.zones from src/panels/common.py).
+function analysisSource(data, lat, lon) {
+  const z = data.zones || { terrain_lat: -80, precomputed_m: 0, precomputed: [] };
+  const near = data.sites.find(s => z.precomputed.includes(s.key) && surfaceDistance(s, lat, lon) <= z.precomputed_m);
+  if (near) return `pre-computed near ${escapeHtml(near.name)}, opens at once`;
+  return lat <= z.terrain_lat ? "computed live, about 30 s"
+    : `no terrain data here (outside ${-z.terrain_lat}°S), so the Ideal Horizon is used`;
+}
+
 // Asks before analyzing a clicked point as a Custom Site (task A5): the live computation takes about 30 s, so a stray
 // click must not start one. Analyze sends the "point" event; `close` removes the balloon and the provisional marker.
 function analyzeBalloon(state, lat, lon, close) {
@@ -137,7 +184,7 @@ function analyzeBalloon(state, lat, lon, close) {
   const el = document.createElement("div");
   el.className = "analyze";
   el.innerHTML = `<b>Analyze this point?</b><div>${lat.toFixed(2)}°, ${lon.toFixed(2)}° E · `
-    + `${lat <= -80 ? "computed live, about 30 s" : "no terrain data here (outside 80°S), so a smooth horizon is used"}`
+    + `${analysisSource(state.data, lat, lon)}`
     + '</div><div class="analyze-buttons"><button class="primary">Analyze</button><button>Cancel</button></div>';
   const [analyze, cancel] = el.querySelectorAll("button");
   analyze.onclick = () => { close(); state.setTriggerValue("point", { lat, lon }); };
@@ -172,6 +219,7 @@ export default function (component) {
   state.data = data;  // the views read the latest data from here, including in their event handlers
   if (!state.observer) {
     watchLayout(state);
+    addViewSwitch(state);
     if (root.requestFullscreen) addFullscreenButton(state);
   }
   state.findPanel();
@@ -179,10 +227,10 @@ export default function (component) {
   // in the view itself survives the reruns in between.
   if (state.viewId !== data.view_id) {
     state.viewId = data.view_id;
-    state.view = data.view === "map" ? "map" : "globe";
-    root.dataset.view = state.view;
+    setView(state, data.view === "map" ? "map" : "globe");
   }
   updateInfo(state, data);
+  root.classList.toggle("has-zones", !!data.zones);
   timeBar.update(state, data.time);
   render(state);
   return () => {

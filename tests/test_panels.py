@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from src.metrics import hourly_states
-from src.panels.common import format_duration, ordinal, parse_coordinates, time_payload
+from src.panels.common import format_countdown, format_duration, ordinal, parse_coordinates, time_payload
 
 
 @pytest.mark.parametrize("text, expected", [
@@ -36,3 +36,26 @@ def test_people_friendly_numbers():
     assert [ordinal(n) for n in (1, 2, 3, 4, 11, 12, 13, 21, 22)] == \
         ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd"]
     assert [format_duration(h) for h in (0, 30, 110.4)] == ["None", "30 h", "4.6 days"]
+    assert [format_countdown(h, "down") for h in (None, 0, 0.04, 0.995, 5.3, 23.97, 47.5, 95.6)] ==         ["No set in window", "down", "2 min", "1.0 h", "5.3 h", "1 d 0 h", "2 d 0 h", "4 d 0 h"]
+
+
+def test_every_place_is_a_catalog_site_with_sourced_images():
+    from src.panels.places import PLACES
+    from src.sites import LUNAR_SITES
+    assert set(PLACES) <= set(LUNAR_SITES)
+    for title, text, photos in PLACES.values():
+        assert title and text and photos
+        for url, caption, page in photos:
+            assert url.startswith("https://") and page.startswith("https://") and caption
+            assert "(" not in page  # a parenthesis would end the caption's markdown link early
+
+
+def test_selected_instant_follows_the_bar_inside_the_window_and_restarts_it_outside(monkeypatch):
+    import streamlit as st
+    from src.panels.common import MOON_VIEW, selected_instant
+    df = pd.DataFrame({"time": pd.date_range("2027-01-01", periods=72, freq="h")})
+    for instant, expected in [(None, "2027-01-01 00:00"),  # the bar has not sent one yet
+                              ("2027-01-02T05:40:00Z", "2027-01-02 05:00"),  # inside: its hour
+                              ("2027-06-15T12:00:00Z", "2027-01-01 00:00")]:  # another window's: the start
+        monkeypatch.setattr(st, "session_state", {MOON_VIEW: {"instant": instant}})
+        assert selected_instant(df) == pd.Timestamp(expected)

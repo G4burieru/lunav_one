@@ -1,6 +1,5 @@
-streamlit
-plotly
-pandas
-requests
-pytest
-rasterio
+streamlit==1.67.0  # st.components.v2 and the width API are recent: upgrade on purpose, after testing
+plotly<8
+pandas<4
+requests<3
+rasterio<2

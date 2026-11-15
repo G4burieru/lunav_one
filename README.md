@@ -17,7 +17,7 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Capability | Current branch |
 |---|---|
 | Moon View | Interactive 3D globe and south polar map with real NASA imagery |
-| Base layers | Globe imagery/elevation; polar Photos (LROC NAC/WAC) and Relief (LOLA) |
+| Base layers | Photos (LROC WAC; NAC near the pole) and Relief (LOLA) on both the globe and the polar map; a button at the top right switches between them |
 | Explorer catalog | Name/coordinate search, type labels, sorting and compact cards |
 | Site Card | 2027–2028 averages, Longest Night, Longest Earth Absence, metric ranks, source context |
 | Site Card tabs | Overview, Sun & Earth (28-day charts), Seasons (monthly summaries) |
@@ -29,7 +29,6 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Moon View time bar | Hourly UTC slider, Play/Pause and dynamic Sun/Earth marker states |
 | Site Card synchronization | Updates selected-instant information and charts when the slider is released or playback paused |
 | Globe rotation | Starts automatically unless reduced motion is requested; stops at the first interaction |
-| Additional layers | Layers Panel is not implemented in this checkout |
 | Full scientific/operational validation | Not completed |
 
 The Explorer's Site Card summary always covers 2027–2028 at 2 m. Moving or playing
@@ -37,16 +36,18 @@ the Moon View time bar changes the marker states immediately. Releasing the slid
 or pausing sends the UTC instant to the Site Card's selected-instant line and
 28-day charts; it does not change the two-year averages or ranks. If no instant
 has been sent, the first sample is used. In Site Planner the Moon View time bar
-covers its Analysis Window; the results panel still has its own Instant slider.
-That panel's countdowns are not yet driven by the Moon View bar.
+covers its Analysis Window and drives the results' countdowns and charts the same way.
 
-Marker **shape** identifies the coordinate type: diamond for a studied point,
-circle for a regional center, square for a historical landing, and triangle for
-an approximate reference. Custom Sites use a ticked ring; a Surface Asset uses
-a cross in a circle. With time data, **fill level** represents the visible solar
-disk fraction, while the **small upper-right dot** is filled for Earth Visibility
-and hollow when Earth does not meet the visibility criterion. These are modeled
-states, not power generation or communications status. The globe's initial
+Every Catalog Site is a circle; the panels name its coordinate type. Custom
+Sites use a ticked ring; a Surface Asset uses a cross in a circle. With time
+data, a badge beside each marker shows a **Sun** that fills from the bottom with
+the visible solar disk fraction, and an **Earth** that is blue while visible and
+gray, crossed out, when Earth does not meet the visibility criterion. These are
+modeled states, not power generation or communications status. The time bar
+plays at 1 hour to 3 days per second, and a UTC date can be typed into it. On
+the south polar map, dashed rings show where a clicked point's analysis comes
+from: pre-computed within about 2 km of a Catalog Site, live terrain inside
+80°S, and the Ideal Horizon outside it. The globe's initial
 rotation stops at the first interaction and is disabled for reduced-motion users.
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
@@ -71,6 +72,7 @@ streamlit run app.py
 Run the tests:
 
 ```bash
+pip install pytest
 python -m pytest -q
 ```
 
@@ -112,11 +114,10 @@ lunav_one/
 │   └── catalog.py               # Pre-computed data loader
 ├── scripts/
 │   ├── precompute.py            # Generates data/catalog/
-│   ├── compare_pgda.py          # Numerical PGDA consistency check
-│   └── render_sun_overlay.py    # Prepares a NASA-derived overlay asset
+│   └── compare_pgda.py          # Numerical PGDA consistency check
 ├── static/
 │   ├── icons/                  # SVG interface icons
-│   └── overlays/               # Prepared Sun visibility image and metadata
+│   └── overlays/               # Prepared Sun and Earth visibility images and metadata
 ├── data/
 │   └── catalog/                 # Pre-computed ephemerides and terrain horizons
 │       ├── manifest.json        # Coordinates, date coverage and terrain source
@@ -131,8 +132,7 @@ lunav_one/
 │   ├── test_metrics.py
 │   ├── test_catalog.py
 │   ├── test_app.py              # Panel smoke tests
-│   ├── test_panels.py           # Search, formatting and state contracts
-│   └── test_sun_overlay.py
+│   └── test_panels.py           # Search, formatting and state contracts
 └── docs/
     ├── TEAM_PLAN.md             # Ownership and workflow
     ├── UI_OVERHAUL.md           # Interface plan and integration tasks
@@ -278,10 +278,9 @@ it is not a local copy of the real imagery or the full application.
 `docs/UI_OVERHAUL.md` is a plan as well as a status record. The current rail opens
 Catalog, Plan and About. The Site Planner already draws selectable Site
 Neighborhood cells on the polar map. UTC time-bar playback and dynamic marker
-states are implemented. The Layers Panel, full in-view navigation and additional
-NASA Sunlight/Earth visibility layer controls still require integration or
-verification; they are not implied by the existing base-layer switches. Prepared data, helper functions and legend
-text do not by themselves make these controls available. No side-by-side comparison
+states are implemented, and the view has its own globe/map switch. NASA's Sunlight and
+Earth visibility layers were tried and removed (PR #33); the Photos/Relief switches are
+base layers only. No side-by-side comparison
 table is present in the current interface; the catalog is sortable by metric.
 
 ## Current limitations

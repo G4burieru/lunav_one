@@ -29,25 +29,29 @@ if _imported_src().get("stamp") != _stamp:
 from src.moon_view import moon_view  # noqa: E402 (imports after the check above)
 from src.panels import about, catalog_list, planner, site_card  # noqa: E402
 from src.panels.common import (  # noqa: E402
-    CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, catalog_time, open_panel, rail_active,
-    select_custom, select_site)
+    CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, analysis_zones, catalog_time, open_panel,
+    rail_active, select_custom, select_site)
 from src.sites import LUNAR_SITES  # noqa: E402
+from src.terrain import SOUTH_POLE_DEM_LIMIT  # noqa: E402
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
-PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render, "about": about.render}
+PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render,
+          "about": about.render}
 RAIL = [("catalog", "Catalog", ":material/public:"), ("planner", "Plan", ":material/edit_location_alt:"),
         ("about", "About", ":material/info:")]
 RAIL_WIDTH = "76px"
 PANEL_LEFT = f"calc({RAIL_WIDTH} + 38px)"  # 14 px margins around the rail, 10 px gap
-PANEL_WIDTH = {"catalog": "380px", "about": "380px", "site": "min(46vw, 760px)", "planner": "min(46vw, 760px)"}
-POLAR_LAT = -80.0  # choosing a site south of this opens the south polar map; other sites open the globe
+PANEL_WIDTH = {"catalog": "380px", "about": "380px", "site": "min(46vw, 760px)",
+               "planner": "min(46vw, 760px)"}
 
 # The view is pinned behind everything and the rail and the panel float over it. The rest of the page ignores the
 # pointer so drags and clicks reach the view. `st-key-<key>` classes come from st.container(key=).
 CSS = f"""<style>
-  /* Streamlit's header stays only for its "Running..." indicator, the one sign that a click is being processed. */
-  [data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
+  /* Streamlit's header stays only for its "Running..." indicator, the one sign that a click is being processed.
+     Its toolbar spans the top right and sits above the view, so it must let clicks through too: otherwise it takes
+     them from the view's layer and full screen buttons there. */
+  [data-testid="stHeader"], [data-testid="stToolbar"] {{ background: transparent; pointer-events: none; }}
   [data-testid="stToolbarActions"], [data-testid="stAppDeployButton"], [data-testid="stMainMenu"] {{ display: none; }}
   [data-testid="stStatusWidget"] {{ position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 3;
     pointer-events: auto; padding: 2px 12px; border-radius: 999px; background: rgba(14, 17, 23, 0.9);
@@ -73,8 +77,8 @@ CSS = f"""<style>
 
 def on_view_site():
     clicked = st.session_state[MOON_VIEW].get("site")
-    if clicked in LUNAR_SITES:
-        select_site(clicked)
+    if clicked in LUNAR_SITES or clicked == "":  # "": a click beside the sites clears the selection
+        select_site(clicked or None)
 
 
 def on_view_point():
@@ -99,25 +103,19 @@ def explorer_time():
 def view_request(selected, custom):
     """The view to show ("globe" or "map") and a view_id that changes whenever the Moon View should switch to it.
 
-    The switch at the top of the Explorer panels picks the view. Choosing a site, or a Custom Site, moves the switch
-    to the view that shows it: the south polar map for polar sites, the globe for the others.
+    Choosing a site, or a Custom Site, switches to the view that shows it: the south polar map for polar sites, the
+    globe for the others. In between, the Moon View's own globe/map button switches it without telling Python.
     """
     ss = st.session_state
-    switch = False
+    if "view_id" not in ss:
+        ss[VIEW_CHOICE], ss["view_id"] = VIEWS[0], 1
     target = selected or (custom and (custom["lat"], custom["lon"]))
     if ss.get("view_site") != target:
         ss["view_site"] = target
         if target:
             lat = LUNAR_SITES[selected]["lat"] if selected else custom["lat"]
-            ss[VIEW_CHOICE] = VIEWS[1] if lat <= POLAR_LAT else VIEWS[0]
-            switch = True  # even to the view already chosen: the user may have moved away from the site
-    if ss.get(VIEW_CHOICE) is None:  # unselected, or dropped while a panel without the switch was open
-        ss[VIEW_CHOICE] = ss.get("view_shown", VIEWS[0])
-    if ss.get("view_shown") != ss[VIEW_CHOICE]:
-        ss["view_shown"] = ss[VIEW_CHOICE]
-        switch = True
-    if switch:
-        ss["view_id"] = ss.get("view_id", 0) + 1
+            ss[VIEW_CHOICE] = VIEWS[1] if lat <= SOUTH_POLE_DEM_LIMIT else VIEWS[0]
+            ss["view_id"] += 1  # even to the view already shown: the user may have switched away from it
     return ("map" if ss[VIEW_CHOICE] == VIEWS[1] else "globe"), ss["view_id"]
 
 
@@ -135,7 +133,7 @@ with st.container(key="rail"):
                   type="primary" if panel_open and rail_active(name) else "secondary", width="stretch",
                   help=f"Hide the {label} panel" if panel_open and rail_active(name) else None)
 
-view, view_id = view_request(selected, custom)  # before the panel, whose globe/map switch it may move
+view, view_id = view_request(selected, custom)
 view_slot = st.container(key="view")  # filled after the panel, whose render() can return what the view shows
 with st.container(key="panel"):
     view_data = PANELS[panel]() or {}
@@ -145,4 +143,4 @@ with view_slot:  # pre-computed data only, so the view opens even if Horizons is
     moon_view(LUNAR_SITES, selected, key=MOON_VIEW, **{"on_site": on_view_site, "on_point": on_view_point,
                                                        "on_cell": planner.on_map_cell, "on_instant": on_view_instant,
                                                        "view": view, "view_id": view_id, "custom": custom,
-                                                       "time": explorer_time(), **view_data})
+                                                       "time": explorer_time(), "zones": analysis_zones(), **view_data})

@@ -7,25 +7,26 @@ import pandas as pd
 import streamlit as st
 
 from src import catalog
-from src.conditions import get_conditions, neighborhood_summary
+from src.conditions import PRECOMPUTED_REACH_M, get_conditions, neighborhood_summary
 from src.metrics import hourly_states, site_summary
 from src.sites import LUNAR_SITES
+from src.terrain import SOUTH_POLE_DEM_LIMIT
 
-get_data = st.cache_data(show_spinner=False)(get_conditions)
-get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
+# Bounded: each Custom Site's two years take about 1.1 MB, kept for every session until the app restarts.
+get_data = st.cache_data(show_spinner=False, max_entries=64)(get_conditions)
+get_neighborhood = st.cache_data(show_spinner=False, max_entries=64)(neighborhood_summary)
 
 # Session state: the open panel, the selected Catalog Site key, and the Custom Site ({"lat", "lon"}) if any.
 PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
 PANEL_OPEN = "panel_open"  # False while the panel is hidden (a second click on its rail icon)
 MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
-VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")
-VIEW_ICONS = {"Globe": "moon", "South pole map": "pole-map"}
+VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")  # the view Python last asked the Moon View for
 CUSTOM_SITE = "Custom Site"
-KIND_LABELS = {
-    "studied_point": "◆ Studied point",
-    "region_center": "● Region center",
-    "actual_landing": "■ Historical landing",
-    "approximate_reference": "▲ Approximate reference",
+KIND_LABELS = {  # every Catalog Site is a circle on the Moon View, so the kind is named only here
+    "studied_point": "Studied point",
+    "region_center": "Region center",
+    "actual_landing": "Historical landing",
+    "approximate_reference": "Approximate reference",
 }
 CACHE_START = datetime.date.fromisoformat(catalog.START)
 CACHE_END = datetime.date.fromisoformat(catalog.END)  # exclusive
@@ -133,21 +134,29 @@ def catalog_time():
                          for key, site in LUNAR_SITES.items()})
 
 
+@st.cache_data(show_spinner=False)
+def analysis_zones():
+    """Where get_conditions takes a clicked point's data from, for the Moon View's dashed rings (`zones`): the
+    pre-computed Site Neighborhood of a Catalog Site within reach, else live terrain inside the south pole DEMs."""
+    precomputed = [key for key, site in LUNAR_SITES.items()  # the sites whose data _catalog_match can use
+                   if (data := catalog.load_site(key, site)) is not None and data[1] is not None]
+    return {"terrain_lat": SOUTH_POLE_DEM_LIMIT, "precomputed_m": PRECOMPUTED_REACH_M, "precomputed": precomputed}
+
+
 def selected_instant(df):
-    """The time bar's instant (UTC, naive like df["time"]), or the start of `df` until the time bar sets one."""
+    """The time bar's instant (UTC, naive like df["time"]), or the start of `df` until the time bar sets one inside
+    its window: an instant from another window (the Explorer's two years, before a Site Planner window) restarts it."""
     value = (st.session_state.get(MOON_VIEW) or {}).get("instant")
-    at = pd.Timestamp(value) if value else df["time"].iloc[0]
-    at = at.tz_convert("UTC").tz_localize(None) if at.tzinfo else at
-    return min(max(at.floor("h"), df["time"].iloc[0]), df["time"].iloc[-1])
+    start, end = df["time"].iloc[0], df["time"].iloc[-1]
+    at = pd.Timestamp(value) if value else start
+    at = (at.tz_convert("UTC").tz_localize(None) if at.tzinfo else at).floor("h")
+    return at if start <= at <= end else start
 
 
 def header():
-    """App title and the globe/map switch, at the top of the Explorer panels."""
+    """App title, at the top of the Explorer panels. The globe/map switch is in the Moon View itself."""
     st.markdown(f"### {icon('moon')} Lunar Landing Site Navigator")
     st.caption("Solar power and direct-to-Earth communication for lunar south pole landings · NASA Space Apps 2026")
-    # No default: view_request() in app.py always sets the value first, and a default too makes Streamlit warn.
-    st.segmented_control("View", VIEWS, key=VIEW_CHOICE, label_visibility="collapsed",
-                         format_func=lambda view: f"{icon(VIEW_ICONS[view])} {view}")
 
 
 def site_label(key):
@@ -164,8 +173,10 @@ def format_countdown(hours, below_label):
         return "No set in window"
     if hours == 0:
         return below_label
-    days, rest = divmod(hours, 24)
-    return f"{int(days)} d {rest:.0f} h" if days else f"{hours:.1f} h"
+    if round(hours * 60) < 60:
+        return f"{max(1, round(hours * 60))} min"
+    days, rest = divmod(round(hours), 24)  # rounded first, so 95.6 h is "4 d 0 h", not "3 d 24 h"
+    return f"{days} d {rest} h" if days else f"{hours:.1f} h"
 
 
 def load(lat, lon, date, days, asset_height=catalog.ASSET_HEIGHT_M, catalog_site=True):

@@ -1,5 +1,7 @@
 """Site Card: one Catalog Site or Custom Site over 2027–2028 (docs/UI_OVERHAUL.md, tasks B2 and B5).
 Owner: Gabriel."""
+import math
+
 import pandas as pd
 import streamlit as st
 
@@ -10,7 +12,9 @@ from src.panels import texts
 from src.panels.common import (CUSTOM, KIND_LABELS, SELECTED, catalog_time, data_note, format_countdown,
                                format_duration, header, icon, open_panel, ordinal, rank, select_site,
                                selected_instant, time_payload, two_years)
+from src.panels.places import PLACES
 from src.sites import LUNAR_SITES
+from src.terrain import MOON_RADIUS_M
 
 CHART_DAYS = 28  # the Sun & Earth tab shows this many days around the selected instant
 
@@ -62,7 +66,16 @@ def instant_line(df, at):
     return f"**{at:%Y-%m-%d %H:%M} UTC** · {sun} · {earth}"
 
 
-def overview(site):
+def overview(key, site):
+    """Where the site is, what there is to see there (src/panels/places.py), and its catalog context."""
+    if site["lat"] < 0:
+        st.caption(f"{math.radians(90 + site['lat']) * MOON_RADIUS_M / 1000:,.0f} km from the south pole")
+    if key in PLACES:
+        title, text, photos = PLACES[key]
+        st.markdown(f"**{title}.** {text}")
+        for column, (url, caption, page) in zip(st.columns(len(photos)), photos):
+            column.image(url, width="stretch")
+            column.caption(f"{caption} · [source]({page})")
     if "coordinate_source" not in site:
         st.caption("A Custom Site has no catalog context. Use Plan here to try another Asset Height or Elevation "
                    "Mask.")
@@ -133,7 +146,7 @@ def render():
 
     tab_overview, tab_sun_earth, tab_seasons = st.tabs(["Overview", "Sun & Earth", "Seasons"])
     with tab_overview:
-        overview(site)
+        overview(selected, site)
     with tab_sun_earth:
         sun_and_earth(df, at, summary)
     with tab_seasons:
