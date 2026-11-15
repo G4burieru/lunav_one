@@ -1,5 +1,12 @@
 # Team Plan: Lunar Landing Site Navigator
 
+> Historical planning record. The hackathon prototype is complete; proposals,
+> interim status and deadlines below are not the current product specification.
+> See the [README](../README.md) and [technical guide](technical_guide.md) for the
+> final interface and scope. The sole presentation deliverable is the
+> [official video of at most 30 seconds](pitch/demo_30s.md).
+
+
 ## Objective
 
 Build a Streamlit web application that lets users compare lunar landing sites and dates, with a focus on the

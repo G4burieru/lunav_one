@@ -1,6 +1,7 @@
 # Lunav One — submission draft
 
-D3 working draft for NASA Space Apps Challenge 2026, Lunar Landing Site Navigator.
+Submission text for the completed NASA Space Apps Challenge 2026 prototype,
+Lunar Landing Site Navigator.
 Check the final submission form and the deployed build before publishing. The
 application is hosted at [lunavone.streamlit.app](https://lunavone.streamlit.app/);
 no award, agency endorsement or operational validation is claimed.
@@ -38,8 +39,12 @@ typed dates and Play/Pause at several speeds. Every Catalog Site marker is a
 circle; a badge beside it shows a Sun that fills with the Illumination Fraction
 and an Earth that is blue during Earth Visibility. Markers update during playback. Releasing the slider or pausing
 synchronizes the Site Card's instant, countdown line and charts; its two-year
-summary and ranks remain unchanged. The initial globe rotation stops at the
-first interaction and respects reduced-motion preferences.
+summary and ranks remain unchanged. The globe initially rotates unless reduced
+motion is requested; a globe interaction or site selection stops it. Rotate can
+restart it and stops it on a second click. Zoom buttons, a responsive phone layout
+and expandable About sections support exploration. A separate 3D relief ×5
+control exaggerates vertical terrain for illustration, not true vertical scale
+or a change to the scientific model.
 
 Overview, Sun & Earth and Seasons tabs show
 source details, external site images and descriptions, 28-day elevation charts
@@ -137,7 +142,7 @@ communications availability. No safe or optimal landing, ice deposit, energy
 yield or thermal survival is certified. Automated tests verify software behavior;
 they do not establish scientific accuracy for every real location.
 
-## Intended impact and integration work
+## Educational impact and completed scope
 
 The intended benefit is educational: let people inspect terrain, compare clearly
 defined environmental metrics and understand uncertainty. User-study or
@@ -153,15 +158,17 @@ verify the hosted build, browser/CDN/imagery loading, marker changes and Site Ca
 synchronization after slider release or pause. Live neighborhood computation
 should not be required by the main recording path.
 
+The original code and documentation use Apache-2.0; external imagery, source data
+and libraries retain their own terms. See [LICENSE](../../LICENSE),
+[NOTICE](../../NOTICE) and [third-party credits](../../THIRD_PARTY_NOTICES.md).
+
 ## Publication details
 
-The team will use only the short video as its official demonstration. No slide
-presentation is planned; the extended video is complementary GitHub material.
+The official video of at most 30 seconds is the sole demonstration deliverable
+and the same public video will be linked from the GitHub README.
 
 - Application: https://lunavone.streamlit.app/
 - Official Demo: at most 30 seconds, pending recording; [script](demo_30s.md).
-- Extended Demo: approximately three minutes of complementary material, pending
-  recording; [script](demo_script.md). This does not replace the official demo.
 - Repository: https://github.com/G4burieru/lunav_one
 - Team: Lunav One — João Gabriel Santos (science), Igor Wanderley (interface),
   Renata Andrade (sites, texts and presentation).

@@ -61,7 +61,7 @@ summit identifications. They are consistent with [NASA's regional description](h
 and our catalog values agree with NASA's PGDA Earth visibility map within a few
 percentage points. See the [comparison and precise assumptions](illumination_comparison.md).
 
-## What Lunav One can explain today
+## What the completed prototype explains
 
 A **Catalog Site** has a documented identity and coordinate meaning. Some entries
 are specific illumination-study points, others are regional centers, and Apollo
@@ -69,14 +69,16 @@ are specific illumination-study points, others are regional centers, and Apollo
 verified summit. Terrain calculations and the literature consistency check are
 available, while complete topographic validation remains pending.
 
-The prototype displays a schematic polar map and terrain-aware Sun/Earth curves
-using ephemerides from [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html). Science
+The prototype displays a 3D Moon and a polar map with NASA imagery, plus
+terrain-aware Sun/Earth curves using ephemerides from [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html). Science
 functions calculate Terrain Horizon and Illumination Fraction, which are now
 used in the interface. Polar calculations combine 20 m terrain within 10 km,
 80 m from 10–50 km, and a 320 m overview from 50–150 km.
 [LOLA products](https://pgda.gsfc.nasa.gov/products/78) provide topographic context,
-while [LROC QuickMap](https://quickmap.lroc.im-ldi.com/) is a cartographic reference,
-not an image layer currently embedded in our map.
+while [LROC QuickMap](https://quickmap.lroc.im-ldi.com/) is a cartographic reference.
+The globe's optional 3D relief uses fivefold vertical exaggeration for illustration;
+it is separate from scientific Terrain Horizon calculations. `src/site_map.py`
+remains a schematic offline map, not the primary visualization.
 
 **Explorer** provides Catalog Site context, conditions and comparison for covered
 dates. **Site Planner** evaluates a chosen location, Asset Height and Elevation

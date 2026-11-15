@@ -1,5 +1,12 @@
 # Catalog expansion review — PR #41
 
+> Historical catalog and integration review. The completed product is described
+> in the [README](../../README.md) and [technical guide](../technical_guide.md).
+> Final documentation and licensing checks are recorded in the
+> [release review](../final_release_review.md). The only presentation deliverable
+> is the [official short video](demo_30s.md); earlier demo planning is superseded.
+
+
 Baseline: main `2b55b23`, incorporated into `devel_renata` by fast-forward, without
 creating a commit. Validation here means checking published names, regional
 coordinates and provenance, not certifying topography or landing suitability.
@@ -10,7 +17,7 @@ The nine additions match NASA's [Lunar Surface Data Book, Revision A, Table A2-2
 printed pages 57–58. All are representative polygon centers, not measured peaks,
 rim crests or landing positions. Existing keys and all numerical coordinates
 were preserved; longitudes are already east-positive in [-180, 180]. The
-[README coordinate table](../../README.md#catalog-provenance-and-conventions)
+[complete coordinate table](../technical_guide.md#catalog-provenance-and-conventions)
 records the nine coordinates and source identifiers.
 
 | Addition | Table identifier | Printed page | Historical context |
@@ -121,7 +128,7 @@ Files changed in this update:
 - Catalog and panels: `src/sites.py`, `src/panels/places.py`,
   `src/panels/common.py`, `src/panels/planner.py`, `src/panels/texts.py`.
 - Documentation: `README.md`, `docs/pitch/submission_draft.md`,
-  `docs/pitch/demo_script.md`, `docs/pitch/mission_explainer.md`,
+  `docs/pitch/demo_30s.md`, `docs/pitch/mission_explainer.md`,
   `docs/pitch/final_science_review.md` (historical-status notice), and this report.
 - Tests: `tests/test_sites.py`, `tests/test_catalog.py`, `tests/test_panels.py`,
   `tests/test_app.py`, `tests/test_catalog_time.py`.
@@ -138,7 +145,8 @@ were retained. The Planner's name validation and `planner_time()` coexist.
 Igor's saved-location failure tracking, manifest START/END validation and
 empty/duplicate-name rejection are preserved. All 17 catalog data sets load for
 2027–2028. The 17 Overviews, regional image captions, Leibnitz historical-region
-correction and separate official/extended video scripts remain unchanged.
+correction were preserved. Presentation planning was subsequently finalized as
+one official video of at most 30 seconds, also used in the README.
 
 The integrated suite passed **128 tests, with no failures or skips**, including
 the JavaScript badge regression. The Streamlit server started and its health
@@ -222,12 +230,12 @@ using an existing Node-compatible runtime. The CI-version Streamlit server also
 started successfully and its health endpoint returned `ok`; AppTest rendered
 the main panels and exercised saved Custom Sites. `git diff --check` passed.
 The 17 catalog/manifest entries and Overviews, source references, imagery,
-Leibnitz correction and both video scripts' separate purposes were preserved.
-The official narration remains 55 words; its eventual exported duration must
-still be measured, and both videos remain unpublished with no invented URLs.
+Leibnitz correction were preserved. The official narration remains 55 words;
+its eventual exported duration must still be measured. That single video is
+pending recording and publication, with no invented URL.
 
-Remote-reference inspection confirmed main at `1e1d7c1`, fully included in
-`devel_renata` at `c8b769f` (zero main commits missing). The branch matches
+At that review, remote-reference inspection confirmed main at `1e1d7c1`, fully
+included in `devel_renata` at `c8b769f` (zero main commits missing). The branch matches
 `origin/devel_renata`. The timeout and Pandas 3 corrections were committed and
 published on GitHub in `c8b769f` — fix: keep name validation tests offline and
 support Pandas 3 time axes. The results above describe local validation in the
