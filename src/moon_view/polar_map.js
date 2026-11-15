@@ -124,11 +124,13 @@ const polarMap = (() => {
   }
 
   // The limits of analysisSource (view.js), dashed: the south pole terrain data's edge, and the pre-computed Site
-  // Neighborhood around each Catalog Site. Drawn once, as rings in map meters: Proj4Leaflet measures an L.circle
-  // with the Earth's radius.
+  // Neighborhood around each Catalog Site. Drawn again only when they change (a site added or pre-computed), as
+  // rings in map meters: Proj4Leaflet measures an L.circle with the Earth's radius.
   function drawZones(state, data) {
-    const m = state.map, z = data.zones;
-    if (m.zones || !z) return;
+    const m = state.map, z = data.zones, key = JSON.stringify([z, data.sites.map(s => [s.key, s.lat, s.lon])]);
+    if (!z || m.zonesKey === key) return;
+    m.zones?.remove();
+    m.zonesKey = key;
     const crs = m.leaflet.options.crs;
     const ring = (lat, lon, radius, color) => {  // dashed, over a dark halo that keeps it visible on bright terrain
       const center = crs.project(L.latLng(lat, lon));

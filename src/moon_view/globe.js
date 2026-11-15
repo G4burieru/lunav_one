@@ -113,6 +113,24 @@ const globeView = (() => {
     el.textContent = meters >= 1000 ? `${meters / 1000} km` : `${meters} m`;
   }
 
+  // The + and − buttons step the camera's distance like the mouse wheel, within OrbitControls' limits, keeping the
+  // point the camera looks at.
+  const ZOOM_STEP = 1.6;
+  function altitudeLimits(state) {
+    const r = state.globe.getGlobeRadius(), c = state.globe.controls();
+    return [c.minDistance / r - 1, Math.min(c.maxDistance, 1e6 * r) / r - 1];
+  }
+  function zoom(state, factor) {
+    const [min, max] = altitudeLimits(state), { altitude } = state.globe.pointOfView();
+    state.closeBalloon?.();
+    state.globe.pointOfView({ altitude: Math.min(max, Math.max(min, altitude * factor)) }, 300);
+  }
+  function markZoomLimits(state) {
+    const [min, max] = altitudeLimits(state), { altitude } = state.globe.pointOfView();
+    state.root.querySelector('[data-zoom="in"]').disabled = altitude <= min * 1.01;
+    state.root.querySelector('[data-zoom="out"]').disabled = altitude >= max * 0.99;
+  }
+
   // Zooming in close to the south pole points at the polar map, once each time the camera comes that close.
   function watchPole(state) {
     const { lat, altitude } = state.globe.pointOfView(), near = lat < POLE_LAT && altitude < POLE_ALTITUDE;
@@ -236,7 +254,11 @@ const globeView = (() => {
     globe.controls().autoRotateSpeed = 0.35;
     globe.controls().addEventListener("start", () => state.closeBalloon?.());
     // OrbitControls' "change" fires whenever the camera moves: user, damping and pointOfView flights alike.
-    globe.controls().addEventListener("change", () => { drawScale(state); watchPole(state); });
+    globe.controls().addEventListener("change", () => {
+      drawScale(state); watchPole(state); markZoomLimits(state);
+    });
+    root.querySelector('[data-zoom="in"]').onclick = () => zoom(state, 1 / ZOOM_STEP);
+    root.querySelector('[data-zoom="out"]').onclick = () => zoom(state, ZOOM_STEP);
     state.globe = globe;
     spinUntilFirstInteraction(state);
 
