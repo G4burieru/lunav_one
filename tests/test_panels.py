@@ -46,7 +46,9 @@ def test_every_place_is_a_catalog_site_with_sourced_images():
     for title, text, photos in PLACES.values():
         assert title and text and photos
         for url, caption, page in photos:
-            assert url.startswith("https://") and page.startswith("https://") and caption
+            # Only the NASA Image and Video Library: no images of uncertain origin or with reuse limits
+            assert url.startswith("https://images-assets.nasa.gov/") and caption
+            assert page.startswith("https://images.nasa.gov/details/")
             assert "(" not in page  # a parenthesis would end the caption's markdown link early
 
 
