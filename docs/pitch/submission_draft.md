@@ -28,7 +28,7 @@ starts with name/coordinate search and compact Catalog Site cards, sortable by
 Sunlight, Earth Visibility, Longest Night or name. Selecting a polar site opens
 the south polar map, while nonpolar locations use the globe. The view streams
 LROC imagery and LOLA shaded relief through NASA Moon Trek, with Photos and
-Relief base layers on both the globe and the map. These images provide context, not live shadows.
+Relief base layers on both the globe and the map. The Globe | South pole switch changes views. These images provide context, not live shadows.
 
 A Site Card shows coordinate type, source context and 2027–2028 conditions at
 2 m Asset Height: mean Illumination Fraction, Earth Visibility, Longest Night
@@ -42,13 +42,24 @@ summary and ranks remain unchanged. The initial globe rotation stops at the
 first interaction and respects reduced-motion preferences.
 
 Overview, Sun & Earth and Seasons tabs show
-source details, 28-day elevation charts and monthly summaries. The old comparison
+source details, external site images and descriptions, 28-day elevation charts
+and monthly summaries. Photographs, composites and measurement-derived maps are
+credited to their providers, not presented as original project results. The old comparison
 table has been replaced by the sorted catalog cards and ranks.
+
+Green dashed rings mark prepared neighborhoods; a cyan ring marks the 80°S
+terrain boundary. Covered scenarios reuse prepared data; other supported polar
+cases compute live. Outside terrain coverage, the Ideal Horizon applies when
+no prepared neighborhood is available. Other heights or dates can require live
+work within a green ring. These boundaries are separate from site markers.
+The Layers panel and NASA visibility overlays were removed.
 
 Plan here opens Where, Surface Asset, When and Results. Users choose a Catalog
 Site or Custom Site, Asset Height, Elevation Mask and Analysis Window. Results
 include Sunset/Earthset countdowns, equivalent full-Sun hours and Earth-view
-percentages. For Catalog Sites at or south of 80°S and at 2 m Asset Height,
+percentages. The Moon View time bar follows the Analysis Window and synchronizes
+results on slider release, pause or a committed typed date; there is no separate
+selected-instant slider in Site Planner. For Catalog Sites at or south of 80°S and at 2 m Asset Height,
 Site Neighborhood cells are drawn directly on the polar map, colored by Sunlight
 or Earth Visibility for the chosen window and mask. Clicking a cell moves the
 Surface Asset and updates its analysis. Best cell selects the highest modeled
@@ -124,7 +135,8 @@ requested live neighborhoods for Custom Sites and other heights in the supported
 polar region. The separate schematic Plotly map remains an offline export.
 The Moon View has a working UTC slider, playback and dynamic marker states.
 
-Before recording, verify
+Before recording, resolve the [image/caption findings](final_science_review.md)
+with Gabriel and verify
 the hosted build, browser/CDN/imagery loading, marker changes and Site Card
 synchronization after slider release or pause. Live neighborhood computation
 should not be required by the main recording path.
