@@ -10,6 +10,10 @@ const globeView = (() => {
   };
   const BUMP = ["LRO_LOLA_DEM_Global_128ppd_v04", "png", 2];  // LOLA elevation (grayscale) for bump shading
   const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const MOON_RADIUS_M = 1737400, SCALE_MAX_PX = 160;  // the scale bar's widest, as on the polar map
+  // Past this, near the south pole, the globe's texture (about 2.7 km per pixel) is coarser than the screen: the
+  // polar map shows it far better.
+  const POLE_LAT = -70, POLE_ALTITUDE = 0.5;
 
   const load = () => (window.Globe ? Promise.resolve() : loadScript(GLOBE_GL_URL));
 
@@ -71,6 +75,7 @@ const globeView = (() => {
     if (right) camera.setViewOffset(w, h, -right / 2, 0, w, h);
     else camera.clearViewOffset();
     camera.updateProjectionMatrix();
+    drawScale(state);
   }
 
   // The globe turns slowly when the app opens and stops for good at the first interaction: dragging or zooming
@@ -92,6 +97,29 @@ const globeView = (() => {
     events.forEach(type => document.addEventListener(type, stop, true));
     controls.addEventListener("start", stop);
     REDUCED_MOTION.addEventListener("change", stop);
+  }
+
+  // Scale bar for the surface at the middle of the view, rounded like Leaflet's (1, 2, 3 or 5 times a power of 10).
+  function drawScale(state) {
+    const globe = state.globe, camera = globe.camera(), h = state.root.querySelector(".globe").clientHeight;
+    if (!h) return;
+    const r = globe.getGlobeRadius();
+    const metersPerPx = (camera.position.length() - r) * 2 * Math.tan(camera.fov * Math.PI / 360) / h
+      * MOON_RADIUS_M / r;
+    const max = SCALE_MAX_PX * metersPerPx, p = 10 ** Math.floor(Math.log10(max)), d = max / p;
+    const meters = p * (d >= 5 ? 5 : d >= 3 ? 3 : d >= 2 ? 2 : 1);
+    const el = state.root.querySelector(".globe-scale");
+    el.style.width = `${Math.round(meters / metersPerPx)}px`;
+    el.textContent = meters >= 1000 ? `${meters / 1000} km` : `${meters} m`;
+  }
+
+  // Zooming in close to the south pole points at the polar map, once each time the camera comes that close.
+  function watchPole(state) {
+    const { lat, altitude } = state.globe.pointOfView(), near = lat < POLE_LAT && altitude < POLE_ALTITUDE;
+    if (near && !state.nearPole && state.view === "globe") {
+      nudgeView(state, "map", "Close to the south pole: switch to the South pole map for sharper terrain");
+    }
+    state.nearPole = near;
   }
 
   // Camera for a site; polar sites are seen from just off the pole (OrbitControls misbehaves exactly at it).
@@ -123,6 +151,7 @@ const globeView = (() => {
   function markerItems(state, data) {
     const kept = state.globeMarkers || {}, next = {}, custom = data.custom;
     const items = data.sites.map(s => ({ key: s.key, name: s.name, kind: s.kind, lat: s.lat, lon: s.lon }));
+    data.saved.forEach(s => items.push({ key: s.key, name: s.name, kind: "saved", lat: s.lat, lon: s.lon }));
     if (custom) items.push({ key: "custom", name: "Custom Site", kind: "custom", lat: custom.lat, lon: custom.lon });
     if (data.mode === "planner" && data.asset) {
       items.push({ key: "asset", name: "Surface Asset", kind: "asset", lat: data.asset.lat, lon: data.asset.lon });
@@ -139,7 +168,7 @@ const globeView = (() => {
 
   function markerElement(state, item) {
     const el = document.createElement("div");
-    el.className = "site-marker globe-marker";
+    el.className = `site-marker globe-marker${item.kind === "saved" ? " saved" : ""}`;
     el.innerHTML = `${markerHtml(item.kind)}<span class="marker-name">${escapeHtml(item.name)}</span>`;
     // Keep marker clicks away from the globe, which would offer to analyze the point under them.
     ["pointerdown", "pointerup", "click"].forEach(type => el.addEventListener(type, e => e.stopPropagation()));
@@ -206,6 +235,8 @@ const globeView = (() => {
       .onGlobeClick(({ lat, lng }, event) => deselect(state) || askToAnalyze(state, lat, lng, event));
     globe.controls().autoRotateSpeed = 0.35;
     globe.controls().addEventListener("start", () => state.closeBalloon?.());
+    // OrbitControls' "change" fires whenever the camera moves: user, damping and pointOfView flights alike.
+    globe.controls().addEventListener("change", () => { drawScale(state); watchPole(state); });
     state.globe = globe;
     spinUntilFirstInteraction(state);
 

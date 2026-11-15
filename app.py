@@ -30,7 +30,7 @@ from src.moon_view import moon_view  # noqa: E402 (imports after the check above
 from src.panels import about, catalog_list, planner, site_card  # noqa: E402
 from src.panels.common import (  # noqa: E402
     CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, analysis_zones, catalog_time, open_panel,
-    rail_active, select_custom, select_site)
+    plan_saved, rail_active, saved_sites, select_custom, select_site, time_payload, two_years)
 from src.sites import LUNAR_SITES  # noqa: E402
 from src.terrain import SOUTH_POLE_DEM_LIMIT  # noqa: E402
 
@@ -79,6 +79,8 @@ def on_view_site():
     clicked = st.session_state[MOON_VIEW].get("site")
     if clicked in LUNAR_SITES or clicked == "":  # "": a click beside the sites clears the selection
         select_site(clicked or None)
+    elif clicked in saved_sites():  # a Custom Site named in the Site Planner opens there again
+        plan_saved(clicked)
 
 
 def on_view_point():
@@ -98,6 +100,16 @@ def explorer_time():
         return dict(catalog_time(), instant=(st.session_state.get(MOON_VIEW) or {}).get("instant"))
     except Exception:  # pre-computed data missing: the view opens without a time bar
         return None
+
+
+def with_saved_states(time):
+    """Adds the saved Custom Sites' states to an Explorer time bar (2027–2028), so their markers get the Sun and Earth
+    badge too. Each is computed live once (about 30 s), then cached; one that fails stays without a badge."""
+    for key, site in saved_sites().items():
+        df = two_years(site["lat"], site["lon"], catalog_site=False)
+        if df is not None:
+            time["states"][key] = time_payload({key: df})["states"][key]
+    return time
 
 
 def view_request(selected, custom):
@@ -137,10 +149,14 @@ view, view_id = view_request(selected, custom)
 view_slot = st.container(key="view")  # filled after the panel, whose render() can return what the view shows
 with st.container(key="panel"):
     view_data = PANELS[panel]() or {}
+    view_data["time"] = view_data.get("time") or explorer_time()
+    if panel != "planner" and view_data["time"]:  # the Planner's bar covers its own window, Surface Asset alone
+        view_data["time"] = with_saved_states(view_data["time"])
 
 with view_slot:  # pre-computed data only, so the view opens even if Horizons is down
     # A panel's render() can override any of these, e.g. the Site Planner's view, Surface Asset and time bar data.
     moon_view(LUNAR_SITES, selected, key=MOON_VIEW, **{"on_site": on_view_site, "on_point": on_view_point,
                                                        "on_cell": planner.on_map_cell, "on_instant": on_view_instant,
                                                        "view": view, "view_id": view_id, "custom": custom,
-                                                       "time": explorer_time(), "zones": analysis_zones(), **view_data})
+                                                       "saved": [{"key": k, **s} for k, s in saved_sites().items()],
+                                                       "zones": analysis_zones(), **view_data})

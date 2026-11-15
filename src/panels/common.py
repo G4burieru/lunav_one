@@ -22,6 +22,9 @@ PANEL_OPEN = "panel_open"  # False while the panel is hidden (a second click on 
 MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
 VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")  # the view Python last asked the Moon View for
 CUSTOM_SITE = "Custom Site"
+# Custom Sites named in the Site Planner, {"saved:<name>": {"name", "lat", "lon"}}. Session state only: they stay on
+# the Moon View until the page is reloaded or closed.
+SAVED, SAVED_PREFIX = "saved_sites", "saved:"
 KIND_LABELS = {  # every Catalog Site is a circle on the Moon View, so the kind is named only here
     "studied_point": "Studied point",
     "region_center": "Region center",
@@ -74,6 +77,15 @@ def select_custom(lat, lon):
     """Open the Site Card of a Custom Site (from the search, or a confirmed click on the Moon View)."""
     st.session_state[SELECTED], st.session_state[CUSTOM] = None, {"lat": lat, "lon": lon}
     st.session_state[PANEL], st.session_state[PANEL_OPEN] = "site", True
+
+
+def saved_sites():
+    return st.session_state.setdefault(SAVED, {})
+
+
+def plan_saved(key):
+    """Open the Site Planner on a saved Custom Site (a click on its marker)."""
+    st.session_state.update({SELECTED: None, CUSTOM: None, PANEL: "planner", PANEL_OPEN: True, "planner_site": key})
 
 
 def parse_coordinates(text):
@@ -161,7 +173,9 @@ def header():
 
 def site_label(key):
     """Display name; the dictionary key stays the internal identifier (see src/sites.py)."""
-    return LUNAR_SITES[key].get("name", key) if key in LUNAR_SITES else key
+    if key in LUNAR_SITES:
+        return LUNAR_SITES[key].get("name", key)
+    return key.removeprefix(SAVED_PREFIX) if isinstance(key, str) else key
 
 
 def is_cached(date, days):

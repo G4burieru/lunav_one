@@ -63,7 +63,8 @@ to 3 days per second) to explore hourly states. Every Catalog Site is a circle; 
 panels name its location type. The badge beside it shows a Sun that fills from the
 bottom with the visible fraction of the Sun's disk, and an Earth that is blue when
 Earth meets the visibility criterion and gray, crossed out, when it does not.
-A Custom Site is a ticked ring; a Surface Asset is a cross in a circle. On the south
+A Custom Site is a ticked ring; one you named in the Site Planner is a violet diamond
+with its name, kept until you reload the page; a Surface Asset is a cross in a circle. On the south
 polar map, dashed rings show where a clicked point's analysis comes from: pre-computed
 within about 2 km of a Catalog Site, live terrain inside 80°S, the Ideal Horizon
 outside. These symbols do not classify landing safety, power output or radio-link

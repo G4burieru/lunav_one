@@ -69,7 +69,8 @@ const polarMap = (() => {
     const planner = data.mode === "planner", custom = data.custom;
     const picked = custom ? [{ key: "custom", name: "Custom Site", kind: "custom", lat: custom.lat,
                                lon: custom.lon }] : [];
-    const items = [...data.sites, ...picked].filter(s => s.lat <= MAP_LAT)
+    const saved = data.saved.map(s => ({ ...s, kind: "saved" }));
+    const items = [...data.sites, ...saved, ...picked].filter(s => s.lat <= MAP_LAT)
       .map(s => ({ key: s.key, name: s.name, kind: s.kind, lat: s.lat, lon: s.lon,
                    selected: !planner && (s.key === "custom" || s.key === data.selected) }));
     if (planner && data.asset && data.asset.lat <= MAP_LAT) {
@@ -104,7 +105,8 @@ const polarMap = (() => {
         zIndexOffset: item.selected ? 1000 : 0, riseOnHover: true, keyboard: choosable,
       });
       marker.bindTooltip(escapeHtml(item.name), { direction: "top", offset: [0, -size / 2 - 6],
-                                                  permanent: item.selected, className: "site-label" });
+                                                  permanent: item.selected || item.kind === "saved",
+                                                  className: `site-label${item.kind === "saved" ? " saved" : ""}` });
       if (choosable) {
         const choose = () => state.setTriggerValue("site", item.key);
         marker.on("click", choose);
@@ -202,7 +204,17 @@ const polarMap = (() => {
     setBase(state, Object.keys(BASES)[0]);
     // Once the user moves the map, a change in the panel's width no longer re-centers it.
     el.addEventListener("pointerdown", () => { state.map.userMoved = true; });
-    el.addEventListener("wheel", () => { state.map.userMoved = true; }, { passive: true });
+    // Zooming out past the map's widest view (wheel, or the disabled − button) points at the globe. Capture: Leaflet
+    // stops clicks on its controls from bubbling.
+    const toGlobe = () => nudgeView(state, "globe",
+                                    "Zoomed all the way out: switch to the Globe to see the whole Moon");
+    el.addEventListener("wheel", e => {
+      state.map.userMoved = true;
+      if (e.deltaY > 0 && map.getZoom() <= map.getMinZoom()) toGlobe();
+    }, { passive: true });
+    el.addEventListener("click", e => {
+      if (e.target.closest(".leaflet-control-zoom-out.leaflet-disabled")) toGlobe();
+    }, true);
   }
 
   // A click on the map (not on a site) offers to analyze that point, with a dashed ring as provisional marker.

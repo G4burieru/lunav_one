@@ -43,6 +43,7 @@ _HTML = """
     <div><span class="zone-line terrain"></span>Inside 80°S: analyzed live, about 30 s · outside: no terrain data</div>
     <div><span class="zone-line precomputed"></span>Around each Catalog Site: pre-computed, opens at once</div>
   </div>
+  <div class="overlay globe-scale" data-for="globe"></div>
   <div class="overlay credit" data-for="globe">Photos: LRO WAC · Relief: LOLA · NASA Moon Trek</div>
   <div class="overlay credit" data-for="map">Photos: LROC NAC and WAC · Relief: LOLA · NASA Moon Trek</div>
 </div>
@@ -55,13 +56,14 @@ def _read(name):
 
 def moon_view(sites, selected=None, *, key, on_site=None, on_point=None, on_cell=None, on_instant=None,
               height="100vh", mode="explorer", view="globe", view_id="", custom=None, asset=None, time=None,
-              neighborhood=None, zones=None):
+              neighborhood=None, zones=None, saved=None):
     """Mount the Moon View over `sites` (a LUNAR_SITES-like dict), highlighting the `selected` key.
 
     `height` is any CSS length. The arguments after it follow the data contract in docs/UI_OVERHAUL.md: `view`
     ("globe" or "map") is applied only when `view_id` changes; `time` feeds the time bar, whose `instant` reaches
     Python only if `on_instant` is given; `mode` and `asset` draw the Site Planner's Surface Asset; `zones`
-    ({terrain_lat, precomputed_m, precomputed: [keys]}) draws where a clicked point's analysis comes from.
+    ({terrain_lat, precomputed_m, precomputed: [keys]}) draws where a clicked point's analysis comes from; `saved`
+    ([{key, name, lat, lon}]) draws the Custom Sites named in the Site Planner.
     """
     # Registered on every run, so edits to the .js and .css files show up on the next rerun without a restart.
     component = st.components.v2.component(
@@ -72,6 +74,7 @@ def moon_view(sites, selected=None, *, key, on_site=None, on_point=None, on_cell
                   for k, s in sites.items()],
         "selected": selected, "height": height, "mode": mode, "view": view, "view_id": view_id, "custom": custom,
         "asset": asset, "time": time, "neighborhood": neighborhood, "zones": zones,
+        "saved": saved or [],
     }
     return component(key=key, data=data, on_site_change=on_site, on_point_change=on_point, on_cell_change=on_cell,
                      on_instant_change=on_instant)
