@@ -77,7 +77,7 @@ def get_conditions(lat, lon, start_date, days, asset_height=catalog.ASSET_HEIGHT
         name, site, (ephemerides, neighborhood), east, north = match
         i = int(np.argmin(np.hypot(neighborhood["east"] - east, neighborhood["north"] - north)))
         horizon, east, north = neighborhood["horizons"][i], neighborhood["east"][i], neighborhood["north"][i]
-        if start >= pd.Timestamp(catalog.START) and stop <= pd.Timestamp(catalog.END):
+        if catalog.covers(start, stop):
             ephemerides = ephemerides[ephemerides["time"] >= start]
             source = "pre-computed"
         else:
@@ -129,7 +129,7 @@ def neighborhood_summary(site_key, start_date, days, elevation_mask=0.0, chunk=1
     ephemerides, neighborhood = data
     start = pd.Timestamp(start_date)
     stop = start + pd.Timedelta(days=days)
-    if not (start >= pd.Timestamp(catalog.START) and stop <= pd.Timestamp(catalog.END)):
+    if not catalog.covers(start, stop):
         ephemerides = get_ephemerides_data(site["lat"], site["lon"], start.date(), days)
     window = ephemerides[(ephemerides["time"] >= start) & (ephemerides["time"] < stop)]
 

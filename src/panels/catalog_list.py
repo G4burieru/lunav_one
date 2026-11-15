@@ -38,7 +38,7 @@ def render():
     sort = st.segmented_control("Sort by", list(SORTS), default="Sunlight", key="catalog_sort") or "Sunlight"
     column, ascending = SORTS[sort]
     summaries = catalog_summaries()
-    keys = sorted(LUNAR_SITES, key=site_label) if column is None else \
+    keys = sorted(LUNAR_SITES, key=lambda k: site_label(k).casefold()) if column is None else \
         summaries.sort_values(column, ascending=ascending).index
     for key in keys:
         site, summary = LUNAR_SITES[key], summaries.loc[key]

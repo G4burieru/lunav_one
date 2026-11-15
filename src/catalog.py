@@ -21,6 +21,11 @@ NEIGHBORHOOD_RADIUS_M = 2000
 NEIGHBORHOOD_SPACING_M = 100
 
 
+def covers(start, stop):
+    """Whether the pre-computed window START..END (exclusive) holds the window start..stop."""
+    return pd.Timestamp(START) <= pd.Timestamp(start) and pd.Timestamp(stop) <= pd.Timestamp(END)
+
+
 def slug(name):
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 

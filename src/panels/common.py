@@ -224,7 +224,7 @@ def site_label(key):
 
 
 def is_cached(date, days):
-    return CACHE_START <= date and date + datetime.timedelta(days=days) <= CACHE_END
+    return catalog.covers(date, date + datetime.timedelta(days=days))
 
 
 def format_countdown(hours, below_label):
