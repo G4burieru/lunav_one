@@ -183,8 +183,8 @@ def results(df, mask, days):
            else f"the Sun sets in {format_countdown(sunset, '')}")
     earth = ("Earth is out of view" if earthset == 0 else "Earth stays in view to the end of the window"
              if earthset is None else f"Earth sets in {format_countdown(earthset, '')}")
-    st.markdown(f"At **{at:%Y-%m-%d %H:%M} UTC**, {sun} and {earth}. Over the {days} days, the Sun shines "
-                f"{100 * sun_hours / len(df):.0f}% of the time and Earth is in view "
+    st.markdown(f"At **{at:%Y-%m-%d %H:%M} UTC**, {sun} and {earth}. Over the {days} days, the mean Illumination "
+                f"Fraction is {100 * sun_hours / len(df):.0f}% ({sun_hours:.0f} h of full Sun) and Earth is in view "
                 f"{100 * earth_hours / len(df):.0f}% of the time.")
     st.caption("The countdowns follow the time bar at the bottom of the view: move it, type a date or play it, "
                "then release or pause.")

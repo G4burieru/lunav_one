@@ -99,8 +99,8 @@ def sun_and_earth(df, at, summary):
     span = pd.Timedelta(days=CHART_DAYS)
     start = min(max(at - span / 2, df["time"].iloc[0]), df["time"].iloc[-1] - span)  # full span near the edges
     window = df[(df["time"] >= start) & (df["time"] < start + span)]
-    st.caption(f"The {CHART_DAYS} days around the selected instant: the Sun shines "
-               f"{100 * sunlight_hours(window) / len(window):.0f}% of the time and Earth is in view "
+    st.caption(f"The {CHART_DAYS} days around the selected instant: the mean Illumination Fraction is "
+               f"{100 * sunlight_hours(window) / len(window):.0f}% and Earth is in view "
                f"{100 * earth_visible_hours(window) / len(window):.0f}% of the time.")
     st.plotly_chart(plot_sun_elevation(window, at), width="stretch", key="card_sun")
     st.plotly_chart(plot_earth_visibility(window, at), width="stretch", key="card_earth")
