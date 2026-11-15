@@ -14,6 +14,11 @@ const globeView = (() => {
   // Past this, near the south pole, the globe's texture (about 2.7 km per pixel) is coarser than the screen: the
   // polar map shows it far better.
   const POLE_LAT = -70, POLE_ALTITUDE = 0.5;
+  // 3D relief: the LOLA elevation image (BUMP) also moves the globe's vertices. The Moon's relief spans about 20 km,
+  // about 1% of its radius, invisible at true scale, so it is exaggerated. The image stretches that span over 0..1;
+  // its middle stays on the sphere. The finer mesh (degrees per vertex) is built only while the relief is on.
+  const RELIEF_EXAGGERATION = 5, RELIEF_SPAN_M = 20000, RELIEF_MESH_DEG = 0.5, COARSE_MESH_DEG = 4;
+  const MARKER_ALTITUDE = 0.005;  // fraction of the globe radius above the surface
 
   const load = () => (window.Globe ? Promise.resolve() : loadScript(GLOBE_GL_URL));
 
@@ -66,6 +71,32 @@ const globeView = (() => {
     }));
   }
 
+  // Height (0..1) of the elevation image at a point, from its pixels kept in state.dem.
+  function demHeight(state, lat, lon) {
+    const { width, height, data } = state.dem;
+    const x = Math.min(width - 1, Math.floor(((lon + 180) % 360 + 360) % 360 / 360 * width));
+    const y = Math.min(height - 1, Math.max(0, Math.floor((90 - lat) / 180 * height)));
+    return data[(y * width + x) * 4] / 255;
+  }
+
+  // Turns the exaggerated 3D relief on or off. Markers follow the terrain under them, so none sinks into a mountain.
+  function setRelief(state, on) {
+    const globe = state.globe, material = globe.globeMaterial();
+    if (on && !material.bumpMap) return;  // the elevation image is still loading
+    state.relief = on;
+    const scale = on ? RELIEF_EXAGGERATION * RELIEF_SPAN_M / MOON_RADIUS_M * globe.getGlobeRadius() : 0;
+    material.displacementMap = on ? material.bumpMap : null;
+    material.displacementScale = scale;
+    material.displacementBias = -scale / 2;
+    material.needsUpdate = true;
+    globe.globeCurvatureResolution(on ? RELIEF_MESH_DEG : COARSE_MESH_DEG);
+    const lift = on ? RELIEF_EXAGGERATION * RELIEF_SPAN_M / MOON_RADIUS_M : 0;
+    globe.htmlAltitude(item => MARKER_ALTITUDE + (on ? (demHeight(state, item.lat, item.lon) - 0.5) * lift : 0));
+    const button = state.root.querySelector(".relief");
+    button.classList.toggle("active", on);
+    button.setAttribute("aria-pressed", on);
+  }
+
   // Fit the globe to the view and shift the projection center to the middle of the area the panel leaves uncovered.
   function layout(state) {
     const el = state.root.querySelector(".globe"), w = el.clientWidth, h = el.clientHeight;
@@ -78,25 +109,37 @@ const globeView = (() => {
     drawScale(state);
   }
 
-  // The globe turns slowly when the app opens and stops for good at the first interaction: dragging or zooming
-  // it, or any click or key press on the page (the panels too). It never turns when the system asks for reduced
-  // motion. Clicks inside the view reach `document` too: pointer and key events cross the shadow root.
-  function spinUntilFirstInteraction(state) {
-    state.spinning = !REDUCED_MOTION.matches;
+  // The globe turns slowly when the app opens, and again after the Rotate button (`asked`). It stops when the user
+  // takes the globe itself: a press on it (a click or the start of a drag) or a wheel zoom, all OrbitControls'
+  // "start", or when a site is chosen (update). The buttons around it (relief, layers, zoom) leave it turning. It never
+  // turns by itself when the system asks for reduced motion.
+  function spinUntilFirstInteraction(state, asked = false) {
+    state.stopWatching?.();
+    state.spinning = asked || !REDUCED_MOTION.matches;
+    markSpin(state);
     if (!state.spinning) return;
-    const controls = state.globe.controls(), events = ["pointerdown", "keydown"];
+    const controls = state.globe.controls();
+    if (asked) controls.autoRotate = true;
     const stop = () => {
       state.spinning = controls.autoRotate = false;
+      markSpin(state);
       state.stopWatching();
     };
     state.stopWatching = () => {
-      events.forEach(type => document.removeEventListener(type, stop, true));
-      controls.removeEventListener("start", stop);  // OrbitControls: a drag or wheel zoom begins
+      controls.removeEventListener("start", stop);
       REDUCED_MOTION.removeEventListener("change", stop);
+      state.stopSpin = state.stopWatching = null;
     };
-    events.forEach(type => document.addEventListener(type, stop, true));
+    state.stopSpin = stop;
     controls.addEventListener("start", stop);
     REDUCED_MOTION.addEventListener("change", stop);
+  }
+
+  // The Rotate button is highlighted while the globe turns.
+  function markSpin(state) {
+    const button = state.root.querySelector(".rotate");
+    button?.classList.toggle("active", !!state.spinning);
+    button?.setAttribute("aria-pressed", !!state.spinning);
   }
 
   // Scale bar for the surface at the middle of the view, rounded like Leaflet's (1, 2, 3 or 5 times a power of 10).
@@ -230,7 +273,8 @@ const globeView = (() => {
       return;
     }
     if (state.globePaused) { state.globePaused = false; globe.resumeAnimation(); }
-    globe.controls().autoRotate = state.spinning && !focus && !state.closeBalloon;
+    if (focus) state.stopSpin?.();  // the camera goes to the site
+    globe.controls().autoRotate = state.spinning && !state.closeBalloon;
     const key = focus ? `${focus.key}:${focus.lat},${focus.lon}` : "";
     if (state.cameraKey !== key) {
       // A site to show moves the camera, and so does the first view; deselecting keeps it where it is.
@@ -245,7 +289,7 @@ const globeView = (() => {
     const globe = new Globe(el, { rendererConfig: { antialias: true, alpha: false } })
       .backgroundColor("#000005")
       .showAtmosphere(false)
-      .htmlLat("lat").htmlLng("lon").htmlAltitude(0.005).htmlTransitionDuration(0)
+      .htmlLat("lat").htmlLng("lon").htmlAltitude(MARKER_ALTITUDE).htmlTransitionDuration(0)
       .htmlElement(item => markerElement(state, item))
       .htmlElementVisibilityModifier((marker, visible) => marker.classList.toggle("behind", !visible))
       .ringLat("lat").ringLng("lng").ringColor(() => t => `rgba(230, 107, 39, ${1 - t})`)
@@ -263,9 +307,37 @@ const globeView = (() => {
     spinUntilFirstInteraction(state);
 
     const [bumpLayer, bumpExt, bumpLevel] = BUMP;
+    const relief = document.createElement("button");
+    relief.className = "relief"; relief.disabled = true;
+    relief.textContent = `3D relief ×${RELIEF_EXAGGERATION}`;
+    relief.title = `Raise the terrain ${RELIEF_EXAGGERATION} times its real height: at true scale the Moon's relief `
+      + "is about 1% of its radius and would not show";
+    relief.setAttribute("aria-pressed", false);
+    relief.onclick = () => setRelief(state, !state.relief);
+    const rotate = document.createElement("button");
+    rotate.className = "rotate"; rotate.textContent = "⟳ Rotate";
+    rotate.title = "Zoom out to the whole Moon, keeping the tilt, and turn slowly until you interact again";
+    rotate.onclick = () => {  // only the altitude changes: the tilt (latitude) the user chose stays
+      state.closeBalloon?.();
+      const altitude = globe.pointOfView().altitude, whole = cameraFor(null).altitude;
+      if (altitude < whole) globe.pointOfView({ altitude: whole }, 600);  // a flight only when zoomed in
+      spinUntilFirstInteraction(state, true);
+    };
+    root.querySelector(".globe-tools").append(relief, rotate);
+    markSpin(state);  // the opening spin started before the button existed
     mosaic(bumpLayer, bumpExt, bumpLevel).then(url => {
       globe.bumpImageUrl(url);
       globe.globeMaterial().bumpScale = 6;
+      const img = new Image();  // its pixels give the markers their height on the 3D relief
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        state.dem = { width: img.width, height: img.height, data: ctx.getImageData(0, 0, img.width, img.height).data };
+        relief.disabled = false;
+      };
+      img.src = url;
     }).catch(() => {});
 
     const buttons = root.querySelector('.choices[data-for="globe"]');

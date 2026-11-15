@@ -20,6 +20,7 @@ _HTML = """
   <div class="polar-map"></div>
   <div class="overlay layers"><span class="choices" data-for="globe"></span><span class="choices" data-for="map"></span>
   </div>
+  <div class="overlay layers globe-tools" data-for="globe"></div>
   <div class="overlay info"><div class="info-name"></div><div class="info-text"></div></div>
   <div class="overlay bottom">
     <div class="status" data-for="globe"></div>
