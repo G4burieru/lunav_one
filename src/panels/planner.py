@@ -8,9 +8,11 @@ from src.colors import EARTH_RAMP, SUN_RAMP, css_gradient, ramp_hex
 from src.conditions import cell_corners, live_neighborhood_horizons, live_neighborhood_summary
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
-from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, data_note, format_countdown,
-                               get_neighborhood, icon, load, selected_instant, site_label, time_payload)
+from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, VIEW_CHOICE, VIEWS, data_note,
+                               format_countdown, get_neighborhood, icon, load, selected_instant, site_label,
+                               time_payload)
 from src.sites import LUNAR_SITES
+from src.terrain import SOUTH_POLE_DEM_LIMIT
 
 HEIGHTS = {"Rover or lander · 2 m": catalog.ASSET_HEIGHT_M, "Mast · 10 m": 10.0, "Other height": None}
 CELL = "planner_cell"  # {"hood", "index"}: the Site Neighborhood cell holding the Surface Asset, None at the center
@@ -18,7 +20,6 @@ HOOD, LIVE_HOOD = "planner_hood", "planner_live_hood"  # the Site Neighborhood s
 
 get_live_horizons = st.cache_data(show_spinner=False, max_entries=8)(live_neighborhood_horizons)  # ~3.6 MB each
 get_live_summary = st.cache_data(show_spinner=False, max_entries=32)(live_neighborhood_summary)
-POLAR_LAT = -80.0  # south of this, the Site Planner shows the south polar map
 
 
 def where():
@@ -175,7 +176,8 @@ def render():
     st.markdown("**3 · When**")
     date, days = when()
     hood = None
-    polar = lat <= POLAR_LAT
+    polar = lat <= SOUTH_POLE_DEM_LIMIT  # the Site Neighborhood needs the south pole DEMs
+    st.session_state[VIEW_CHOICE] = VIEWS[1] if polar else VIEWS[0]  # leaving the Planner keeps this view
     if polar:
         (lat, lon), hood = neighborhood(key, lat, lon, height, date, days, mask)
     else:

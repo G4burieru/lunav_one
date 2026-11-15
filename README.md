@@ -72,6 +72,7 @@ streamlit run app.py
 Run the tests:
 
 ```bash
+pip install pytest
 python -m pytest -q
 ```
 
