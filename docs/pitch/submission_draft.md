@@ -27,16 +27,16 @@ One screen holds the Moon View, an icon rail and one floating panel. Explorer
 starts with name/coordinate search and compact Catalog Site cards, sortable by
 Sunlight, Earth Visibility, Longest Night or name. Selecting a polar site opens
 the south polar map, while nonpolar locations use the globe. The view streams
-LROC imagery and LOLA shaded relief through NASA Moon Trek, including Photos
-and Relief base layers on the map. These images provide context, not live shadows.
+LROC imagery and LOLA shaded relief through NASA Moon Trek, with Photos and
+Relief base layers on both the globe and the map. These images provide context, not live shadows.
 
 A Site Card shows coordinate type, source context and 2027–2028 conditions at
 2 m Asset Height: mean Illumination Fraction, Earth Visibility, Longest Night
 and Longest Earth Absence. Its rank compares one metric among Catalog Sites,
-not safety or mission suitability. An integrated UTC time bar supports dragging
-and Play/Pause. Marker shape identifies coordinate type; fill level represents
-Illumination Fraction, and a filled/hollow upper-right dot represents Earth
-Visibility. Markers update during playback. Releasing the slider or pausing
+not safety or mission suitability. An integrated UTC time bar supports dragging,
+typed dates and Play/Pause at several speeds. Every Catalog Site marker is a
+circle; a badge beside it shows a Sun that fills with the Illumination Fraction
+and an Earth that is blue during Earth Visibility. Markers update during playback. Releasing the slider or pausing
 synchronizes the Site Card's instant, countdown line and charts; its two-year
 summary and ranks remain unchanged. The initial globe rotation stops at the
 first interaction and respects reduced-motion preferences.
@@ -123,11 +123,8 @@ The Site Neighborhood is integrated into the polar map, including explicitly
 requested live neighborhoods for Custom Sites and other heights in the supported
 polar region. The separate schematic Plotly map remains an offline export.
 The Moon View has a working UTC slider, playback and dynamic marker states.
-The Layers Panel and additional layer controls remain pending in this checkout.
 
-One integration difference remains: although the Planner's Moon View bar covers
-its Analysis Window, the results panel still uses a separate Instant slider.
-Do not claim its countdowns follow the Moon View bar. Before recording, verify
+Before recording, verify
 the hosted build, browser/CDN/imagery loading, marker changes and Site Card
 synchronization after slider release or pause. Live neighborhood computation
 should not be required by the main recording path.

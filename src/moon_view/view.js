@@ -174,7 +174,7 @@ function analysisSource(data, lat, lon) {
   const near = data.sites.find(s => z.precomputed.includes(s.key) && surfaceDistance(s, lat, lon) <= z.precomputed_m);
   if (near) return `pre-computed near ${escapeHtml(near.name)}, opens at once`;
   return lat <= z.terrain_lat ? "computed live, about 30 s"
-    : `no terrain data here (outside ${-z.terrain_lat}°S), so a smooth horizon is used`;
+    : `no terrain data here (outside ${-z.terrain_lat}°S), so the Ideal Horizon is used`;
 }
 
 // Asks before analyzing a clicked point as a Custom Site (task A5): the live computation takes about 30 s, so a stray

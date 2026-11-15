@@ -37,17 +37,18 @@ Show Photos briefly, then the Site Card's coordinate context.]
 
 “The Moon View combines a three-dimensional Moon with a polar map using real
 NASA imagery. Selecting Connecting Ridge C1 takes us to a documented study
-point. A diamond means a studied point, a circle a regional center, and a square
-a historical landing. These shapes identify location types, not landing safety.”
+point. Every catalog site is a circle; the card names its type: a studied point,
+a regional center or a historical landing. These types describe the coordinates,
+not landing safety.”
 
 ## 0:45–1:30 — Move through time
 
 [Drag the UTC slider and release. Press Play briefly, then Pause. Point to
-marker fill, its upper-right dot and the Site Card's updated UTC instant.]
+the Sun and Earth badge beside the markers and the Site Card's updated UTC instant.]
 
 “The time bar lets us move through hourly conditions or play and pause them.
-Marker fill follows how much of the Sun's disk clears the terrain. The small
-dot is filled when Earth's center is visible and hollow when it is not.
+Beside each marker, the Sun fills as more of its disk clears the terrain, and
+the Earth turns blue when Earth's center is visible.
 Markers change while time moves. When we release or pause, the Site Card's
 instant and charts follow. Its two-year averages stay fixed. Sunlight is mean
 Illumination Fraction, not generated electricity. Longest Night and Longest Earth
@@ -94,17 +95,13 @@ Do not present a fallback as a recording of an unavailable live interaction.
 - Rehearse for approximately three minutes in the actual browser and hosted build.
   Check that Pause/slider release updates the Site Card, while the summary stays fixed.
 - Explain a Custom Site's ticked ring and a Surface Asset's cross in a circle
-  only if they appear. A triangle denotes an approximate reference; no new entry
-  of that kind is required for the demonstration.
-- The Planner's Moon View time bar covers its Analysis Window, but its results
-  panel still has an independent Instant slider. Do not claim its countdowns
-  synchronize with the Moon View bar. Use the panel slider if demonstrating them.
+  only if they appear.
+- The Planner's Moon View time bar covers its Analysis Window and drives its
+  countdowns like the Site Card's: release the slider or pause before pointing to them.
 - Neighborhoods are offered at or south of 80°S. Catalog Sites at 2 m reuse prepared
   terrain; other cases require Paint the Site Neighborhood. Keep that slower path
   out of the main take. Best cell is disabled as No better cell when differences
   are below the implementation's threshold; choose another covered window if needed.
-- Layers Panel and additional NASA visibility-layer controls are still pending;
-  existing Photos/Relief switches are base layers, not those controls.
 - Some scientific captions remain hardcoded in other owners' panels; narrate
   Sunlight as mean Illumination Fraction rather than binary sunlight duration.
 - If using the optional Malapert example, the point is -1600 m east, +100 m north.
