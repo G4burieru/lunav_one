@@ -20,16 +20,21 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Base layers | Photos (LROC WAC; NAC near the pole) and Relief (LOLA) on both the globe and the polar map; a button at the top right switches between them |
 | Explorer catalog | Name/coordinate search, type labels, sorting and compact cards |
 | Site Card | 2027–2028 averages, Longest Night, Longest Earth Absence, metric ranks, source context |
-| Site Card tabs | Overview, Sun & Earth (28-day charts), Seasons (monthly summaries) |
+| Site Card tabs | Overview with sourced images and descriptions, Sun & Earth (28-day charts), Seasons (monthly summaries) |
 | Site Planner | Where, Surface Asset, When, Results; Asset Height, Elevation Mask and countdowns |
 | Site Neighborhood | Polar-map cells: pre-computed for Catalog Sites at 2 m; computed on demand for Custom Sites and other heights at or south of 80°S |
 | Custom Site | Coordinate search or confirmed point selection on globe/map; live calculation where needed |
 | Offline alternative | src/site_map.py exports a schematic Plotly map, separate from the Moon View |
 | Data pipeline | Eight sites pre-computed hourly for 2027–2028 at 2 m, automatic regeneration workflow |
-| Moon View time bar | Hourly UTC slider, Play/Pause and dynamic Sun/Earth marker states |
+| Moon View time bar | Hourly UTC slider, typed dates, multiple playback speeds and dynamic Sun/Earth marker states |
 | Site Card synchronization | Updates selected-instant information and charts when the slider is released or playback paused |
 | Globe rotation | Starts automatically unless reduced motion is requested; stops at the first interaction |
 | Full scientific/operational validation | Not completed |
+
+The Globe/South pole map button switches views independently of Photos/Relief.
+Overview includes external site images and descriptions: photographs, composites
+and scientific maps provide context, not original model outputs. See the
+[science and image review](docs/pitch/final_science_review.md) for caption caveats.
 
 The Explorer's Site Card summary always covers 2027–2028 at 2 m. Moving or playing
 the Moon View time bar changes the marker states immediately. Releasing the slider
@@ -46,8 +51,12 @@ gray, crossed out, when Earth does not meet the visibility criterion. These are
 modeled states, not power generation or communications status. The time bar
 plays at 1 hour to 3 days per second, and a UTC date can be typed into it. On
 the south polar map, dashed rings show where a clicked point's analysis comes
-from: pre-computed within about 2 km of a Catalog Site, live terrain inside
-80°S, and the Ideal Horizon outside it. The globe's initial
+from. Green rings mark prepared neighborhoods near covered Catalog Sites;
+the cyan ring marks the 80°S terrain boundary. Covered scenarios reuse prepared
+data; other supported polar cases use live terrain. Outside terrain coverage,
+the Ideal Horizon applies when no prepared neighborhood is available. Other
+heights or dates may require live work even inside a green ring. These
+boundaries are separate from site markers. The globe's initial
 rotation stops at the first interaction and is disabled for reduced-motion users.
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
@@ -102,6 +111,7 @@ lunav_one/
 │   │   ├── catalog_list.py     # Search and sorted catalog cards
 │   │   ├── site_card.py        # Metrics, context and chart tabs
 │   │   ├── planner.py          # Four-step Site Planner
+│   │   ├── places.py           # Site descriptions and external image references
 │   │   ├── about.py
 │   │   ├── common.py           # Shared helpers and cached data
 │   │   └── texts.py            # Scientific explanatory copy
@@ -116,8 +126,7 @@ lunav_one/
 │   ├── precompute.py            # Generates data/catalog/
 │   └── compare_pgda.py          # Numerical PGDA consistency check
 ├── static/
-│   ├── icons/                  # SVG interface icons
-│   └── overlays/               # Prepared Sun and Earth visibility images and metadata
+│   └── icons/                  # SVG interface icons
 ├── data/
 │   └── catalog/                 # Pre-computed ephemerides and terrain horizons
 │       ├── manifest.json        # Coordinates, date coverage and terrain source
@@ -142,7 +151,8 @@ lunav_one/
         ├── mission_explainer.md
         ├── submission_draft.md
         ├── demo_script.md
-        └── illumination_comparison.md
+        ├── illumination_comparison.md
+        └── final_science_review.md # Scientific and image-source review
 ```
 
 ## Data Sources

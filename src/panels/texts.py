@@ -64,9 +64,12 @@ panels name its location type. The badge beside it shows a Sun that fills from t
 bottom with the visible fraction of the Sun's disk, and an Earth that is blue when
 Earth meets the visibility criterion and gray, crossed out, when it does not.
 A Custom Site is a ticked ring; a Surface Asset is a cross in a circle. On the south
-polar map, dashed rings show where a clicked point's analysis comes from: pre-computed
-within about 2 km of a Catalog Site, live terrain inside 80°S, the Ideal Horizon
-outside. These symbols do not classify landing safety, power output or radio-link
+polar map, green dashed rings mark pre-computed neighborhoods near covered Catalog
+Sites; a cyan dashed ring marks the 80°S terrain boundary. These are coverage
+boundaries, separate from site markers. Covered scenarios reuse prepared data;
+other points at or south of 80°S use live terrain calculations. Outside terrain
+coverage, the Ideal Horizon applies when no pre-computed neighborhood is available.
+Other heights or dates can require live work even inside a green ring. These symbols do not classify landing safety, power output or radio-link
 performance.
 
 Markers update while time moves. Release the slider or pause to update the Site
@@ -99,8 +102,8 @@ LOLA elevation models distributed by NASA Goddard PGDA provide terrain. Lunav On
 calculates Terrain Horizons, Illumination Fractions, durations and rankings from those
 inputs. The Moon View displays LROC photographs and LOLA shaded relief through NASA
 Moon Trek. Imagery is visual context, not an instantaneous shadow or safety measurement.
-NASA's long-term, ground-level visibility layers use different definitions and periods
-from the Site Card; their values must not be read as the same calculation.
+NASA's long-term, ground-level visibility reference maps use different definitions
+and periods from the Site Card. They are not displayed as Moon View layers.
 
 **Coverage and limits.** Covered Catalog Site scenarios use pre-computed hourly data;
 other supported cases compute live and can take longer or fail if services are unavailable.
