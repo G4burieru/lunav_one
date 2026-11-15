@@ -50,6 +50,7 @@ const polarMap = (() => {
     const point = map.project(site ? [site.lat, site.lon] : [-90, 0], zoom).subtract([right / 2, 0]);
     const center = map.unproject(point, zoom);
     m.userMoved = false;
+    m.atOverview = !site;
     if (animate) map.flyTo(center, zoom, { duration: 1.2 });
     else map.setView(center, zoom, { animate: false });
   }
@@ -254,18 +255,19 @@ const polarMap = (() => {
       m.placed = true;
       if (first) centerOn(state, null, false);
       m.centeredOn = key;
-      if (focus || !first) centerOn(state, focus, true);
+      if (focus) centerOn(state, focus, true);
     } else if (m.centeredOn !== key) {
       m.centeredOn = key;
-      centerOn(state, focus, true);
+      if (focus) centerOn(state, focus, true);  // deselecting keeps the map where it is
     }
   }
 
-  // The panel widens when a Site Card opens, so center the focus again unless the user has moved the map since.
+  // The panel widens when a Site Card opens, so center the focus again unless the user has moved the map since. With
+  // no focus, only the overview is centered again: after a deselection the map stays where it is.
   function layout(state) {
-    const m = state.map;
+    const m = state.map, focus = focusOf(state.data);
     m.leaflet.invalidateSize({ pan: false });
-    if (m.shown && !m.userMoved) centerOn(state, focusOf(state.data), true);
+    if (m.shown && !m.userMoved && (focus || m.atOverview)) centerOn(state, focus, true);
   }
 
   const destroy = state => state.map.leaflet.remove();

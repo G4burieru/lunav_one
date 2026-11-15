@@ -186,8 +186,9 @@ const globeView = (() => {
     globe.controls().autoRotate = state.spinning && !focus && !state.closeBalloon;
     const key = focus ? `${focus.key}:${focus.lat},${focus.lon}` : "";
     if (state.cameraKey !== key) {
+      // A site to show moves the camera, and so does the first view; deselecting keeps it where it is.
+      if (focus || state.cameraKey === undefined) globe.pointOfView(cameraFor(focus), state.globeShown ? 1500 : 0);
       state.cameraKey = key;
-      globe.pointOfView(cameraFor(focus), state.globeShown ? 1500 : 0);
     }
     state.globeShown = true;
   }
