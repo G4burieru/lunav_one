@@ -48,18 +48,23 @@ NO_TERRAIN = (
     "Horizon of a smooth Moon, so local ridges and crater walls are not included."
 )
 
-ABOUT = """
+ABOUT_INTRO = """
 Lunav One helps you explore sunlight and Earth Visibility near the lunar south pole.
 **Explorer** opens documented Catalog Sites; **Site Planner** evaluates a Surface Asset
 at a chosen location, height and Analysis Window. This is an educational prototype.
+"""
 
-**Read the Site Card.** Its averages and longest intervals cover **2027–2028 at 2 m
+# The About panel shows each section in its own expander, closed, in this order.
+ABOUT_SECTIONS = {
+    "Read the Site Card": """
+The Site Card's averages and longest intervals cover **2027–2028 at 2 m
 Asset Height**. Rankings compare only the Catalog Sites and the selected metric;
 they do not rank landing safety. The 17 Overviews provide sourced geographic context;
 regional mosaics do not show a close-up of each catalog coordinate. The selected-instant line and 28-day Sun & Earth charts
 describe a shorter interval; the Seasons chart groups results by month.
-
-**Read the Moon View.** Drag the UTC time bar, type a date or use Play/Pause (1 hour
+""",
+    "Read the Moon View": """
+Drag the UTC time bar, type a date or use Play/Pause (1 hour
 to 3 days per second) to explore hourly states. Every Catalog Site is a circle; the
 panels name its location type. The badge beside it shows a Sun that fills from the
 bottom with the visible fraction of the Sun's disk, and an Earth that is blue when
@@ -83,7 +88,8 @@ coverage only the asset's computed states are supplied; other markers have no
 badge rather than displaying states from another period.
 Initial globe rotation stops at the first interaction and is disabled when the
 system requests reduced motion.
-
+""",
+    "What the numbers mean": """
 - **Sunlight** is the mean **Illumination Fraction**: the portion of the Sun's disk above
   the **Terrain Horizon**, averaged over time. Partial views count proportionally. It
   is neither electrical energy nor simply the percentage of hours with any sunlight.
@@ -102,16 +108,18 @@ system requests reduced motion.
   reference sphere. The 2 m preset supports pre-computed neighborhoods; 10 m and other
   heights can need live terrain calculations. **Elevation Mask** adds angular clearance
   for Earth's center; it does not evaluate antenna performance.
-
-**NASA inputs and project calculations.** JPL Horizons provides Sun/Earth ephemerides;
+""",
+    "NASA inputs and project calculations": """
+JPL Horizons provides Sun/Earth ephemerides;
 LOLA elevation models distributed by NASA Goddard PGDA provide terrain. Lunav One
 calculates Terrain Horizons, Illumination Fractions, durations and rankings from those
 inputs. The Moon View displays LROC photographs and LOLA shaded relief through NASA
 Moon Trek. Imagery is visual context, not an instantaneous shadow or safety measurement.
 NASA's long-term, ground-level visibility reference maps use different definitions
 and periods from the Site Card. They are not displayed as Moon View layers.
-
-**Coverage and limits.** Covered Catalog Site scenarios use pre-computed hourly data;
+""",
+    "Coverage and limits": """
+Covered Catalog Site scenarios use pre-computed hourly data;
 other supported cases compute live and can take longer or fail if services are unavailable.
 Pre-computed Site Neighborhoods use 100 m spacing within 2 km at 2 m height, with nearby
 positions snapped to a supported point. In the supported polar region (at or south
@@ -121,8 +129,8 @@ Horizon fallback is identified where
 terrain is unavailable. Literature comparisons are consistency checks, not independent
 validation: source data are shared and analysis periods differ. We do not certify landing
 safety, permanent illumination, usable power, thermal survival or operational communications.
-
-**Sources and credits.**
+""",
+    "Sources and credits": """
 [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html) ·
 [NASA PGDA / LOLA](https://pgda.gsfc.nasa.gov/products/78) ·
 [Moon Trek](https://trek.nasa.gov/moon/) ·
@@ -131,4 +139,5 @@ safety, permanent illumination, usable power, thermal survival or operational co
 Coordinate references are recorded in each Catalog Site's scientific context.
 Team Lunav One: João Gabriel Santos (science), Igor Wanderley (interface),
 Renata Andrade (sites, text and presentation).
-"""
+""",
+}
