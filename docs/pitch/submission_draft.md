@@ -69,7 +69,8 @@ at or south of 80°S, Paint the Site Neighborhood starts a live calculation on
 demand; external-service availability and waiting time still apply. Custom Sites can also be created from
 coordinate search or an analyzed click on the globe/map.
 
-Eight Catalog Sites have source references and coordinate meanings. Four
+Seventeen Catalog Sites have source references and coordinate meanings, including all 13
+Artemis III candidate regions NASA named in 2022. Four
 specific study points come from Gläser et al. (2017); other entries are regional
 centers or a historical landing. Pre-computed data covers 2027–2028. Supported
 cases outside that coverage use live calculations; an identified Ideal Horizon

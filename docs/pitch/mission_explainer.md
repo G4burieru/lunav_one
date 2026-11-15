@@ -82,7 +82,7 @@ not an image layer currently embedded in our map.
 dates. **Site Planner** evaluates a chosen location, Asset Height and Elevation
 Mask. Pre-computed neighborhoods use 100 m spacing: a chosen location is snapped
 to the nearest supported point, rather than evaluated with unlimited precision. Pre-computed
-Terrain Horizons and ephemerides now cover the eight Catalog Sites for 2027–2028
+Terrain Horizons and ephemerides now cover the 17 Catalog Sites for 2027–2028
 at a 2 m Asset Height. Their availability is distinct from full scientific
 validation; see the [preliminary literature comparison](illumination_comparison.md).
 

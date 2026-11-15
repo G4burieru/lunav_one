@@ -206,17 +206,20 @@ function deselect(state) {
   return true;
 }
 
-// A right-click on the Moon leaves the Site Planner for browsing (the "site" event with "", which opens the catalog),
-// or clears the selection in the Explorer. A right-drag is not a click: the globe pans with it.
+// A right-click on the Moon clears everything: it closes an "Analyze this point?" balloon, and leaves the Site Planner
+// for browsing (the "site" event with "", which opens the catalog) or clears the selection in the Explorer. A
+// right-drag is not a click: the globe pans with it.
 function addRightClick(state) {
   let down = null;
   state.root.addEventListener("pointerdown", e => { if (e.button === 2) down = [e.clientX, e.clientY]; }, true);
   state.root.addEventListener("contextmenu", e => {
-    if (e.target.closest(".layers, .time-bar, .analyze")) return;  // the controls keep the browser's menu
+    if (e.target.closest(".layers, .time-bar")) return;  // the controls keep the browser's menu
     e.preventDefault();
     const moved = down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5;
     down = null;
     if (moved) return;
+    state.closeBalloon?.();  // the globe's balloon
+    state.map?.leaflet.closePopup();  // the polar map's
     if (state.data.mode === "planner") state.setTriggerValue("site", "");
     else deselect(state);
   });
