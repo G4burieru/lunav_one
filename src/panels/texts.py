@@ -118,7 +118,7 @@ safety, permanent illumination, usable power, thermal survival or operational co
 
 **Sources and credits.**
 [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html) ·
-[NASA PGDA / LOLA](https://pgda.gsfc.nasa.gov/products/69) ·
+[NASA PGDA / LOLA](https://pgda.gsfc.nasa.gov/products/78) ·
 [Moon Trek](https://trek.nasa.gov/moon/) ·
 [LROC](https://lroc.im-ldi.com/) ·
 [Gläser et al. (2017)](https://ntrs.nasa.gov/citations/20170007365).

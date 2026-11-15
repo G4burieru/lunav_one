@@ -38,12 +38,11 @@ Suggested Shackleton copy (not applied):
 
 ## Image-by-image audit
 
-Nine unique URLs are reused across eight Site Cards. “Source matched” below
-means the linked source identifies the product; it does not imply the downloaded
-Commons rendition was visually inspected. All seven Commons image requests
-returned HTTP 403 in this environment, including a retry with expanded network permissions;
-that result alone does **not** establish broken URLs in a normal browser. Both
-NASA Image Library assets returned HTTP 200 and were visually inspected.
+Nine unique URLs are reused across eight Site Cards. Renata confirmed that the
+image files open normally in her browser. This confirms access, not the scientific
+identification of every feature or the completeness of each attribution. Source
+and metadata checks below are distinguished from visual verification; this review
+does not claim that all images were visually inspected by the reviewer.
 
 | File/product in places.py | Type and identity | Credit, reuse and action |
 |---|---|---|
@@ -51,9 +50,9 @@ NASA Image Library assets returned HTTP 200 and were visually inspected.
 | [South Pole Illumination Map (LROC271)](https://commons.wikimedia.org/wiki/File:South_Pole_Illumination_Map_(LROC271).png) | Measurement-derived illumination-frequency map from stacked LROC images, not a photograph. [Original](https://lroc.im-ldi.com/images/271) supports Shackleton and the pole position in this particular map. Its sampling is not the project's 2027–2028 2 m calculation. | NASA/GSFC/ASU. Commons has a NASA public-domain tag, but LROC featured-image terms require the distinction below. |
 | [Traversing the Shackleton de Gerlache Ridge map](https://commons.wikimedia.org/wiki/File:Traversing_the_Shackleton_de_Gerlache_Ridge_(LROC1247_-_content_geomap_snippet).png) | Geomorphic interpretation using NAC imagery **and LOLA topography**, confirmed by [original](https://lroc.im-ldi.com/images/1247). | NASA/GSFC/ASU. Add terrain-data provenance to the caption. Commons public-domain tag does not remove the need to check the original's terms. |
 | [AS15-96-13090_Malapert_mountain.jpg](https://commons.wikimedia.org/wiki/File:AS15-96-13090_Malapert_mountain.jpg) | Apollo photograph exists; precise terrain identification remains unresolved as explained above. | NASA mission image; exact rendition's attribution/licensing was not independently verified. Do not use the specific Malapert caption before review. |
-| [Near the Summit of Malapert Mountain (LROC21)](https://commons.wikimedia.org/wiki/File:Near_the_Summit_of_Malapert_Mountain_(LROC21).png) | Identified LROC close-up, 2.4 km wide, north up; [original](https://lroc.im-ldi.com/images/21) supports these details. Not the catalog center or an image of its exact summit coordinate. | NASA/GSFC/ASU; use qualified language for inferred creep. Commons license page could not be independently checked; educational use is covered by LROC terms with credit. |
-| [FaustiniCrater.jpg](https://commons.wikimedia.org/wiki/File:FaustiniCrater.jpg) | Commons associates the crater image with [USGS feature 1919](https://planetarynames.wr.usgs.gov/Feature/1919). Rendition/frame matching remains pending visual access; do not claim it was independently geolocated. | Commons lists NASA/public-domain status. Recover the original image product and full instrument credit before treating “LRO” as verified provenance for this rendition. |
-| [Lunar_south_pole_summer_annotated.jpg](https://commons.wikimedia.org/wiki/File:Lunar_south_pole_summer_annotated.jpg) | Measurement-derived Diviner surface-temperature map for southern summer noon, not a photograph or ice-detection image. Linked UCLA original was not recovered. [Instrument science](https://www.diviner.ucla.edu/science) supports the measurement type. | Commons lists NASA/public-domain status; retrieve original Diviner credit and color scale. Prefer “colors encode surface temperature” until the actual scale is checked; do not assume darker always means colder. |
+| [Near the Summit of Malapert Mountain (LROC21)](https://commons.wikimedia.org/wiki/File:Near_the_Summit_of_Malapert_Mountain_(LROC21).png) | Identified LROC close-up, 2.4 km wide, north up; [original](https://lroc.im-ldi.com/images/21) supports these details. Not the catalog center or an image of its exact summit coordinate. | NASA/GSFC/ASU; use qualified language for inferred creep. Check the rendition’s stated license against the original; LROC permits educational reuse of website images with credit. |
+| [FaustiniCrater.jpg](https://commons.wikimedia.org/wiki/File:FaustiniCrater.jpg) | Commons associates the crater image with [USGS feature 1919](https://planetarynames.wr.usgs.gov/Feature/1919). The exact original product/frame still needs to be documented; this review does not establish independent geolocation. | Commons lists NASA/public-domain status. Recover the original image product and full instrument credit before treating “LRO” as verified provenance for this rendition. |
+| [Lunar_south_pole_summer_annotated.jpg](https://commons.wikimedia.org/wiki/File:Lunar_south_pole_summer_annotated.jpg) | Measurement-derived Diviner surface-temperature map for southern summer noon, not a photograph or ice-detection image. The original Diviner product identifier and credit still need to be documented. [Instrument science](https://www.diviner.ucla.edu/science) supports the measurement type. | Commons lists NASA/public-domain status; retrieve original Diviner credit and color scale. Prefer “colors encode surface temperature” until the actual scale is checked; do not assume darker always means colder. |
 | [as11-40-5927](https://images.nasa.gov/details/as11-40-5927) | NASA asset downloaded and visually checked: Aldrin beside Eagle, photographed by Armstrong. [NASA mission context](https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11.html). | NASA credit; apply NASA media guidance, including identifiable-person and endorsement restrictions. |
 | [PIA12909](https://science.nasa.gov/photojournal/apollo-11-second-look/) | NASA asset downloaded and visually checked: annotated LROC view of Apollo 11 hardware/tracks, 2009. | Expand “NASA” to NASA/GSFC/Arizona State University as specified by the original. |
 
@@ -70,10 +69,9 @@ with the source's stated terms and should not be treated as conclusive.
 also excludes third-party rights from any blanket permission. No agency
 endorsement should be implied. This review does not certify legal clearance.
 
-Before publication, open all nine actual image URLs in the recording browser,
-match thumbnails to originals, retain source URLs and exact credit lines, and
-resolve the Apollo 15, Faustini provenance and Diviner scale/credit gaps. Do not
-present the current external-image collection as completely verified.
+Before publication, retain source URLs and exact credit lines, match the
+renditions to documented original products, and resolve the Apollo 15, Faustini
+provenance and Diviner scale/credit gaps. Do not present the current external-image collection as completely verified.
 
 ## Text/code correspondence and recording handoff
 

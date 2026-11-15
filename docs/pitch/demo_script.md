@@ -13,7 +13,7 @@ Bracketed directions and checklists are not narration. Confirm that the
 - Rehearse Connecting Ridge C1. Find two instants with visibly different Sun/Earth
   marker states. Record the UTC labels for rehearsal; do not invent a transition.
 - Test typed UTC dates, playback speeds, Play, Pause and dragging. Markers update during playback; release the
-  slider or pause to update the Site Card. Its 2027–2028 grid stays fixed.
+  slider or pause to update the Site Card. Its 2027–2028 summary stays fixed.
 - Use Plan here with a Catalog Site at 2 m Asset Height, 0° Elevation Mask and a
   covered 14-day window, such as 2027-01-01. Keep the map's pre-computed neighborhood
   as the main demonstration; do not request a live neighborhood or change height.
@@ -32,7 +32,7 @@ sunlight and Earth. Lunav One connects geographic context with modeled condition
 
 [Search for Connecting Ridge C1 and select it. The site opens the polar map.
 Indicate Globe/South pole map and Photos/Relief. Briefly show the Overview
-context and ridge map if loaded, identifying it as a map, not a photograph.
+context and ridge map, identifying it as a map, not a photograph.
 Avoid the unverified Apollo 15 Malapert identification.]
 
 “The Moon View combines a three-dimensional Moon with a polar map using real
@@ -56,7 +56,7 @@ or guaranteed communication outages.”
 ## 1:30–2:15 — Inspect the neighborhood
 
 [Click Plan here. Keep the pre-computed 2 m Catalog Site scenario. Show the
-four steps and Color by; select a visible neighborhood cell on the polar map.
+four steps and the Color by control; keep the polar map visible.
 Indicate the green coverage ring. Release the time bar to show Planner following
 it. Select a cell, show the moved asset and results, then Back to the site.]
 
@@ -107,7 +107,6 @@ Do not present a fallback as a recording of an unavailable live interaction.
   Its separate two-year Earth Visibility result is not the same as a short-window
   percentage and does not establish a summit or permanent communications.
 - Resolve the [image/caption findings](final_science_review.md) with Gabriel.
-  Check image loading in the recording browser, especially Commons-hosted files.
 - Publish the video URL after reviewing the final recording.
 
 Sources and reproducible checks: [illumination comparison](illumination_comparison.md),
