@@ -93,9 +93,12 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
 - **Done: A8 and B7.** The rail has a Layers panel with two switches, Sunlight and Earth visibility, each with its
   legend and Renata's explanation (`texts.SUN_LAYER`, `texts.EARTH_LAYER`). The choice lives in
   `st.session_state["overlays"]`, so layers stay on in the other panels, and showing one switches to the map.
-  `drawLayers()` in `polar_map.js` places `static/overlays/<name>_85s.png` over ±151740 m in a pane between the
-  photos and the Site Neighborhood cells. Both images come from `python -m scripts.render_overlays`, with the
-  ramps of `src/colors.py` (the Earth one replaces NASA's colored tiles, so both layers read the same way).
+  `drawLayers()` in `polar_map.js` stacks three images per layer, finest on top, in a translucent pane between
+  the photos and the Site Neighborhood cells: `static/overlays/<name>_65s.png`, `_75s` and `_85s`, at 1920, 960
+  and 240 m per pixel, from PGDA's maps to 65°S, 75°S and 85°S, each cut to the disc that ends at its latitude.
+  A layer weighs about 2 MB. NASA publishes these maps only from 65°S, so the map's last 5° to 60°S have no layer.
+  The map credits NASA PGDA while a layer is shown. The images come from `python -m scripts.render_overlays`, with
+  the ramps of `src/colors.py` (the Earth one replaces NASA's colored tiles, so both layers read the same way).
 - **Stale modules after a deploy:** Streamlit drops changed modules only for the browser sessions that saw the
   change, and Streamlit Cloud updates the code without restarting Python, so new sessions could mix a new
   `app.py` with old `src` modules (the ImportError after PR #24). `app.py` now drops every `src` module when a

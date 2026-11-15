@@ -5,7 +5,7 @@ from src.colors import EARTH_RAMP, SUN_RAMP, css_gradient
 from src.panels import texts
 from src.panels.common import OVERLAYS, VIEW_CHOICE, VIEWS
 
-# name: (label, ramp, explanation). The images are static/overlays/<name>_85s.png (scripts/render_overlays.py).
+# name: (label, ramp, explanation). The images are static/overlays/<name>_<extent>.png (scripts/render_overlays.py).
 LAYERS = {"sun": ("Sunlight", SUN_RAMP, texts.SUN_LAYER), "earth": ("Earth visibility", EARTH_RAMP, texts.EARTH_LAYER)}
 
 
@@ -19,8 +19,8 @@ def toggle(name):
 
 def render():
     st.markdown("### Layers")
-    st.caption("NASA Goddard maps over the south polar map, from 85°S to the pole. They stay on while you use the "
-               "other panels.")
+    st.caption("NASA Goddard maps over the south polar map, from 65°S to the pole, sharpest near the pole. NASA "
+               "publishes them only for the polar regions. They stay on while you use the other panels.")
     shown = st.session_state.get(OVERLAYS, ())
     for name, (label, ramp, text) in LAYERS.items():
         with st.container(border=True):

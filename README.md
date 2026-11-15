@@ -116,7 +116,7 @@ lunav_one/
 │   └── render_overlays.py       # Prepares the NASA-derived Layers images
 ├── static/
 │   ├── icons/                  # SVG interface icons
-│   └── overlays/               # Prepared Sun visibility image and metadata
+│   └── overlays/               # Prepared Sun and Earth visibility images and metadata
 ├── data/
 │   └── catalog/                 # Pre-computed ephemerides and terrain horizons
 │       ├── manifest.json        # Coordinates, date coverage and terrain source
