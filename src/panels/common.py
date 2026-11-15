@@ -149,7 +149,9 @@ def catalog_time(date=CACHE_START, days=EXPLORER_DAYS, elevation_mask=0.0):
             df = get_data(site["lat"], site["lon"], str(date), days)
         except Exception:  # an unavailable location keeps its marker, without invented states
             continue
-        if df is not None and df["time"].reset_index(drop=True).equals(axis):
+        # Pandas versions infer different datetime units (s/us/ns); compare instants, not dtype precision.
+        if (df is not None and len(df) == len(axis)
+                and (df["time"].reset_index(drop=True) == axis).all()):
             frames[key] = df
     if not frames:
         return {"start": axis.iloc[0].strftime("%Y-%m-%dT%H:%M:%SZ"), "hours": len(axis),
@@ -168,7 +170,7 @@ def planner_time(df, instant=None, elevation_mask=0.0):
     date = times.iloc[0].date()
     days, remainder = divmod(len(times), 24)
     if (not remainder and times.iloc[0] == pd.Timestamp(date) and is_cached(date, days)
-            and times.reset_index(drop=True).equals(pd.Series(pd.date_range(date, periods=len(times), freq="h")))):
+            and (times.reset_index(drop=True) == pd.Series(pd.date_range(date, periods=len(times), freq="h"))).all()):
         background = catalog_time(date, days, elevation_mask)
         if (background["start"], background["hours"]) == (payload["start"], payload["hours"]):
             payload["states"] = {**background["states"], **payload["states"]}

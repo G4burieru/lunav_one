@@ -134,3 +134,18 @@ for (const [mode, payload] of Object.entries(payloads)) {
     path.write_text(script, encoding='utf-8')
     subprocess.run([node, str(path)], check=True, capture_output=True, text=True,
                    env={**os.environ, 'ELECTRON_RUN_AS_NODE': '1'}, timeout=20)
+
+
+@pytest.mark.parametrize('unit', ['s', 'us', 'ns'])
+def test_matching_time_axes_do_not_depend_on_datetime_storage_precision(monkeypatch, unit):
+    """Pandas 2/3 can represent the same hours with different datetime64 units."""
+    df = pd.DataFrame({'time': pd.date_range('2027-01-01', periods=24, freq='h'),
+                       'illumination_fraction': 0.25, 'earth_elevation': 1.0})
+    df['time'] = df['time'].astype(f'datetime64[{unit}]')
+    monkeypatch.setattr(common, 'get_data', lambda *args: df)
+    payload = common.planner_time(df, elevation_mask=2.0)
+    assert set(payload['states']) == {*LUNAR_SITES, 'asset'}
+    assert payload['hours'] == 24
+    for states in payload['states'].values():
+        # Quarter solar disk visible; Earth's center is below the requested 2 degree mask.
+        assert decode(states).tolist() == [25] * 24

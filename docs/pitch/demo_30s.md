@@ -7,7 +7,9 @@ ending, rather than using the entire limit.
 
 Team: **Lunav One**. Members: **João Gabriel Santos**, **Igor Wanderley** and
 **Renata Andrade**. Display all three full names during the opening five seconds;
-they do not need to be spoken. These credits were confirmed by the team.
+they do not need to be spoken. Credits were supplied by Renata during the
+project review and match the names in repository commit authorship; see
+[team credit provenance](catalog_expansion_review.md#team-credit-provenance).
 
 ## Narration and screen plan
 

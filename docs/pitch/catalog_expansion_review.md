@@ -106,8 +106,8 @@ an existing Node-compatible runtime. `git diff --check` also passed.
 No identifier, coordinate, pre-computed file or scientific equation was changed.
 No manual regeneration is required for coordinate compatibility; changing
 `sites.py` on main may still trigger the team's automatic pre-computation workflow
-because metadata and coordinates share that file. No commit or push is part of
-this update.
+because metadata and coordinates share that file. The catalog work and scientific
+correction were committed in `d77cdc3` and `09cd8a8`; integration status is recorded below.
 
 There is no required Igor implementation change: the existing marker painters
 already support the corrected data contract. Gabriel can review the small
@@ -129,8 +129,9 @@ Files changed in this update:
 
 ## PR #42 integration check
 
-Integrated main `1e1d7c1` into the working tree based on `09cd8a8`, leaving the
-merge uncommitted for review. The only textual conflict was at the end of
+Main `1e1d7c1` was merged into `devel_renata` based on `09cd8a8`, committed and
+pushed as `7373541` — Merge main into devel_renata preserving catalog states and
+Custom Site fixes. The only textual conflict was at the end of
 `tests/test_app.py`; the Planner-state test and both incoming Custom Site tests
 were retained. The Planner's name validation and `planner_time()` coexist.
 
@@ -143,6 +144,90 @@ The integrated suite passed **128 tests, with no failures or skips**, including
 the JavaScript badge regression. The Streamlit server started and its health
 endpoint returned `ok`; AppTest exercised the main panels and Custom Site flows.
 Both working-tree and staged `git diff --check` checks passed. No scientific
-calculations, JavaScript or pre-computed files were changed. No commit or push
-was made for this integration. Finishing the merge commit and pushing the branch
-remain necessary before opening the PR with these changes.
+calculations, JavaScript or pre-computed files were changed. This integration
+is complete and published; it no longer needs a merge commit or push. The final
+review below describes subsequent, uncommitted test/documentation corrections.
+
+
+## Final review: CI timeout
+
+[Workflow run 43725870352](https://github.com/G4burieru/lunav_one/actions/runs/43725870352)
+checked out main `1e1d7c1`, before Renata's catalog/badge changes were merged. Its
+pre-computation step succeeded; the test step reported 112 passes and one timeout
+in `test_a_name_typed_just_before_the_click_is_still_checked`. The runner used
+Python 3.13.18 and Streamlit 1.67.0.
+
+A guarded reproduction exposed an unintended live calculation. The test saves
+Ridge A at Connecting Ridge C1, so the coordinate widgets disappear. Streamlit
+cleans up their widget state. Choosing Custom Site again recreates them at the
+default (-89.5, 0.0), outside any prepared neighborhood. The reproduction recorded
+a Horizons request for that coordinate; if ephemerides succeed, the production
+path then calculates a live polar Terrain Horizon via NASA DEMs. The workflow
+log does not identify the particular network operation that exceeded its time
+budget, so that narrower attribution is not established. It does establish the
+120-second AppTest timeout. This is a network-dependent test scenario, not
+evidence that `planner_time()` introduced the failure.
+
+The test now seeds the same covered C1 coordinate before recreating the widgets
+and checks that those values are retained. Test-only guards fail immediately on
+any HTTP request or Rasterio dataset open; rendered science errors are also
+rejected. This keeps the real save callback, enabled-button race and checks for
+saved-name duplicates, catalog-name duplicates and whitespace-only names. No
+production logic or timeout was changed. `with_saved_states()` is not responsible
+for this transition: the failure is in Planner results for the newly selected
+point. The separate failed-saved-site regression remains in place.
+
+## Team credit provenance
+
+The full names were supplied explicitly by Renata during the project review.
+They also match repository commit author records:
+
+- João Gabriel Santos: [commit 2b55b23](https://github.com/G4burieru/lunav_one/commit/2b55b23).
+- Igor Wanderley: [commit 1e1d7c1](https://github.com/G4burieru/lunav_one/commit/1e1d7c1).
+- Renata Andrade: [commit 7373541](https://github.com/G4burieru/lunav_one/commit/7373541).
+
+These are the approved project credits; commit author records corroborate the
+spelling used in the documentation. The short script now states this provenance
+explicitly. No surnames were inferred.
+
+## Final review: CI compatibility and validation results
+
+A temporary environment reproduced Python 3.13.18, Streamlit 1.67.0, Pandas
+3.1.1, Rasterio 1.5.2 and Pytest 9.2.0 from the failed workflow's logs. No project
+dependency, workflow setting or existing virtual environment was changed. The
+host operating system and the full pre-computation job were not reproduced;
+these checks use the committed catalog data and do not regenerate it.
+
+This exposed a separate branch compatibility issue: Pandas 3 loaded cached
+hours as `datetime64[us]` while `date_range` inferred `datetime64[s]`.
+`Series.equals()` rejected identical instants because the storage units differed,
+so the catalog payload omitted valid states. The first full run in that
+environment had 122 passes and six failures, distinct from the original main
+workflow's name-test timeout. Both axis checks in `common.py` now compare the
+actual ordered timestamps, with the existing length and window checks retained.
+No hours, masks, heights, scientific equations or underlying data are changed.
+Three regression cases cover seconds, microseconds and nanoseconds.
+
+Final results after both fixes:
+
+| Environment / check | Passed | Failed | Skipped |
+|---|---:|---:|---:|
+| Existing environment: Python 3.10.12, Streamlit 1.65.0, Pandas 2.3.3, Rasterio 1.4.4 | 131 | 0 | 0 |
+| Temporary CI-version environment: Python 3.13.18, Streamlit 1.67.0, Pandas 3.1.1, Rasterio 1.5.2 | 131 | 0 | 0 |
+| Previously timing-out test, run alone in the CI-version environment | 1 | 0 | 0 |
+
+Both complete runs included the production JavaScript decoder and marker painters
+using an existing Node-compatible runtime. The CI-version Streamlit server also
+started successfully and its health endpoint returned `ok`; AppTest rendered
+the main panels and exercised saved Custom Sites. `git diff --check` passed.
+The 17 catalog/manifest entries and Overviews, source references, imagery,
+Leibnitz correction and both video scripts' separate purposes were preserved.
+The official narration remains 55 words; its eventual exported duration must
+still be measured, and both videos remain unpublished with no invented URLs.
+
+Remote-reference inspection found main still at `1e1d7c1`, included in branch
+HEAD `7373541` (zero main commits missing). The current fixes remain local and
+uncommitted. The hosted Actions run has not been rerun by this review; the next
+remote run must confirm the result on GitHub's runner. Browser rehearsal of the
+hosted build and measurement of the recorded video remain manual publication
+checks, not scientific certification. No other technical blocker was found.
