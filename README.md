@@ -247,7 +247,8 @@ See the [frame evidence and Earth Visibility comparison](docs/pitch/illumination
 Existing dictionary keys are retained for compatibility. **The key
 `Shackleton Crater (Rim)` now uses S1 instead of the previous Site04 region center
 (-89.7668, -171.87).** The current manifest matches S1. The loader rejects
-pre-computed entries whose manifest coordinates differ from the catalog.
+pre-computed entries whose manifest coordinates differ from the catalog or whose
+START/END dates differ from the supported 2027–2028 window.
 The legacy key `Malapert Massif (Summit)` remains a region center, not a verified
 summit. Regional centers are from NASA's Lunar Surface Data Book ACD-50044 Rev A
 (2023), Table A2-2, printed pages 57–58. Each entry records its source, coordinate
@@ -306,6 +307,11 @@ visibility at the seven polar Catalog Sites evaluated in the reference study is 
 visibility map: six are within 1.3 percentage points and all within 4.6
 (`python -m scripts.compare_pgda`). These are consistency checks, not a claim of
 independent mission validation.
+
+Custom Site names are checked again when saved, rejecting empty or already-used
+names. If a saved location fails to compute its Explorer states, that coordinate
+remains without a badge for the rest of the session instead of retrying on every
+interaction (PR #42).
 
 ## Scientific explanation and demo scripts
 

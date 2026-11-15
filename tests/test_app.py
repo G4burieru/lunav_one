@@ -105,3 +105,41 @@ def test_planner_sends_all_catalog_states_alongside_the_asset(monkeypatch):
     payload = received[-1]
     assert set(payload['states']) == {*LUNAR_SITES, 'asset'}
     assert payload['hours'] == 14 * 24
+
+
+def test_a_name_typed_just_before_the_click_is_still_checked():
+    """The button was enabled for the previous name; a taken or empty name sent with the click saves nothing."""
+    at = AppTest.from_file("../app.py", default_timeout=120).run()
+    at.session_state["custom"] = {"lat": -89.4398, "lon": -137.17}
+    at.button(key="rail_planner").click().run()
+    at.text_input(key="planner_name").input("Ridge A").run()
+    at.button(key="planner_save").click().run()
+    saved = dict(at.session_state["saved_sites"])
+    at.selectbox(key="planner_site").set_value("Custom Site").run()
+    for name in ("Ridge A", "Haworth", "  "):
+        at.text_input(key="planner_name").input("Ridge B").run()  # enables the button
+        at.text_input(key="planner_name").input(name)
+        at.button(key="planner_save").click().run()
+        assert at.session_state["saved_sites"] == saved, name
+    assert not at.exception
+
+
+def test_a_failing_saved_site_is_not_retried_on_every_rerun(monkeypatch):
+    """A saved Custom Site whose live computation fails stays without a badge instead of blocking every rerun."""
+    import requests
+    calls = []
+
+    def offline(*args, **kwargs):
+        calls.append(1)
+        raise requests.ConnectionError("offline")
+
+    monkeypatch.setattr(requests, "get", offline)
+    at = AppTest.from_file("../app.py", default_timeout=120)
+    at.session_state["saved_sites"] = {"saved:Equator": {"name": "Equator", "lat": 10.123, "lon": 10.456}}
+    at.run()
+    assert calls  # tried once: a live point, JPL Horizons is unreachable
+    tried = len(calls)
+    at.button(key="rail_about").click().run()
+    at.button(key="rail_catalog").click().run()
+    assert len(calls) == tried
+    assert not at.exception

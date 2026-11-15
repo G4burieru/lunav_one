@@ -125,3 +125,24 @@ Files changed in this update:
   `docs/pitch/final_science_review.md` (historical-status notice), and this report.
 - Tests: `tests/test_sites.py`, `tests/test_catalog.py`, `tests/test_panels.py`,
   `tests/test_app.py`, `tests/test_catalog_time.py`.
+
+
+## PR #42 integration check
+
+Integrated main `1e1d7c1` into the working tree based on `09cd8a8`, leaving the
+merge uncommitted for review. The only textual conflict was at the end of
+`tests/test_app.py`; the Planner-state test and both incoming Custom Site tests
+were retained. The Planner's name validation and `planner_time()` coexist.
+
+Igor's saved-location failure tracking, manifest START/END validation and
+empty/duplicate-name rejection are preserved. All 17 catalog data sets load for
+2027–2028. The 17 Overviews, regional image captions, Leibnitz historical-region
+correction and separate official/extended video scripts remain unchanged.
+
+The integrated suite passed **128 tests, with no failures or skips**, including
+the JavaScript badge regression. The Streamlit server started and its health
+endpoint returned `ok`; AppTest exercised the main panels and Custom Site flows.
+Both working-tree and staged `git diff --check` checks passed. No scientific
+calculations, JavaScript or pre-computed files were changed. No commit or push
+was made for this integration. Finishing the merge commit and pushing the branch
+remain necessary before opening the PR with these changes.
