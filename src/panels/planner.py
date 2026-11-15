@@ -22,9 +22,19 @@ get_live_horizons = st.cache_data(show_spinner=False, max_entries=8)(live_neighb
 get_live_summary = st.cache_data(show_spinner=False, max_entries=32)(live_neighborhood_summary)
 
 
+def taken_names():
+    """Names a new Custom Site cannot use: the saved Custom Sites' and the Catalog Sites'."""
+    return {s["name"] for s in saved_sites().values()} | {site_label(k) for k in LUNAR_SITES}
+
+
 def save_custom(lat, lon):
-    """Keep the Custom Site on the Moon View under the typed name, and plan it under that name."""
-    name = st.session_state.get("planner_name", "").strip()
+    """Keep the Custom Site on the Moon View under the typed name, and plan it under that name.
+
+    Checked again here: the button's disabled state comes from the previous run, and a name typed just before the
+    click arrives together with it."""
+    name = (st.session_state.get("planner_name") or "").strip()
+    if not name or name in taken_names():
+        return
     key = SAVED_PREFIX + name
     saved_sites()[key] = {"name": name, "lat": lat, "lon": lon}
     st.session_state.update(planner_site=key, planner_name="")
@@ -47,7 +57,7 @@ def where():
         name = col_name.text_input("Name", key="planner_name", max_chars=40,
                                    placeholder="e.g. Ridge east of Shackleton",
                                    help="Keeps this Custom Site on the Moon View until you reload or close the page.")
-        taken = {s["name"] for s in saved.values()} | {site_label(k) for k in LUNAR_SITES}
+        taken = taken_names()
         col_save.button("Keep on the map", key="planner_save", on_click=save_custom, args=(lat, lon),
                         width="stretch", disabled=not name.strip() or name.strip() in taken)
         if name.strip() in taken:

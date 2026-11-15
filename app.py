@@ -104,10 +104,17 @@ def explorer_time():
 
 def with_saved_states(time):
     """Adds the saved Custom Sites' states to an Explorer time bar (2027–2028), so their markers get the Sun and Earth
-    badge too. Each is computed live once (about 30 s), then cached; one that fails stays without a badge."""
+    badge too. Each is computed live once (about 30 s), then cached; one that fails stays without a badge for the rest
+    of the session, instead of being tried again on every rerun (Streamlit does not cache errors)."""
+    failed = st.session_state.setdefault("failed_saved", set())  # (lat, lon): a renamed copy fails just the same
     for key, site in saved_sites().items():
-        df = two_years(site["lat"], site["lon"], catalog_site=False)
-        if df is not None:
+        place = (site["lat"], site["lon"])
+        if place in failed:
+            continue
+        df = two_years(*place, catalog_site=False)
+        if df is None:
+            failed.add(place)
+        else:
             time["states"][key] = time_payload({key: df})["states"][key]
     return time
 
