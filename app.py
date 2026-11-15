@@ -95,11 +95,9 @@ def on_view_instant():
 
 
 def explorer_time():
-    """The Explorer's time bar: every Catalog Site over 2027–2028, from the instant the bar last sent."""
-    try:
-        return dict(catalog_time(), instant=(st.session_state.get(MOON_VIEW) or {}).get("instant"))
-    except Exception:  # pre-computed data missing: the view opens without a time bar
-        return None
+    """The Explorer's time bar: every Catalog Site over 2027–2028, from the instant the bar last sent. A site without
+    data just has no states (catalog_time skips it); any other error is a bug and shows."""
+    return dict(catalog_time(), instant=(st.session_state.get(MOON_VIEW) or {}).get("instant"))
 
 
 def with_saved_states(time):

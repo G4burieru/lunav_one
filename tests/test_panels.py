@@ -97,3 +97,14 @@ def test_catalog_summaries_follow_sites_added_while_running(monkeypatch):
     assert set(common.catalog_summaries().index) == set(first)
     monkeypatch.undo()
     assert set(common.catalog_summaries().index) == set(common.LUNAR_SITES)
+
+
+def test_name_sort_ignores_case():
+    """"de Gerlache…" sorts among the D's of the catalog list, not after every capitalized name."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file("../app.py", default_timeout=120)
+    at.session_state["catalog_sort"] = "Name"
+    at.run()
+    assert not at.exception
+    names = [m.value.split("**")[1] for m in at.markdown if m.value.startswith("**")]
+    assert names == sorted(names, key=str.casefold) and "de Gerlache Rim 1" in names
