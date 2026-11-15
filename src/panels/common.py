@@ -177,11 +177,16 @@ def planner_time(df, instant=None, elevation_mask=0.0):
     return payload
 
 
-@st.cache_data(show_spinner=False)
 def analysis_zones():
     """Where get_conditions takes a clicked point's data from, for the Moon View's dashed rings (`zones`): the
     pre-computed Site Neighborhood of a Catalog Site within reach, else live terrain inside the south pole DEMs."""
-    precomputed = [key for key, site in LUNAR_SITES.items()  # the sites whose data _catalog_match can use
+    return _analysis_zones(LUNAR_SITES, catalog.read_manifest())
+
+
+# The sites and the manifest are the cache key, so a site added or pre-computed while the app runs gets its ring.
+@st.cache_data(show_spinner=False)
+def _analysis_zones(sites, manifest):
+    precomputed = [key for key, site in sites.items()  # the sites whose data _catalog_match can use
                    if (data := catalog.load_site(key, site)) is not None and data[1] is not None]
     return {"terrain_lat": SOUTH_POLE_DEM_LIMIT, "precomputed_m": PRECOMPUTED_REACH_M, "precomputed": precomputed}
 
