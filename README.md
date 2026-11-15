@@ -112,8 +112,7 @@ lunav_one/
 │   └── catalog.py               # Pre-computed data loader
 ├── scripts/
 │   ├── precompute.py            # Generates data/catalog/
-│   ├── compare_pgda.py          # Numerical PGDA consistency check
-│   └── render_overlays.py       # Prepares the NASA-derived Layers images
+│   └── compare_pgda.py          # Numerical PGDA consistency check
 ├── static/
 │   ├── icons/                  # SVG interface icons
 │   └── overlays/               # Prepared Sun and Earth visibility images and metadata

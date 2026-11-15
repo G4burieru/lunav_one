@@ -17,7 +17,6 @@ get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
 # Session state: the open panel, the selected Catalog Site key, and the Custom Site ({"lat", "lon"}) if any.
 PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
 PANEL_OPEN = "panel_open"  # False while the panel is hidden (a second click on its rail icon)
-OVERLAYS = "overlays"  # the Layers shown on the south polar map: a sorted list of "earth" and "sun"
 MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
 VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")
 VIEW_ICONS = {"Globe": "moon", "South pole map": "pole-map"}

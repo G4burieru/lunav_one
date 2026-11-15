@@ -2,7 +2,6 @@
 
 Keep constant names stable: panels import them directly. Catalog help describes
 2027–2028 at 2 m Asset Height; About also explains the Site Planner's chosen window.
-Layer descriptions are ready for integration, not evidence of a working Layers panel.
 """
 
 INTRO = (
@@ -38,17 +37,6 @@ ELEVATION_MASK_HELP = (
     "Extra clearance angle required above the Terrain Horizon for Earth's center to count as visible. "
     "0° uses the horizon alone; a larger mask can reduce Earth Visibility. This is a geometric margin, "
     "not an antenna or radio-link calculation."
-)
-SUN_LAYER = (
-    "NASA PGDA Sun visibility: percentage of hourly samples with any part of the Sun visible at ground level, "
-    "averaged over 18.6 years. Darker amber means less visibility. Site Card Sunlight instead averages the "
-    "visible fraction of the solar disk at 2 m over 2027–2028. Height, period, resolution and metric differ; "
-    "the layer and Site Card values are not interchangeable."
-)
-EARTH_LAYER = (
-    "NASA PGDA Earth visibility: percentage of hourly samples with any part of Earth's disk visible at ground "
-    "level, averaged over 18.6 years. Site Cards use Earth's center at 2 m over 2027–2028. These different "
-    "definitions can give different percentages; neither measures radio-link availability."
 )
 CUSTOM_SITE = (
     "A location you selected, without a Catalog Site's source context. Conditions are calculated from JPL "
