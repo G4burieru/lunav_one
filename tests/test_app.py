@@ -87,3 +87,21 @@ def test_a_named_custom_site_stays_on_the_map_until_removed():
     assert at.session_state["saved_sites"] == {}
     assert at.selectbox(key="planner_site").value == "Custom Site"
     assert not at.exception
+
+
+def test_planner_sends_all_catalog_states_alongside_the_asset(monkeypatch):
+    from src.panels import planner
+    from src.sites import LUNAR_SITES
+    received = []
+    original = planner.planner_time
+    def capture(*args, **kwargs):
+        payload = original(*args, **kwargs)
+        received.append(payload)
+        return payload
+    monkeypatch.setattr(planner, 'planner_time', capture)
+    at = AppTest.from_file('../app.py', default_timeout=120).run()
+    at.button(key='rail_planner').click().run()
+    assert not at.exception and received
+    payload = received[-1]
+    assert set(payload['states']) == {*LUNAR_SITES, 'asset'}
+    assert payload['hours'] == 14 * 24

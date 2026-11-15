@@ -1,6 +1,12 @@
 # Final science and image review — through PR #37
 
-Reviewed against main `03c026f`. This is a review and proposed handoff to Gabriel;
+Historical review against main `03c026f`. The science-copy corrections and image
+replacements were subsequently integrated in PR #39; the old image inventory
+below records the reviewed version, not the current NASA-Library-only collection.
+For the 17-site catalog and current additions, see the
+[catalog expansion review](catalog_expansion_review.md).
+
+The original review and proposed handoff to Gabriel follows;
 `src/panels/places.py` has not been changed. No new Catalog Sites or numerical
 results are introduced. Metadata checks are distinguished from visual verification.
 

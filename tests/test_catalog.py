@@ -37,3 +37,22 @@ def test_unchanged_data_is_not_rewritten(tmp_path):
     assert (csv.read_bytes(), npz.stat().st_mtime_ns) == before
     save_terrain(npz, horizons=np.array([1, 3], dtype=np.int16))
     assert np.load(npz)["horizons"].tolist() == [1, 3]
+
+
+def test_all_catalog_files_match_registered_coordinates_and_coverage():
+    from src.sites import LUNAR_SITES
+    manifest = catalog.read_manifest()
+    assert len(LUNAR_SITES) == 17 and set(manifest) == set(LUNAR_SITES)
+    for key, site in LUNAR_SITES.items():
+        entry = manifest[key]
+        assert (entry['lat'], entry['lon']) == (site['lat'], site['lon'])
+        assert (entry['start'], entry['end']) == (catalog.START, catalog.END)
+        ephemerides, hood = catalog.load_site(key, site)
+        expected = pd.Series(pd.date_range(catalog.START, catalog.END, freq='h', inclusive='left'), name='time')
+        # Horizons exports may retain the stop instant; conditions use the half-open window.
+        covered = ephemerides.loc[ephemerides['time'] < pd.Timestamp(catalog.END), 'time'].reset_index(drop=True)
+        pd.testing.assert_series_equal(covered, expected)
+        assert ephemerides['time'].is_monotonic_increasing and ephemerides['time'].is_unique
+        assert hood is not None
+        assert hood['horizons'].shape == (len(hood['east']), 360)
+        assert np.isfinite(hood['horizons']).all()

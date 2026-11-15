@@ -10,8 +10,10 @@ Compatibility: legacy dictionary keys are retained. In particular, the key
 "Shackleton Crater (Rim)" now identifies Table 2 point 1 (local label S1),
 replacing the old Site04 center (-89.7668, -171.87). Invalidate its cached data.
 
-The regional centers cover all 13 Artemis III candidate regions NASA named in 2022
-(ARTEMIS_2022_SOURCE). CLPS landing locations are deferred: no official coordinates.
+Twelve regional centers and Connecting Ridge C1/C2 represent the 13 historical
+2022 candidate regions. The Shackleton points are additional study locations.
+Specific study points do not replace original regional centers. No CLPS sites
+are added here.
 """
 
 COORDINATE_CONVENTION = "Lunar coordinates; degrees; north-positive latitude; east-positive longitude [-180, 180]"
@@ -121,7 +123,7 @@ LUNAR_SITES = {
         "Haworth", -86.7639, -22.777, "Haworth", 57,
         "Haworth DEM study-region center; not the crater center or floor.",
         "LOLA topography supports investigation of polar terrain and horizon obstruction.",
-        "NASA GSFC south-pole DEM study region; no mission landing designation implied.",
+        ARTEMIS_2024 + ARTEMIS_CONTEXT, ARTEMIS_2024_SOURCE,
     ),
     "Peak Near Shackleton": _artemis_region(
         "Peak Near Shackleton", -88.811, 123.6901, "R07 / Site07", 58,
@@ -151,9 +153,13 @@ LUNAR_SITES = {
     ),
     "Leibnitz Beta Plateau": _artemis_region(
         "Leibnitz Beta Plateau", -85.4266, 31.74276, "R20 / Site20", 58,
-        "Representative center of the Leibnitz Beta Plateau study region. Leibnitz Beta is now officially "
-        "named Mons Mouton.",
-        "Elevated polar terrain supports studies of illumination and Earth line of sight.",
+        "Representative center of the historical Leibnitz Beta Plateau study region, now known as Mons Mouton. "
+        "The legacy name and coordinates are retained for pre-computed data compatibility.",
+        "Elevated polar terrain supports studies of illumination and Earth line of sight. "
+        "NASA's 2024 list names Mons Mouton and Mons Mouton Plateau separately; this historical "
+        "center does not define the boundaries or center of either revised region. "
+        "Naming reference: https://svs.gsfc.nasa.gov/5074/.",
+        in_2024=True,
     ),
     "Nobile Rim 1": _artemis_region(
         "Nobile Rim 1", -85.4381, 37.36667, "R06 / Site06", 58,
