@@ -64,3 +64,42 @@ def test_shackleton_replacement_is_distinct_from_old_region_center():
     assert (site["lat"], site["lon"]) != (-89.7668, -171.87)
     assert "local catalog label" in site["source_location"]
     assert LUNAR_SITES["Apollo 11 (Tranquility Base)"]["coordinate_kind"] == "actual_landing"
+
+
+def test_region_identifiers_pages_and_historical_associations():
+    from src.sites import ARTEMIS_2024_SOURCE
+    expected = {
+        "Peak Near Shackleton": (58, "R07 / Site07"),
+        "Connecting Ridge Extension": (58, "SL3"),
+        "de Gerlache Rim 1": (58, "R11 / Site11"),
+        "de Gerlache Rim 2": (58, "SL2"),
+        "de Gerlache-Kocher Massif": (58, "R42 / Site42"),
+        "Leibnitz Beta Plateau": (58, "R20 / Site20"),
+        "Nobile Rim 1": (58, "R06 / Site06"),
+        "Nobile Rim 2": (57, "DM2"),
+        "Amundsen Rim": (57, "DM1"),
+    }
+    assert len(LUNAR_SITES) == 17
+    for key, (page, identifier) in expected.items():
+        assert LUNAR_SITES[key]['source_location'] == f'Table A2-2, printed page {page}, {identifier}'
+    for key in ['Haworth', 'Malapert Massif (Summit)', 'de Gerlache Rim 2', 'Nobile Rim 1', 'Nobile Rim 2']:
+        assert LUNAR_SITES[key]['exploration_source'] == ARTEMIS_2024_SOURCE
+        assert '2022' in LUNAR_SITES[key]['exploration_context']
+        assert '2024' in LUNAR_SITES[key]['exploration_context']
+    for key in ['Connecting Ridge C1', 'Connecting Ridge C2']:
+        assert LUNAR_SITES[key]['coordinate_kind'] == 'studied_point'
+        assert (LUNAR_SITES[key]['lat'], LUNAR_SITES[key]['lon']) != (-89.4632, -137.49)
+
+
+def test_leibnitz_name_correspondence_does_not_imply_2024_regional_retention():
+    from src.sites import ARTEMIS_2022_SOURCE, ARTEMIS_2024_SOURCE
+    site = LUNAR_SITES['Leibnitz Beta Plateau']
+    assert site['exploration_source'] == ARTEMIS_2022_SOURCE
+    assert ARTEMIS_2024_SOURCE in site['exploration_context']
+    assert 'Mons Mouton Plateau' in site['exploration_context']
+    assert 'Equivalence of this older polygon' in site['exploration_context']
+    assert 'not established' in site['exploration_context']
+    assert 'kept in its refined 2024 list' not in site['exploration_context']
+    assert 'https://svs.gsfc.nasa.gov/5074/' in site['scientific_context']
+    assert (site['lat'], site['lon']) == (-85.4266, 31.74276)
+    assert site['source_location'] == 'Table A2-2, printed page 58, R20 / Site20'

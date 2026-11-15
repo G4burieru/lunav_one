@@ -140,10 +140,41 @@ def time_payload(dfs, instant=None, elevation_mask=0.0):
 
 
 @st.cache_data(show_spinner=False)
-def catalog_time():
-    """Time bar states of every Catalog Site over 2027–2028, for the Explorer; set "instant" before sending."""
-    return time_payload({key: get_data(site["lat"], site["lon"], str(CACHE_START), EXPLORER_DAYS)
-                         for key, site in LUNAR_SITES.items()})
+def catalog_time(date=CACHE_START, days=EXPLORER_DAYS, elevation_mask=0.0):
+    """Catalog marker states at 2 m, on the requested hourly axis and Earth Elevation Mask."""
+    axis = pd.Series(pd.date_range(date, periods=days * 24, freq="h"))
+    frames = {}
+    for key, site in LUNAR_SITES.items():
+        try:
+            df = get_data(site["lat"], site["lon"], str(date), days)
+        except Exception:  # an unavailable location keeps its marker, without invented states
+            continue
+        # Pandas versions infer different datetime units (s/us/ns); compare instants, not dtype precision.
+        if (df is not None and len(df) == len(axis)
+                and (df["time"].reset_index(drop=True) == axis).all()):
+            frames[key] = df
+    if not frames:
+        return {"start": axis.iloc[0].strftime("%Y-%m-%dT%H:%M:%SZ"), "hours": len(axis),
+                "instant": None, "states": {}}
+    return time_payload(frames, elevation_mask=elevation_mask)
+
+
+def planner_time(df, instant=None, elevation_mask=0.0):
+    """Add covered Catalog Site states on exactly the asset's axis; never reuse another window.
+
+    Catalog markers retain their 2 m reference height; the asset uses its chosen height.
+    Outside cached coverage only the computed asset is sent, avoiding 17 live queries.
+    """
+    payload = time_payload({"asset": df}, instant=instant, elevation_mask=elevation_mask)
+    times = df["time"]
+    date = times.iloc[0].date()
+    days, remainder = divmod(len(times), 24)
+    if (not remainder and times.iloc[0] == pd.Timestamp(date) and is_cached(date, days)
+            and (times.reset_index(drop=True) == pd.Series(pd.date_range(date, periods=len(times), freq="h"))).all()):
+        background = catalog_time(date, days, elevation_mask)
+        if (background["start"], background["hours"]) == (payload["start"], payload["hours"]):
+            payload["states"] = {**background["states"], **payload["states"]}
+    return payload
 
 
 @st.cache_data(show_spinner=False)

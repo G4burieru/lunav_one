@@ -1,7 +1,12 @@
-# Three-minute demo — time-aware Moon View
+# Extended Demo — approximately 3 minutes
 
-Draft checked against main through PR #37 (03c026f). Rehearse the
-spoken paragraphs at about 130 words per minute, allowing screen transitions.
+Complementary material, separate from the [Official Demo of at most 30 seconds](demo_30s.md).
+This extended video will be linked from the GitHub README. It does not replace
+the official submission demo and will not be submitted as that demonstration.
+
+Draft updated for the 17-site catalog introduced by PR #41. Rehearse the
+spoken paragraphs at about 130 words per minute: approximately 342 words, or
+2 minutes 38 seconds of narration, plus about 20 seconds for screen interactions.
 Bracketed directions and checklists are not narration. Confirm that the
 [hosted application](https://lunavone.streamlit.app/) has the same build before recording.
 
@@ -10,6 +15,8 @@ Bracketed directions and checklists are not narration. Confirm that the
 - Start `python -m streamlit run app.py` and let NASA imagery and catalog data load.
 - Start in Globe; its slow initial rotation stops on the first interaction and
   stays off. Reduced-motion settings may prevent rotation from starting.
+- All 17 Catalog Sites now have Overviews; the nine new entries use a regional
+  LROC context mosaic, not a close-up of each coordinate.
 - Rehearse Connecting Ridge C1. Find two instants with visibly different Sun/Earth
   marker states. Record the UTC labels for rehearsal; do not invent a transition.
 - Test typed UTC dates, playback speeds, Play, Pause and dragging. Markers update during playback; release the
@@ -32,8 +39,8 @@ sunlight and Earth. Lunav One connects geographic context with modeled condition
 
 [Search for Connecting Ridge C1 and select it. The site opens the polar map.
 Indicate the Globe | South pole switch and Photos/Relief. Briefly show the
-Overview context and the LRO south pole mosaic (NASA Image Library).
-The Apollo 15 Malapert photo is no longer in the app.]
+Overview context and the LRO south pole mosaic, identified as regional context
+(NASA Image Library).]
 
 “The Moon View combines a three-dimensional Moon with a polar map using real
 NASA imagery. We can switch views here. Connecting Ridge C1 is a documented
@@ -95,6 +102,9 @@ Do not present a fallback as a recording of an unavailable live interaction.
   Check that Pause/slider release updates the Site Card, while the summary stays fixed.
 - Explain a Custom Site's ticked ring and a Surface Asset's cross in a circle
   only if they appear.
+- During the covered Planner take, Catalog Site badges remain at 2 m and use
+  the selected Elevation Mask; the asset uses its chosen height. Outside the
+  pre-computed date coverage, only the asset has supplied temporal states.
 - The Planner's Moon View time bar covers its Analysis Window and drives its
   countdowns like the Site Card's: release the slider or pause before pointing to them.
 - Neighborhoods are offered at or south of 80°S. Catalog Sites at 2 m reuse prepared
@@ -106,7 +116,8 @@ Do not present a fallback as a recording of an unavailable live interaction.
 - If using the optional Malapert example, the point is -1600 m east, +100 m north.
   Its separate two-year Earth Visibility result is not the same as a short-window
   percentage and does not establish a summit or permanent communications.
-- Resolve the [image/caption findings](final_science_review.md) with Gabriel.
+- Check the [17-site source and integration review](catalog_expansion_review.md)
+  and rehearse marker states in the deployed build.
 - Publish the video URL after reviewing the final recording.
 
 Sources and reproducible checks: [illumination comparison](illumination_comparison.md),

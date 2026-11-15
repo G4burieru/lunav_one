@@ -59,7 +59,10 @@ Site or Custom Site, Asset Height, Elevation Mask and Analysis Window. Results
 include Sunset/Earthset countdowns, equivalent full-Sun hours and Earth-view
 percentages. The Moon View time bar follows the Analysis Window and synchronizes
 results on slider release, pause or a committed typed date; there is no separate
-selected-instant slider in Site Planner. For Catalog Sites at or south of 80°S and at 2 m Asset Height,
+selected-instant slider in Site Planner. Within pre-computed date coverage,
+Catalog Site badges follow that same window at 2 m with the chosen Elevation
+Mask; the asset follows its chosen height. Outside coverage, only asset states
+are sent and catalog badges are omitted. For Catalog Sites at or south of 80°S and at 2 m Asset Height,
 Site Neighborhood cells are drawn directly on the polar map, colored by Sunlight
 or Earth Visibility for the chosen window and mask. Clicking a cell moves the
 Surface Asset and updates its analysis. Best cell selects the highest modeled
@@ -70,7 +73,13 @@ demand; external-service availability and waiting time still apply. Custom Sites
 coordinate search or an analyzed click on the globe/map.
 
 Seventeen Catalog Sites have source references and coordinate meanings, including all 13
-Artemis III candidate regions NASA named in 2022. Four
+historical Artemis III candidate regions NASA named in 2022: Connecting Ridge is
+represented by C1/C2, not its regional center. The Leibnitz Beta identifier is
+retained as a historical reference associated with the mountain Mons Mouton;
+this does not establish retention or polygon equivalence with either 2024 region.
+Haworth's 2022/2024 associations are documented. All 17 have
+Overviews; the nine new entries use an explicitly labeled regional LROC mosaic.
+Four
 specific study points come from Gläser et al. (2017); other entries are regional
 centers or a historical landing. Pre-computed data covers 2027–2028. Supported
 cases outside that coverage use live calculations; an identified Ideal Horizon
@@ -103,6 +112,9 @@ constitute a complete terrain, uncertainty or landing-safety assessment.
   and [Gläser et al. (2017), Table 2](https://ntrs.nasa.gov/api/citations/20170007365/downloads/20170007365.pdf): coordinate provenance.
 - [Moon Trek](https://trek.nasa.gov/moon/) and [LROC](https://lroc.im-ldi.com/):
   imagery; [QuickMap](https://quickmap.lroc.im-ldi.com/): cartographic reference.
+- [NASA 2022 regional list](https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-moon/),
+  [2024 revision](https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/)
+  and [Mons Mouton naming](https://svs.gsfc.nasa.gov/5074/): historical regional context.
 - [CSA lunar exploration resources](https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/):
   educational context, not a project partnership.
 
@@ -136,18 +148,23 @@ requested live neighborhoods for Custom Sites and other heights in the supported
 polar region. The separate schematic Plotly map remains an offline export.
 The Moon View has a working UTC slider, playback and dynamic marker states.
 
-Before recording, resolve the [image/caption findings](final_science_review.md)
-with Gabriel and verify
-the hosted build, browser/CDN/imagery loading, marker changes and Site Card
+Before recording, consult the [17-site review](catalog_expansion_review.md) and
+verify the hosted build, browser/CDN/imagery loading, marker changes and Site Card
 synchronization after slider release or pause. Live neighborhood computation
 should not be required by the main recording path.
 
 ## Publication details
 
+The team will use only the short video as its official demonstration. No slide
+presentation is planned; the extended video is complementary GitHub material.
+
 - Application: https://lunavone.streamlit.app/
-- Demonstration video: pending recording and review.
+- Official Demo: at most 30 seconds, pending recording; [script](demo_30s.md).
+- Extended Demo: approximately three minutes of complementary material, pending
+  recording; [script](demo_script.md). This does not replace the official demo.
 - Repository: https://github.com/G4burieru/lunav_one
-- Team: Gabriel (science), Igor (interface), Renata (sites, texts and presentation).
+- Team: Lunav One — João Gabriel Santos (science), Igor Wanderley (interface),
+  Renata Andrade (sites, texts and presentation).
 - Challenge reference: https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/
 
 Confirm the official form's limits and the final deployed feature set before submission.

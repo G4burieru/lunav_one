@@ -55,7 +55,8 @@ at a chosen location, height and Analysis Window. This is an educational prototy
 
 **Read the Site Card.** Its averages and longest intervals cover **2027–2028 at 2 m
 Asset Height**. Rankings compare only the Catalog Sites and the selected metric;
-they do not rank landing safety. The selected-instant line and 28-day Sun & Earth charts
+they do not rank landing safety. The 17 Overviews provide sourced geographic context;
+regional mosaics do not show a close-up of each catalog coordinate. The selected-instant line and 28-day Sun & Earth charts
 describe a shorter interval; the Seasons chart groups results by month.
 
 **Read the Moon View.** Drag the UTC time bar, type a date or use Play/Pause (1 hour
@@ -76,6 +77,10 @@ performance.
 Markers update while time moves. Release the slider or pause to update the Site
 Card's instant and charts; its two-year averages stay fixed. In Site Planner the
 bar covers the Analysis Window and drives the countdowns and charts the same way.
+Within 2027–2028, Catalog Site badges use their 2 m reference height and the
+Planner's Elevation Mask; the Surface Asset uses its chosen height. Outside that
+coverage only the asset's computed states are supplied; other markers have no
+badge rather than displaying states from another period.
 Initial globe rotation stops at the first interaction and is disabled when the
 system requests reduced motion.
 
@@ -124,5 +129,6 @@ safety, permanent illumination, usable power, thermal survival or operational co
 [LROC](https://lroc.im-ldi.com/) ·
 [Gläser et al. (2017)](https://ntrs.nasa.gov/citations/20170007365).
 Coordinate references are recorded in each Catalog Site's scientific context.
-Lunav One's team: Gabriel (science), Igor (interface), Renata (sites, text and presentation).
+Team Lunav One: João Gabriel Santos (science), Igor Wanderley (interface),
+Renata Andrade (sites, text and presentation).
 """

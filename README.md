@@ -25,7 +25,7 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Site Neighborhood | Polar-map cells: pre-computed for Catalog Sites at 2 m; computed on demand for Custom Sites and other heights at or south of 80°S |
 | Custom Site | Coordinate search or confirmed point selection on globe/map; live calculation where needed |
 | Offline alternative | src/site_map.py exports a schematic Plotly map, separate from the Moon View |
-| Data pipeline | Eight sites pre-computed hourly for 2027–2028 at 2 m, automatic regeneration workflow |
+| Data pipeline | Seventeen sites pre-computed hourly for 2027–2028 at 2 m, automatic regeneration workflow |
 | Moon View time bar | Hourly UTC slider, typed dates, multiple playback speeds and dynamic Sun/Earth marker states |
 | Site Card synchronization | Updates selected-instant information and charts when the slider is released or playback paused |
 | Globe rotation | Starts automatically unless reduced motion is requested; stops at the first interaction |
@@ -34,7 +34,7 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 The Globe | South pole switch changes views independently of Photos/Relief; at a zoom limit it points to the other view.
 Overview includes external site images and descriptions: photographs, composites
 and scientific maps provide context, not original model outputs. See the
-[science and image review](docs/pitch/final_science_review.md) for caption caveats.
+[catalog and image review](docs/pitch/catalog_expansion_review.md) for current provenance.
 
 The Explorer's Site Card summary always covers 2027–2028 at 2 m. Moving or playing
 the Moon View time bar changes the marker states immediately. Releasing the slider
@@ -47,7 +47,11 @@ Every Catalog Site is a circle; the panels name its coordinate type. Custom
 Sites use a ticked ring; a Surface Asset uses a cross in a circle. With time
 data, a badge beside each marker shows a **Sun** that fills from the bottom with
 the visible solar disk fraction, and an **Earth** that is blue while visible and
-gray, crossed out, when Earth does not meet the visibility criterion. These are
+gray, crossed out, when Earth does not meet the visibility criterion.
+In a covered Site Planner window, Catalog Site badges use their 2 m reference
+height and the Planner's Elevation Mask; the Surface Asset uses its chosen
+height. Outside 2027–2028 only the asset's computed states are supplied, so
+catalog markers remain without badges instead of reusing another period. These are
 modeled states, not power generation or communications status. The time bar
 plays at 1 hour to 3 days per second, and a UTC date can be typed into it. On
 the south polar map, dashed rings show where a clicked point's analysis comes
@@ -60,7 +64,7 @@ boundaries are separate from site markers. The globe's initial
 rotation stops at the first interaction and is disabled for reduced-motion users.
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
-The eight entries now have pre-computed data. Numerical comparison with the
+All 17 entries have pre-computed data. Numerical comparison with the
 literature is documented below; complete topographic and scientific validation
 is still pending. Automated tests check software
 behavior, including synthetic terrain cases, rather than scientific validation
@@ -141,6 +145,7 @@ lunav_one/
 │   ├── test_metrics.py
 │   ├── test_catalog.py
 │   ├── test_app.py              # Panel smoke tests
+│   ├── test_catalog_time.py     # Catalog/Planner states and JavaScript badges
 │   └── test_panels.py           # Search, formatting and state contracts
 └── docs/
     ├── TEAM_PLAN.md             # Ownership and workflow
@@ -150,9 +155,11 @@ lunav_one/
     └── pitch/
         ├── mission_explainer.md
         ├── submission_draft.md
-        ├── demo_script.md
+        ├── demo_30s.md          # Official short submission demo
+        ├── demo_script.md       # Complementary extended demo
         ├── illumination_comparison.md
-        └── final_science_review.md # Scientific and image-source review
+        ├── final_science_review.md # Historical scientific and image-source review
+        └── catalog_expansion_review.md # 17-site provenance and temporal integration
 ```
 
 ## Data Sources
@@ -164,11 +171,13 @@ lunav_one/
 
 ## Team
 
+Team name: **Lunav One**.
+
 | Member | Role |
 |---|---|
-| Gabriel | Data & Science |
-| Igor | Interface & Deployment |
-| Renata | Sites, Context & Pitch |
+| João Gabriel Santos | Data & Science |
+| Igor Wanderley | Interface & Deployment |
+| Renata Andrade | Sites, Context & Pitch |
 
 See [docs/TEAM_PLAN.md](docs/TEAM_PLAN.md) for details.
 
@@ -201,7 +210,7 @@ selecting one displays an explanation.
 ## Catalog provenance and conventions
 
 Coordinates use degrees, north-positive latitude and east-positive longitude in
-[-180, 180]. The initial set has eight Catalog Sites for Explorer context and
+[-180, 180]. The catalog has 17 Catalog Sites for Explorer context and
 Site Planner analysis. Four specific study points are prioritized;
 no pre-computation is performed by the catalog module itself.
 
@@ -214,6 +223,15 @@ no pre-computation is performed by the catalog module itself.
 | Malapert Massif | -85.9948 | -0.23578 | NASA Table A2-2 region center, R23 / Site23 |
 | Faustini Rim A | -87.8897 | 90.0 | NASA Table A2-2 region center, LM7 |
 | Haworth | -86.7639 | -22.777 | NASA Table A2-2 region center, Haworth |
+| Peak Near Shackleton | -88.811 | 123.6901 | NASA Table A2-2 region center, R07 / Site07 |
+| Connecting Ridge Extension | -89.0324 | -101.999 | NASA Table A2-2 region center, SL3 |
+| de Gerlache Rim 1 | -88.6834 | -67.9321 | NASA Table A2-2 region center, R11 / Site11 |
+| de Gerlache Rim 2 | -88.23 | -64.6284 | NASA Table A2-2 region center, SL2 |
+| de Gerlache-Kocher Massif | -85.8296 | -116.322 | NASA Table A2-2 region center, R42 / Site42 |
+| Leibnitz Beta Plateau (historical region) | -85.4266 | 31.74276 | NASA Table A2-2 historical region center, R20 / Site20 |
+| Nobile Rim 1 | -85.4381 | 37.36667 | NASA Table A2-2 region center, R06 / Site06 |
+| Nobile Rim 2 | -83.954 | 58.82206 | NASA Table A2-2 region center, DM2 |
+| Amundsen Rim | -84.2287 | 69.44396 | NASA Table A2-2 region center, DM1 |
 | Apollo 11 (Tranquility Base) | 0.67416 | 23.47314 | Historical lunar module location |
 
 [Gläser et al. (2017), Table 2, PDF page 12](https://ntrs.nasa.gov/api/citations/20170007365/downloads/20170007365.pdf)
@@ -229,16 +247,34 @@ See the [frame evidence and Earth Visibility comparison](docs/pitch/illumination
 Existing dictionary keys are retained for compatibility. **The key
 `Shackleton Crater (Rim)` now uses S1 instead of the previous Site04 region center
 (-89.7668, -171.87).** The current manifest matches S1. The loader rejects
-pre-computed entries whose manifest coordinates differ from the catalog.
+pre-computed entries whose manifest coordinates differ from the catalog or whose
+START/END dates differ from the supported 2027–2028 window.
 The legacy key `Malapert Massif (Summit)` remains a region center, not a verified
 summit. Regional centers are from NASA's Lunar Surface Data Book ACD-50044 Rev A
 (2023), Table A2-2, printed pages 57–58. Each entry records its source, coordinate
-meaning and validation status. The map uses diamonds for study points, circles
+meaning and validation status. The separate offline Plotly map uses diamonds for study points, circles
 for regional centers, and squares for actual landing locations within its extent. A symbol key explains these types;
 hover information groups coordinates, context, provenance and validation status.
 
-Peak Near Shackleton, Nobile Rim 1, IM-1 Odysseus and IM-2 Athena are deferred to
-limit automatic pre-computation costs; no approximate Malapert summit is included.
+The 17 entries comprise 12 regional centers, four specific illumination-study
+points and Apollo 11. They represent all 13 regions in the historical
+[NASA August 2022 list](https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-moon/),
+with Connecting Ridge represented by C1/C2 rather than its regional center
+(R01/Site01: -89.4632, -137.49). The Shackleton S1/S2 points are additional study
+locations, not extra 2022 candidate regions. CLPS landings are not added here.
+
+Haworth was listed in both 2022 and the
+[October 2024 revision](https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/).
+The mountain informally called Leibnitz Beta is now officially named
+[Mons Mouton](https://svs.gsfc.nasa.gov/5074/).
+Its legacy catalog key and coordinates remain unchanged. Regional selection and
+nomenclature changed in 2024: Mons Mouton and Mons Mouton Plateau are listed
+separately. The older polygon is not documented here as equivalent to either
+revised region, so no automatic retention in the 2024 list is claimed. This catalog is not a complete set of the
+nine revised 2024 regional centers. All 17 Overviews now include sourced context;
+the nine new entries explicitly label their shared NASA LROC mosaic as regional
+context rather than a photograph of the exact coordinate. See the
+[catalog expansion review](docs/pitch/catalog_expansion_review.md).
 Historical Artemis III candidate-region associations are separate from
 [NASA's 2026 architecture](https://www.nasa.gov/news-release/nasa-adds-mission-to-artemis-lunar-program-updates-architecture/):
 Artemis III is an Earth-orbit demonstration planned for 2027, while Artemis IV
@@ -267,16 +303,40 @@ There is no need to run pre-computation for documentation-only changes.
 [Preliminary literature comparison](docs/pitch/illumination_comparison.md) records
 four study points. With the combined 20 m/80 m terrain, all four mean
 illumination estimates differ from the paper by less than 1.2 percentage points. Earth
-visibility at all seven polar Catalog Sites is compared with NASA's PGDA average Earth
+visibility at the seven polar Catalog Sites evaluated in the reference study is compared with NASA's PGDA average Earth
 visibility map: six are within 1.3 percentage points and all within 4.6
 (`python -m scripts.compare_pgda`). These are consistency checks, not a claim of
 independent mission validation.
 
-## Scientific explanation and presentation drafts
+Custom Site names are checked again when saved, rejecting empty or already-used
+names. If a saved location fails to compute its Explorer states, that coordinate
+remains without a badge for the rest of the session instead of retrying on every
+interaction (PR #42).
+
+## Scientific explanation and demo scripts
 
 - [Mission explainer](docs/pitch/mission_explainer.md): accessible scientific background.
 - [Submission draft](docs/pitch/submission_draft.md): current work, intended impact and pending details.
-- [Three-minute demo script](docs/pitch/demo_script.md): demonstrated features versus planned work.
+- [Official short demo script](docs/pitch/demo_30s.md): submission video, at most 30 seconds.
+- [Extended demo script](docs/pitch/demo_script.md): approximately three minutes of complementary material.
+
+## Demo Videos
+
+**Official Demo — 30 seconds**
+
+The team will submit only this short video as its official NASA Space Apps
+Challenge demonstration. No slide presentation is planned. Recording and publication are pending. [Recording script](docs/pitch/demo_30s.md).
+
+<!-- When published, add the real public video link here, labeled Official Demo. -->
+
+**Extended Demo — approximately 3 minutes**
+
+Complementary material showing the interface, site selection, temporal indicators
+and Site Planner in more detail, to be shared here on GitHub. It does not replace
+the official short demo and is not the demonstration submitted for judging.
+Recording and publication are pending. [Recording script](docs/pitch/demo_script.md).
+
+<!-- When published, add the real public video link here, labeled Extended Demo. -->
 
 ## External services and integration status
 
@@ -331,4 +391,4 @@ tool. The schematic map itself does not calculate terrain or illumination.
 
 Application: [Lunav One](https://lunavone.streamlit.app/).
 
-Demonstration video: pending publication.
+Demo videos: recording and publication pending; see [Demo Videos](#demo-videos).

@@ -89,21 +89,57 @@ def test_a_named_custom_site_stays_on_the_map_until_removed():
     assert not at.exception
 
 
-def test_a_name_typed_just_before_the_click_is_still_checked():
+def test_planner_sends_all_catalog_states_alongside_the_asset(monkeypatch):
+    from src.panels import planner
+    from src.sites import LUNAR_SITES
+    received = []
+    original = planner.planner_time
+    def capture(*args, **kwargs):
+        payload = original(*args, **kwargs)
+        received.append(payload)
+        return payload
+    monkeypatch.setattr(planner, 'planner_time', capture)
+    at = AppTest.from_file('../app.py', default_timeout=120).run()
+    at.button(key='rail_planner').click().run()
+    assert not at.exception and received
+    payload = received[-1]
+    assert set(payload['states']) == {*LUNAR_SITES, 'asset'}
+    assert payload['hours'] == 14 * 24
+
+
+def test_a_name_typed_just_before_the_click_is_still_checked(monkeypatch):
     """The button was enabled for the previous name; a taken or empty name sent with the click saves nothing."""
+    import rasterio
+    import requests
+
+    network_attempts = []
+    def unexpected_network(*args, **kwargs):
+        network_attempts.append(args[0] if args else kwargs)
+        raise RuntimeError("Name validation must use pre-computed data, without Horizons or remote DEM reads")
+
+    monkeypatch.setattr(requests, "get", unexpected_network)
+    monkeypatch.setattr(rasterio, "open", unexpected_network)
     at = AppTest.from_file("../app.py", default_timeout=120).run()
     at.session_state["custom"] = {"lat": -89.4398, "lon": -137.17}
     at.button(key="rail_planner").click().run()
     at.text_input(key="planner_name").input("Ridge A").run()
     at.button(key="planner_save").click().run()
     saved = dict(at.session_state["saved_sites"])
+    # The coordinate widgets disappear while a saved site is selected, so Streamlit cleans their keys.
+    # Seed the covered point again before recreating them; their defaults (-89.5, 0) need live science.
+    at.session_state["planner_lat"], at.session_state["planner_lon"] = -89.4398, -137.17
     at.selectbox(key="planner_site").set_value("Custom Site").run()
+    assert at.number_input(key="planner_lat").value == -89.4398
+    assert at.number_input(key="planner_lon").value == -137.17
+    assert not at.error
     for name in ("Ridge A", "Haworth", "  "):
         at.text_input(key="planner_name").input("Ridge B").run()  # enables the button
         at.text_input(key="planner_name").input(name)
         at.button(key="planner_save").click().run()
         assert at.session_state["saved_sites"] == saved, name
+        assert not at.error
     assert not at.exception
+    assert not network_attempts
 
 
 def test_a_failing_saved_site_is_not_retried_on_every_rerun(monkeypatch):

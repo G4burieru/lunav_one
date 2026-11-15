@@ -9,8 +9,8 @@ from src.conditions import cell_corners, live_neighborhood_horizons, live_neighb
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
 from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, SAVED_PREFIX, VIEW_CHOICE, VIEWS,
-                               data_note, format_countdown, get_neighborhood, icon, load, saved_sites,
-                               selected_instant, site_label, time_payload)
+                               data_note, format_countdown, get_neighborhood, icon, load, planner_time, saved_sites,
+                               selected_instant, site_label)
 from src.sites import LUNAR_SITES
 from src.terrain import SOUTH_POLE_DEM_LIMIT
 
@@ -231,4 +231,4 @@ def render():
     if df is None:
         return view
     at = results(df, mask, days)  # the time bar starts there when its window changes
-    return {**view, "time": time_payload({"asset": df}, instant=f"{at:%Y-%m-%dT%H:%M:%SZ}", elevation_mask=mask)}
+    return {**view, "time": planner_time(df, instant=f"{at:%Y-%m-%dT%H:%M:%SZ}", elevation_mask=mask)}

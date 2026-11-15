@@ -5,6 +5,8 @@ to its page there. Images of uncertain origin or with reuse limits (LROC feature
 the Apollo 15 "Malapert" photo, the Faustini and Diviner images) are left out.
 A place is (title, text, [(image URL, caption with credit, source page)]).
 """
+from src.sites import ARTEMIS_2022_SOURCE, ARTEMIS_2024_SOURCE, POLAR_SOURCE
+
 _ASSETS, _DETAILS = "https://images-assets.nasa.gov/image/", "https://images.nasa.gov/details/"
 
 
@@ -71,3 +73,82 @@ PLACES = {
                "NASA/GSFC/Arizona State University")],
     ),
 }
+
+
+def _regional_overview(title, geography, in_2024=False, naming_source=None):
+    """Regional context, not an exact-coordinate photograph or a landing assessment."""
+    history = ("This region was included in NASA's historical 2022 Artemis III candidate list. "
+               "The Catalog Site is the Data Book's representative region center, not a verified "
+               "summit or landing point. ")
+    sources = f"[NASA 2022]({ARTEMIS_2022_SOURCE}) · [Coordinate table]({POLAR_SOURCE})"
+    if in_2024:
+        history += "The associated region also appears in NASA's revised 2024 list. "
+        sources += f" · [NASA 2024]({ARTEMIS_2024_SOURCE})"
+    if naming_source:
+        sources += f" · [Name and geographic context]({naming_source})"
+    image = _nasa("PIA13523", "medium",
+                  "Regional context: LROC Wide Angle Camera mosaic of the lunar south polar region, "
+                  "not a close-up or marker of this Catalog Site's exact coordinates. "
+                  "NASA/GSFC/Arizona State University")
+    return title, geography + " " + history + "Sources: " + sources, [image]
+
+
+PLACES.update({
+    "Peak Near Shackleton": _regional_overview(
+        "Peak Near Shackleton",
+        "A high-terrain study region near Shackleton crater. Its name describes the surrounding "
+        "terrain; the catalog coordinate is not a surveyed peak. Local ridges can change the Terrain Horizon.",
+    ),
+    "Connecting Ridge Extension": _regional_overview(
+        "Connecting Ridge Extension",
+        "A study region extending the Connecting Ridge area near the lunar south pole. It is distinct "
+        "from the Connecting Ridge regional center and from the specific Gläser C1/C2 study points.",
+    ),
+    "de Gerlache Rim 1": _regional_overview(
+        "de Gerlache Rim 1",
+        "One of two named study regions around de Gerlache crater's rim. Elevated terrain and nearby "
+        "crater walls make sunlight and Earth Visibility dependent on the precise position and time.",
+    ),
+    "de Gerlache Rim 2": _regional_overview(
+        "de Gerlache Rim 2",
+        "A second study region associated with de Gerlache crater's rim, separate from Rim 1. "
+        "A regional rim name does not establish that every point lies on the crest.",
+        in_2024=True,
+    ),
+    "de Gerlache-Kocher Massif": _regional_overview(
+        "de Gerlache-Kocher Massif",
+        "A south polar massif study region associated with de Gerlache and Kocher craters. Its raised "
+        "terrain is useful context for exploring how topography changes the visible Sun and Earth.",
+    ),
+    "Leibnitz Beta Plateau": _regional_overview(
+        "Historical Leibnitz Beta Plateau region / Mons Mouton",
+        "Leibnitz Beta was an informal name for the mountain now officially named Mons Mouton, "
+        "near Nobile crater. The catalog keeps the historical 2022 region center and identifier. "
+        "NASA revised the regional selection and nomenclature in 2024, listing Mons Mouton "
+        "and Mons Mouton Plateau separately. This naming correspondence does not establish "
+        "that the older polygon matches either revised region; its center is not presented "
+        "as the center of either 2024 region. "
+        f"[NASA 2024 regional update]({ARTEMIS_2024_SOURCE}).",
+        naming_source="https://svs.gsfc.nasa.gov/5074/",
+    ),
+    "Nobile Rim 1": _regional_overview(
+        "Nobile Rim 1",
+        "A study region associated with Nobile crater's rim in the south polar highlands. "
+        "Nearby slopes and crater walls affect the Terrain Horizon; the regional name alone "
+        "does not determine illumination at a particular point.",
+        in_2024=True,
+    ),
+    "Nobile Rim 2": _regional_overview(
+        "Nobile Rim 2",
+        "A separate Nobile rim study region, with a different representative center from Rim 1. "
+        "Comparisons should use each location's modeled conditions rather than assuming equal "
+        "sunlight or Earth Visibility across the rim.",
+        in_2024=True,
+    ),
+    "Amundsen Rim": _regional_overview(
+        "Amundsen Rim",
+        "A study region associated with Amundsen crater's rim near the south pole. "
+        "The catalog center describes a region of interest, not the crater center or a "
+        "topographically verified crest.",
+    ),
+})

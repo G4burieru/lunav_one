@@ -83,7 +83,11 @@ dates. **Site Planner** evaluates a chosen location, Asset Height and Elevation
 Mask. Pre-computed neighborhoods use 100 m spacing: a chosen location is snapped
 to the nearest supported point, rather than evaluated with unlimited precision. Pre-computed
 Terrain Horizons and ephemerides now cover the 17 Catalog Sites for 2027–2028
-at a 2 m Asset Height. Their availability is distinct from full scientific
+at a 2 m Asset Height. The entries include 12 regional centers, four studied
+points and one historical landing. C1/C2 are not the Connecting Ridge regional
+center; the legacy Leibnitz Beta name refers to Mons Mouton. Regional Overview
+mosaics provide geographic context, not exact-coordinate photographs. See the
+[catalog source review](catalog_expansion_review.md). Their availability is distinct from full scientific
 validation; see the [preliminary literature comparison](illumination_comparison.md).
 
 Illumination and Earth Visibility are two factors in exploration planning. A
