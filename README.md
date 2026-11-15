@@ -22,18 +22,32 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Site Card | 2027–2028 averages, Longest Night, Longest Earth Absence, metric ranks, source context |
 | Site Card tabs | Overview, Sun & Earth (28-day charts), Seasons (monthly summaries) |
 | Site Planner | Where, Surface Asset, When, Results; Asset Height, Elevation Mask and countdowns |
-| Site Neighborhood | Selectable cells on the polar map for Catalog Sites at or south of 80°S, at 2 m Asset Height |
+| Site Neighborhood | Polar-map cells: pre-computed for Catalog Sites at 2 m; computed on demand for Custom Sites and other heights at or south of 80°S |
 | Custom Site | Coordinate search or confirmed point selection on globe/map; live calculation where needed |
 | Offline alternative | src/site_map.py exports a schematic Plotly map, separate from the Moon View |
 | Data pipeline | Eight sites pre-computed hourly for 2027–2028 at 2 m, automatic regeneration workflow |
-| Time playback and additional layers | No working time-bar playback or Layers panel in this checkout; Planner neighborhood cells are implemented |
+| Moon View time bar | Hourly UTC slider, Play/Pause and dynamic Sun/Earth marker states |
+| Site Card synchronization | Updates selected-instant information and charts when the slider is released or playback paused |
+| Globe rotation | Starts automatically unless reduced motion is requested; stops at the first interaction |
+| Additional layers | Layers Panel is not implemented in this checkout |
 | Full scientific/operational validation | Not completed |
 
-The Explorer's Site Card summary always covers 2027–2028 at 2 m. The selected-instant
-line and its 28-day charts describe a shorter interval. The Moon View time-bar
-integration is pending: without an instant event, the Site Card uses the first
-2027 sample. Site Planner currently uses its own Instant slider and Analysis Window.
-These scopes must not be confused with each other or with NASA's long-term layers.
+The Explorer's Site Card summary always covers 2027–2028 at 2 m. Moving or playing
+the Moon View time bar changes the marker states immediately. Releasing the slider
+or pausing sends the UTC instant to the Site Card's selected-instant line and
+28-day charts; it does not change the two-year averages or ranks. If no instant
+has been sent, the first sample is used. In Site Planner the Moon View time bar
+covers its Analysis Window; the results panel still has its own Instant slider.
+That panel's countdowns are not yet driven by the Moon View bar.
+
+Marker **shape** identifies the coordinate type: diamond for a studied point,
+circle for a regional center, square for a historical landing, and triangle for
+an approximate reference. Custom Sites use a ticked ring; a Surface Asset uses
+a cross in a circle. With time data, **fill level** represents the visible solar
+disk fraction, while the **small upper-right dot** is filled for Earth Visibility
+and hollow when Earth does not meet the visibility criterion. These are modeled
+states, not power generation or communications status. The globe's initial
+rotation stops at the first interaction and is disabled for reduced-motion users.
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
 The eight entries now have pre-computed data. Numerical comparison with the
@@ -79,6 +93,7 @@ lunav_one/
 │   │   ├── __init__.py          # Component contract and asset loading
 │   │   ├── globe.js             # 3D Moon, NASA textures and markers
 │   │   ├── polar_map.js         # Leaflet + Moon Trek south polar tiles
+│   │   ├── time_bar.js          # UTC slider, playback and hourly marker states
 │   │   ├── view.js              # Shared view state and events
 │   │   └── view.css
 │   ├── panels/                 # Floating panels
@@ -262,9 +277,10 @@ it is not a local copy of the real imagery or the full application.
 
 `docs/UI_OVERHAUL.md` is a plan as well as a status record. The current rail opens
 Catalog, Plan and About. The Site Planner already draws selectable Site
-Neighborhood cells on the polar map. Time-bar playback, full in-view navigation
-and additional NASA Sunlight/Earth visibility layer controls require verification
-after their integration. Prepared data, helper functions and legend
+Neighborhood cells on the polar map. UTC time-bar playback and dynamic marker
+states are implemented. The Layers Panel, full in-view navigation and additional
+NASA Sunlight/Earth visibility layer controls still require integration or
+verification; they are not implied by the existing base-layer switches. Prepared data, helper functions and legend
 text do not by themselves make these controls available. No side-by-side comparison
 table is present in the current interface; the catalog is sortable by metric.
 
@@ -285,13 +301,18 @@ require live requests. Custom Sites outside the south-pole DEM use the Ideal
 Horizon if no pre-computed neighborhood is available, with a warning.
 
 Monthly charts are in Site Card → Seasons. For a polar Catalog Site at 2 m,
-Site Planner colors the map's neighborhood cells by Sunlight or Earth Visibility
-for the chosen Analysis Window and Elevation Mask. Clicking a cell moves the
+Site Planner uses the pre-computed neighborhood. For a Custom Site or other Asset
+Height at or south of 80°S, Paint the Site Neighborhood explicitly starts a live
+calculation; it may take longer or fail if external services are unavailable.
+The neighborhood is centered on the chosen point, with 100 m spacing over a 2 km
+radius. Colors summarize Sunlight or Earth Visibility over the Analysis Window;
+the Elevation Mask affects Earth Visibility. Clicking a cell moves the
 Surface Asset and updates its results. Best cell selects the highest value for
-the current metric; ties use the first maximum in the data. It is not an overall
-landing recommendation. A dashed outline marks that cell and a solid outline
-marks the selected one; Back to the site restores the catalog position. The
-neighborhood is not shown for Custom Sites, nonpolar sites or other heights.
+the current metric when cell values differ by at least 0.5 percentage points;
+otherwise No better cell is shown. Ties use the first maximum. This is not an
+overall landing recommendation. A dashed outline marks the best cell when one
+is identified, and a solid outline marks the selected one. Back to the site
+restores the neighborhood center. No neighborhood is offered north of 80°S.
 The former Plotly neighborhood chart has been removed; src/site_map.py remains
 the separate schematic Plotly export for offline use. Reference-frame compatibility has been checked; a complete
 uncertainty, vehicle-safety or operational assessment has not been performed. The literature

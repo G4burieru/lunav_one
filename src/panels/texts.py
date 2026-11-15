@@ -70,6 +70,20 @@ Asset Height**. Rankings compare only the eight Catalog Sites and the selected m
 they do not rank landing safety. The selected-instant line and 28-day Sun & Earth charts
 describe a shorter interval; the Seasons chart groups results by month.
 
+**Read the Moon View.** Drag the UTC time bar or use Play/Pause to explore hourly
+states. Marker fill follows the visible fraction of the Sun's disk; the small
+upper-right dot is filled when Earth meets the visibility criterion and hollow
+when it does not. Shape identifies the location type: diamond (studied point),
+circle (region center), square (historical landing), triangle (approximate reference).
+A Custom Site is a ticked ring; a Surface Asset is a cross in a circle. These symbols
+do not classify landing safety, power output or radio-link performance.
+
+Markers update while time moves. Release the slider or pause to update the Site
+Card's instant and charts; its two-year averages stay fixed. In Site Planner the
+Moon View bar follows the Analysis Window, but the panel's countdowns still use
+its own Instant slider. Initial globe rotation stops at the first interaction
+and is disabled when the system requests reduced motion.
+
 - **Sunlight** is the mean **Illumination Fraction**: the portion of the Sun's disk above
   the **Terrain Horizon**, averaged over time. Partial views count proportionally. It
   is neither electrical energy nor simply the percentage of hours with any sunlight.
@@ -100,7 +114,10 @@ from the Site Card; their values must not be read as the same calculation.
 **Coverage and limits.** Covered Catalog Site scenarios use pre-computed hourly data;
 other supported cases compute live and can take longer or fail if services are unavailable.
 Pre-computed Site Neighborhoods use 100 m spacing within 2 km at 2 m height, with nearby
-positions snapped to a supported point. An Ideal Horizon fallback is identified where
+positions snapped to a supported point. In the supported polar region (at or south
+of 80°S), Custom Sites and other heights can request a neighborhood with Paint the
+Site Neighborhood; this starts a live calculation and may take longer. An Ideal
+Horizon fallback is identified where
 terrain is unavailable. Literature comparisons are consistency checks, not independent
 validation: source data are shared and analysis periods differ. We do not certify landing
 safety, permanent illumination, usable power, thermal survival or operational communications.
