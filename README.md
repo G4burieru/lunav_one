@@ -41,18 +41,14 @@ by themselves end the spin. **3D relief ×5 is a visual aid**: it does not chang
 coordinates, Asset Height or the scientific calculations. The Photos/Relief
 base-layer selector and the 3D relief toggle are separate controls.
 
-<!-- Optional future GIF: real application footage of globe relief and Rotate. -->
-<!-- Optional future GIF: real time-bar interaction and Sun/Earth badges. -->
-<!-- Optional future GIF: real Site Planner and Site Neighborhood interaction. -->
+## Official Demo
 
-## Official Demo — 30 seconds
+[**Watch the official demo on YouTube**](https://youtu.be/ASh9yAMIm1U)
 
-The same short video will be used for the official Space Apps submission and
-as the project's public demonstration here. **Recording and publication are
-pending.** The [English script](docs/pitch/demo_30s.md) includes the team,
-problem, working application, NASA inputs and educational impact.
-
-<!-- Add the real public Official Demo video link here after recording and review. -->
+This is the project's main public demonstration and the video prepared for the
+official Space Apps submission.
+The [English script](docs/pitch/demo_30s.md) covers the team, problem, working
+application, NASA inputs and educational impact.
 
 ## Technologies
 

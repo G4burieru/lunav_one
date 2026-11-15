@@ -99,6 +99,8 @@ lunav_one/
 ├── scripts/
 │   ├── precompute.py            # Generates data/catalog/
 │   └── compare_pgda.py          # Numerical PGDA consistency check
+├── media/
+│   └── lunavone.mp4             # Local copy of the official demo
 ├── static/
 │   └── icons/                  # SVG interface icons
 ├── data/

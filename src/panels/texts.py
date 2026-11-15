@@ -134,6 +134,8 @@ validation: source data are shared and analysis periods differ. We do not certif
 safety, permanent illumination, usable power, thermal survival or operational communications.
 """,
     "Sources and credits": """
+[Source code: G4burieru/lunav_one](https://github.com/G4burieru/lunav_one)
+
 [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/manual.html) ·
 [NASA PGDA / LOLA](https://pgda.gsfc.nasa.gov/products/78) ·
 [Moon Trek](https://trek.nasa.gov/moon/) ·

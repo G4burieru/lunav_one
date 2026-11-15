@@ -106,7 +106,8 @@ Use Connecting Ridge C1 and a covered 2 m window to avoid live waits. Rehearse
 real marker transitions and the same time selection in Planner; check the hosted
 build matches this branch. Keep the schematic Plotly export available offline.
 Resolve the above caption/credit issues before showing affected Overview images.
-The demo is a timed draft; browser rehearsal and video publication remain pending.
+At the time of this historical review, the demo was a timed draft. The
+[official recording](https://youtu.be/ASh9yAMIm1U) is now available through the README.
 
 Software validation: `python -m pytest -q` — **91 passed**. All ten public text
 constant names and their panel imports were preserved; `git diff --check` passed.
