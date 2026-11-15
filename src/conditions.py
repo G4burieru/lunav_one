@@ -50,11 +50,14 @@ def cell_corners(site, east, north, size=catalog.NEIGHBORHOOD_SPACING_M):
     return np.stack([lats, lons], axis=-1).reshape(-1, 4, 2)
 
 
+# A point this close to a Catalog Site uses its pre-computed Site Neighborhood: the nearest grid point is in it.
+PRECOMPUTED_REACH_M = catalog.NEIGHBORHOOD_RADIUS_M + catalog.NEIGHBORHOOD_SPACING_M / 2
+
+
 def _catalog_match(lat, lon):
-    reach = catalog.NEIGHBORHOOD_RADIUS_M + catalog.NEIGHBORHOOD_SPACING_M / 2
     for name, site in LUNAR_SITES.items():
         east, north = offset_from(site, lat, lon)
-        if np.hypot(east, north) > reach:
+        if np.hypot(east, north) > PRECOMPUTED_REACH_M:
             continue
         data = catalog.load_site(name, site)
         if data is not None and data[1] is not None:

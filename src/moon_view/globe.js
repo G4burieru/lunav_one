@@ -5,8 +5,8 @@ const globeView = (() => {
   const TILE_URL = "https://trek.nasa.gov/tiles/Moon/EQ/{layer}/1.0.0/default/default028mm/{level}/{row}/{col}.{ext}";
   // Equirectangular Moon Trek layers: [layer, tile extension, highest level to load]; level n = 2^(n+1) x 2^n tiles.
   const LAYERS = {
-    Imagery: ["LRO_WAC_Mosaic_Global_303ppd_v02", "jpg", 3],  // LROC WAC global mosaic, 4096 x 2048 px
-    Elevation: ["LRO_LOLA_ClrShade_Global_128ppd_v04", "png", 3],  // LOLA color shaded relief
+    Photos: ["LRO_WAC_Mosaic_Global_303ppd_v02", "jpg", 3],  // LROC WAC global mosaic, 4096 x 2048 px
+    Relief: ["LRO_LOLA_ClrShade_Global_128ppd_v04", "png", 3],  // LOLA color shaded relief, as on the polar map
   };
   const BUMP = ["LRO_LOLA_DEM_Global_128ppd_v04", "png", 2];  // LOLA elevation (grayscale) for bump shading
   const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -202,7 +202,7 @@ const globeView = (() => {
       .htmlElementVisibilityModifier((marker, visible) => marker.classList.toggle("behind", !visible))
       .ringLat("lat").ringLng("lng").ringColor(() => t => `rgba(230, 107, 39, ${1 - t})`)
       .ringMaxRadius(2.5).ringPropagationSpeed(2).ringRepeatPeriod(900)
-      .onGlobeClick(({ lat, lng }, event) => askToAnalyze(state, lat, lng, event));
+      .onGlobeClick(({ lat, lng }, event) => deselect(state) || askToAnalyze(state, lat, lng, event));
     globe.controls().autoRotateSpeed = 0.35;
     globe.controls().addEventListener("start", () => state.closeBalloon?.());
     state.globe = globe;

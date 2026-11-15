@@ -20,10 +20,10 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   - Photos stacks the WAC mosaic to 60°S (levels 0–4) under the NAC mosaic to 85.5°S (0–11). Relief stacks the LOLA
     color shaded relief to 55°S (0–4), to 75°S (0–6) and to 87.5°S (0–9). The Earth visibility tiles for A8 use the
     same grid, with levels 0–6.
-  - The globe/map switch is still the segmented control at the top of the Explorer panels. Choosing a site moves
-    it: polar sites (south of 80°S) open the map and the others open the globe (`view_request` in `app.py`). An
-    in-view switch (A7) only needs to change the view in JavaScript, because the view keeps its own choice until
-    `view_id` changes.
+  - The globe/map switch is a button at the top right of the view, before Photos and Relief (the same two base
+    layers on both views): it names the other view and switches in JavaScript alone, because the view keeps its
+    own choice until `view_id` changes. Choosing a site still switches to the view that shows it: polar sites
+    (south of 80°S) open the map and the others open the globe (`view_request` in `app.py`).
   - A click on a marker, or Enter or Space on a focused marker, sends `site`. The map centers the selected site in
     the area to the right of the panel. It centers again when the panel changes width, unless the user has moved
     the map.
@@ -62,7 +62,7 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   keyword arguments for `moon_view`, so `app.py` now fills the view after the panel. The Site Planner returns
   `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. It keeps its own
   Instant slider until A3 covers the Planner window.
-- **Done: C4.** `python -m scripts.render_overlays` writes the Sunlight overlay for A8, and since A8 also the Earth one:
+- **Done: C4** (removed with B7 in PR #33). `python -m scripts.render_overlays` writes the Sunlight overlay for A8, and since A8 also the Earth one:
   - `static/overlays/sun_85s.png` is 1264 × 1264 px at 240 m per pixel, about 1 MB.
   - `sun_85s.json` holds its bounds, ±151740 m in the same polar stereographic CRS as the Moon Trek tiles.
   - In Leaflet: `L.Proj.imageOverlay("app/static/overlays/sun_85s.png", L.bounds([-151740, -151740], [151740,
@@ -90,7 +90,7 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   horizons match the pre-computed ones within 0.005°. When every cell has the same value, no best cell is marked.
 - **Busy indicator:** Streamlit's header is transparent instead of hidden, so its Running and Stop indicator shows at
   the top center while a click is processed; without it a slow click looked ignored.
-- **Done: A8 and B7.** The rail has a Layers panel with two switches, Sunlight and Earth visibility, each with its
+- **Done: A8 and B7, then removed in PR #33:** the panel was neither intuitive nor informative. The rail had a Layers panel with two switches, Sunlight and Earth visibility, each with its
   legend and Renata's explanation (`texts.SUN_LAYER`, `texts.EARTH_LAYER`). The choice lives in
   `st.session_state["overlays"]`, so layers stay on in the other panels, and showing one switches to the map.
   `drawLayers()` in `polar_map.js` stacks three images per layer, finest on top, in a translucent pane between
@@ -270,19 +270,19 @@ Python to Moon View (`data`):
 | `selected` | Catalog Site key or `null` |
 | `custom`, `asset` | `{lat, lon}` or `null`: the Custom Site, and the Surface Asset position in the Planner |
 | `time` | `{start, hours, instant, states: {key: base64}}`; one byte per hour: bits 0–6 illumination fraction × 100, bit 7 Earth visible |
-| `overlays` | a subset of `["earth", "sun"]` |
+| `zones` | `{terrain_lat, precomputed_m, precomputed: [keys]}`: where a clicked point's analysis comes from, drawn as dashed rings on the map |
 | `neighborhood` | `null` or `{site, center: {lat, lon}, reach_m, label, selected, best, cells: [{corners: [[lat, lon] × 4], value, color}]}` |
 
 Moon View to Python:
 
 | Event | Kind | Value |
 |---|---|---|
-| `site` | trigger | key of a clicked site |
+| `site` | trigger | key of a clicked site, or `""` for a click beside the sites (clears the selection) |
 | `point` | trigger | `{lat, lon}` after Analyze |
 | `cell` | trigger | index of a clicked Site Neighborhood cell |
 | `instant` | state | ISO time, sent when the bar is released or paused |
 
-The panels share `st.session_state` keys `panel` (`catalog`, `site`, `planner`, `layers`, `about`), `selected` and
+The panels share `st.session_state` keys `panel` (`catalog`, `site`, `planner`, `about`), `selected` and
 `custom`.
 
 ## Tasks

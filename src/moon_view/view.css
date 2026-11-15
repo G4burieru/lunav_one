@@ -5,20 +5,23 @@
 .moon-view[data-view="map"] .globe, .moon-view[data-view="globe"] .polar-map { visibility: hidden; }
 .moon-view[data-view="map"] [data-for="globe"], .moon-view[data-view="globe"] [data-for="map"] { display: none; }
 .overlay { position: absolute; pointer-events: none; text-shadow: 0 1px 3px #000; }
-/* Centered in the part of the view the app's panel leaves uncovered (--panel-right is set by view.js). */
-.hint, .status, .time-bar { left: calc(var(--panel-right, 0px) + (100% - var(--panel-right, 0px)) / 2);
-  transform: translateX(-50%); }
+/* The status, the hints and the time bar, stacked at the bottom, centered in the part of the view the app's panel
+   leaves uncovered (--panel-right is set by view.js). Stacked, the time bar can grow without covering the hints. */
+.bottom { bottom: 30px; left: calc(var(--panel-right, 0px) + (100% - var(--panel-right, 0px)) / 2);
+  transform: translateX(-50%); width: min(640px, calc(100% - var(--panel-right, 0px) - 140px));
+  display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .hint, .status { text-align: center; white-space: nowrap; }
-.hint { bottom: 34px; font-size: 0.85rem; opacity: 0.75; }  /* one line above the credit */
-.status { bottom: 58px; font-size: 0.8rem; opacity: 0.85; }
-.has-time .hint { bottom: 112px; }  /* above the time bar */
-.has-time .status { bottom: 136px; }
+.hint { font-size: 0.85rem; opacity: 0.75; }
+.status { font-size: 0.8rem; opacity: 0.85; }
+.status:empty { display: none; }
 .layers { top: 14px; right: 14px; pointer-events: auto; display: flex; gap: 4px; }
 .choices { display: flex; gap: 4px; }
 .layers button { background: rgba(20, 22, 30, 0.75); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.25);
   border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; cursor: pointer; }
 .layers button.active { background: #e66b27; border-color: #e66b27; color: #fff; }
 .layers button.fullscreen { margin-left: 8px; }
+.layers button.view-switch { margin-right: 8px; display: inline-flex; align-items: center; gap: 6px; }
+.view-switch img { width: 14px; height: 14px; }
 .credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
 /* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
 .moon-view:fullscreen { height: 100vh; }
@@ -29,7 +32,7 @@
 .info-text { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; line-height: 1.35; }
 
 /* Time bar (time_bar.js). */
-.time-bar { bottom: 30px; width: min(640px, calc(100% - var(--panel-right, 0px) - 140px)); box-sizing: border-box;
+.time-bar { width: 100%; box-sizing: border-box;
   display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 10px; padding: 8px 12px;
   pointer-events: auto; text-shadow: none; background: rgba(14, 17, 23, 0.88);
   border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; }
@@ -39,30 +42,57 @@
 .time-bar .play svg { width: 16px; height: 16px; fill: currentColor; }
 .time-bar .play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .time-slider { width: 100%; margin: 0; accent-color: #e66b27; cursor: pointer; }
-.time-label { font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.time-readout { grid-column: 2 / -1; min-height: 1.2em; font-size: 0.78rem; opacity: 0.9; }
+.time-label { font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+.time-date { width: 16ch; font: inherit; font-variant-numeric: tabular-nums; color: #e8e8e8;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.22); border-radius: 6px; padding: 3px 7px; }
+.time-date:hover { border-color: rgba(255,255,255,0.4); }
+.time-date:focus { outline: none; border-color: #e66b27; box-shadow: 0 0 0 1px #e66b27; }
+.time-date.invalid { border-color: #e86a5f; box-shadow: 0 0 0 1px #e86a5f; }
+.time-readout { grid-column: 2; min-height: 1.2em; font-size: 0.78rem; opacity: 0.9; }
+/* Speed: the view's own pill buttons (.layers), smaller. */
+.time-speed { justify-self: end; display: flex; gap: 3px; }
+.time-speed button { padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(20, 22, 30, 0.75); color: #e8e8e8; font: 0.72rem sans-serif; cursor: pointer; white-space: nowrap; }
+.time-speed button:hover { border-color: rgba(255,255,255,0.5); }
+.time-speed button.active { background: #e66b27; border-color: #e66b27; color: #fff; }
+.time-speed button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* Where a clicked point's analysis comes from: the legend of the dashed rings (polar_map.js drawZones). */
+.zones { top: 50px; right: 14px; padding: 6px 10px; font-size: 0.72rem; line-height: 1.6; text-shadow: none;
+  background: rgba(10, 12, 18, 0.72); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; }
+.moon-view:not(.has-zones) .zones { display: none; }
+.zone-line { display: inline-block; width: 20px; margin-right: 8px; vertical-align: middle; border-top: 2px dashed; }
+.zone-line.terrain { border-color: #4fd1e8; }
+.zone-line.precomputed { border-color: #7fd18b; }
 
 /* Site markers (markerHtml and paintMarker in view.js), on the map and on the globe. Leaflet and globe.gl position
    the marker element absolutely, so it anchors the layers inside it. */
 .site-marker svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; stroke-width: 2; }
 .site-marker .shape { fill: #4ba3d3; stroke: #0b0d12; }
-.site-marker .lit { display: none; fill: #ffc83d; stroke: #0b0d12; }  /* clipped from the top by paintMarker */
 .site-marker .cross { fill: none; }
-.site-marker.timed .shape { fill: #262a35; stroke: #d4d9e2; }  /* the unlit part: night */
-.site-marker.timed .lit { display: block; }
-.site-marker.selected .shape, .site-marker.selected .lit { stroke: #fff; stroke-width: 2.5; }
-.site-marker.selected:not(.timed) .shape { fill: #e66b27; }
+.site-marker.selected .shape { fill: #e66b27; stroke: #fff; stroke-width: 2.5; }
 .site-marker.selected::before { content: ""; position: absolute; inset: -6px; border: 2px solid #e66b27;
   border-radius: 50%; }
-.site-marker .earth { display: none; position: absolute; top: -5px; right: -6px; width: 9px; height: 9px;
-  box-sizing: border-box; border: 2px solid #aab4c3; border-radius: 50%; background: rgba(10, 12, 18, 0.85); }
-.site-marker.timed .earth { display: block; }
-.site-marker.timed.earth-up .earth { background: #4ba3d3; border-color: #fff; }  /* filled: Earth in view */
+/* The time bar's badge: Sun and Earth at the bar's hour (paintMarker). It never takes clicks. */
+.site-marker .conditions { display: none; position: absolute; left: calc(100% + 6px); top: 50%;
+  transform: translateY(-50%); gap: 3px; padding: 2px 5px; border-radius: 999px; pointer-events: none;
+  background: rgba(10, 12, 18, 0.88); border: 1px solid rgba(255,255,255,0.22); }
+.site-marker.timed .conditions { display: flex; }
+.conditions .sun, .conditions .earth { position: relative; width: 16px; height: 16px; flex: none; }
+.conditions svg { stroke-width: 2; stroke-linecap: round; }
+.conditions .sun-off { fill: #3a3f4b; stroke: #6b7280; }
+.conditions .sun-on { fill: #ffc83d; stroke: #ffc83d; }  /* clipped from the top by paintMarker */
+.conditions .earth { fill: #2a2f3a; stroke: #6b7280; }
+.conditions .earth .grid { fill: none; stroke-width: 1.2; }
+.conditions .earth .slash { stroke: #e86a5f; }
+.site-marker.earth-up .earth { fill: #3b8fd9; stroke: #d6ebff; }
+.site-marker.earth-up .earth .grid { stroke: rgba(255,255,255,0.6); }
+.site-marker.earth-up .earth .slash { display: none; }
 .site-marker:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 3px; }
 .polar-map .site-marker.static { cursor: default; }  /* the Custom Site and the Surface Asset are not chosen */
 /* On the globe a marker is an HTML element over the canvas; its name shows on hover, on focus or when selected. */
-.globe-marker { width: 18px; height: 18px; cursor: pointer; pointer-events: auto; }
-.globe-marker.selected { width: 26px; height: 26px; }
+.globe-marker { width: 22px; height: 22px; cursor: pointer; pointer-events: auto; }
+.globe-marker.selected { width: 30px; height: 30px; }
 .globe-marker.behind { visibility: hidden; }
 .marker-name { display: none; position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
   padding: 2px 8px; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; background: rgba(10, 12, 18, 0.85);

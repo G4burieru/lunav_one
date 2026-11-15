@@ -36,3 +36,14 @@ def test_people_friendly_numbers():
     assert [ordinal(n) for n in (1, 2, 3, 4, 11, 12, 13, 21, 22)] == \
         ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd"]
     assert [format_duration(h) for h in (0, 30, 110.4)] == ["None", "30 h", "4.6 days"]
+
+
+def test_every_place_is_a_catalog_site_with_sourced_images():
+    from src.panels.places import PLACES
+    from src.sites import LUNAR_SITES
+    assert set(PLACES) <= set(LUNAR_SITES)
+    for title, text, photos in PLACES.values():
+        assert title and text and photos
+        for url, caption, page in photos:
+            assert url.startswith("https://") and page.startswith("https://") and caption
+            assert "(" not in page  # a parenthesis would end the caption's markdown link early
