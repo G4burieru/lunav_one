@@ -39,7 +39,7 @@
 .view-nudge.shown { opacity: 1; }
 .credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
 /* The globe's scale bar (globe.js drawScale), styled and placed like the polar map's Leaflet one. */
-.globe-scale { bottom: 36px; right: 10px; padding: 2px 5px 1px; font-size: 11px; line-height: 1.1; white-space: nowrap;
+.globe-scale { bottom: max(36px, var(--controls-lift, 0px)); right: 10px; padding: 2px 5px 1px; font-size: 11px; line-height: 1.1; white-space: nowrap;
   color: #e8e8e8; background: rgba(10, 12, 18, 0.6); border: 2px solid #e8e8e8; border-top: none; text-shadow: none; }
 .globe-scale:empty { display: none; }
 /* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
@@ -132,7 +132,8 @@
 /* South polar map (Leaflet's own stylesheet is linked in the component's HTML). */
 .polar-map.leaflet-container { background: #000005; font-family: sans-serif; }
 .polar-map { user-select: none; -webkit-user-select: none; }  /* else a drag selects the zoom buttons' text */
-.polar-map .leaflet-bottom.leaflet-right { bottom: 26px; }  /* above the credit line */
+/* Zoom and scale: above the credit line, and above the time bar where it reaches under them (view.js). */
+.polar-map .leaflet-bottom.leaflet-right { bottom: max(26px, var(--controls-lift, 0px)); }
 .polar-map .leaflet-bar { border: 1px solid rgba(255,255,255,0.25); box-shadow: none; }
 .polar-map .leaflet-bar a { background: rgba(20, 22, 30, 0.85); color: #e8e8e8; border-bottom-color: rgba(255,255,255,0.2); }
 .polar-map .leaflet-bar a:hover, .polar-map .leaflet-bar a:focus { background: #2b2f3b; color: #fff; }
