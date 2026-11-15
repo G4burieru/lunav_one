@@ -41,12 +41,12 @@ by themselves end the spin. **3D relief ×5 is a visual aid**: it does not chang
 coordinates, Asset Height or the scientific calculations. The Photos/Relief
 base-layer selector and the 3D relief toggle are separate controls.
 
-## Official Demo — 30 seconds
+## Official Demo
 
-[**Watch the official demo — MP4, approximately 28 seconds**](media/lunavone.mp4)
+[**Watch the official demo on YouTube**](https://youtu.be/ASh9yAMIm1U)
 
 This is the project's main public demonstration and the video prepared for the
-official Space Apps submission. The recording is **27.925 seconds** long.
+official Space Apps submission.
 The [English script](docs/pitch/demo_30s.md) covers the team, problem, working
 application, NASA inputs and educational impact.
 

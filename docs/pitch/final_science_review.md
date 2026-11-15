@@ -107,7 +107,7 @@ real marker transitions and the same time selection in Planner; check the hosted
 build matches this branch. Keep the schematic Plotly export available offline.
 Resolve the above caption/credit issues before showing affected Overview images.
 At the time of this historical review, the demo was a timed draft. The
-[official recording](../../media/lunavone.mp4) is now available through the README.
+[official recording](https://youtu.be/ASh9yAMIm1U) is now available through the README.
 
 Software validation: `python -m pytest -q` — **91 passed**. All ten public text
 constant names and their panel imports were preserved; `git diff --check` passed.

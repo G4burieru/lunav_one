@@ -4,7 +4,7 @@
 > interim status and deadlines below are not the current product specification.
 > See the [README](../README.md) and [technical guide](technical_guide.md) for the
 > final interface and scope. The sole presentation deliverable is the
-> [official video of at most 30 seconds](pitch/demo_30s.md).
+> [official video](pitch/demo_30s.md).
 
 
 Replace the two-page interface with one Google Earth-style screen that is easy to read for the public and still

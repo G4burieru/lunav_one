@@ -4,7 +4,7 @@
 > in the [README](../../README.md) and [technical guide](../technical_guide.md).
 > Final documentation and licensing checks are recorded in the
 > [release review](../final_release_review.md). The only presentation deliverable
-> is the [official short video](demo_30s.md); earlier demo planning is superseded.
+> is the [official video](demo_30s.md); earlier demo planning is superseded.
 
 
 Baseline: main `2b55b23`, incorporated into `devel_renata` by fast-forward, without
@@ -146,7 +146,7 @@ Igor's saved-location failure tracking, manifest START/END validation and
 empty/duplicate-name rejection are preserved. All 17 catalog data sets load for
 2027–2028. The 17 Overviews, regional image captions, Leibnitz historical-region
 correction were preserved. Presentation planning was subsequently finalized as
-one official video of at most 30 seconds, also used in the README.
+one official video, also used in the README.
 
 The integrated suite passed **128 tests, with no failures or skips**, including
 the JavaScript badge regression. The Streamlit server started and its health
@@ -231,8 +231,8 @@ started successfully and its health endpoint returned `ok`; AppTest rendered
 the main panels and exercised saved Custom Sites. `git diff --check` passed.
 The 17 catalog/manifest entries and Overviews, source references, imagery,
 Leibnitz correction were preserved. The official narration script remains 55 words.
-The single official video is now recorded: [lunavone.mp4](../../media/lunavone.mp4),
-27.925 seconds, linked from the README.
+The single official video is available on [YouTube](https://youtu.be/ASh9yAMIm1U)
+and linked from the README.
 
 At that review, remote-reference inspection confirmed main at `1e1d7c1`, fully
 included in `devel_renata` at `c8b769f` (zero main commits missing). The branch matches
@@ -241,6 +241,5 @@ published on GitHub in `c8b769f` — fix: keep name validation tests offline and
 support Pandas 3 time axes. The results above describe local validation in the
 two recorded environments; a passing GitHub Actions result for `c8b769f` has not
 been confirmed. Browser rehearsal of the hosted build remains a manual
-publication check, not scientific certification; the recorded video's duration
-has since been measured at 27.925 seconds.
+publication check, not scientific certification.
 No other technical blocker was found.

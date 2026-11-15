@@ -43,12 +43,12 @@ outside this educational prototype's claims.
 
 ## Single official video
 
-The [30-second script](pitch/demo_30s.md) is the sole video deliverable and the
+The [official demo script](pitch/demo_30s.md) is the sole video deliverable and the
 same video linked from the GitHub README. Its 55-word narration script is unchanged.
 Recording instructions mention the optional exaggerated-relief opening without
-adding narration or a control tour. The recorded [official video](../media/lunavone.mp4)
-is stored in `media/lunavone.mp4`; its measured duration is **27.925 seconds**,
-within the 30-second maximum. The original uploaded file was moved unchanged.
+adding narration or a control tour. The [official video](https://youtu.be/ASh9yAMIm1U)
+is linked from the README through YouTube. The original file remains unchanged
+in `media/lunavone.mp4` as a local project asset.
 
 The superseded extended-demo script was removed, with all current references
 updated. No extended video or slide presentation is planned. Research documents
