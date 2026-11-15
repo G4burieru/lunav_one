@@ -165,10 +165,10 @@ and libraries retain their own terms. See [LICENSE](../../LICENSE),
 ## Publication details
 
 The official video of at most 30 seconds is the sole demonstration deliverable
-and the same public video will be linked from the GitHub README.
+and the same public video is linked from the GitHub README.
 
 - Application: https://lunavone.streamlit.app/
-- Official Demo: at most 30 seconds, pending recording; [script](demo_30s.md).
+- Official Demo: [recorded video, 27.925 seconds](../../media/lunavone.mp4); [script](demo_30s.md).
 - Repository: https://github.com/G4burieru/lunav_one
 - Team: Lunav One — João Gabriel Santos (science), Igor Wanderley (interface),
   Renata Andrade (sites, texts and presentation).

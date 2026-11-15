@@ -230,9 +230,9 @@ using an existing Node-compatible runtime. The CI-version Streamlit server also
 started successfully and its health endpoint returned `ok`; AppTest rendered
 the main panels and exercised saved Custom Sites. `git diff --check` passed.
 The 17 catalog/manifest entries and Overviews, source references, imagery,
-Leibnitz correction were preserved. The official narration remains 55 words;
-its eventual exported duration must still be measured. That single video is
-pending recording and publication, with no invented URL.
+Leibnitz correction were preserved. The official narration script remains 55 words.
+The single official video is now recorded: [lunavone.mp4](../../media/lunavone.mp4),
+27.925 seconds, linked from the README.
 
 At that review, remote-reference inspection confirmed main at `1e1d7c1`, fully
 included in `devel_renata` at `c8b769f` (zero main commits missing). The branch matches
@@ -240,6 +240,7 @@ included in `devel_renata` at `c8b769f` (zero main commits missing). The branch 
 published on GitHub in `c8b769f` — fix: keep name validation tests offline and
 support Pandas 3 time axes. The results above describe local validation in the
 two recorded environments; a passing GitHub Actions result for `c8b769f` has not
-been confirmed. Browser rehearsal of the hosted build and measurement of the
-recorded video remain manual publication checks, not scientific certification.
+been confirmed. Browser rehearsal of the hosted build remains a manual
+publication check, not scientific certification; the recorded video's duration
+has since been measured at 27.925 seconds.
 No other technical blocker was found.
