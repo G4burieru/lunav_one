@@ -29,8 +29,8 @@ if _imported_src().get("stamp") != _stamp:
 from src.moon_view import moon_view  # noqa: E402 (imports after the check above)
 from src.panels import about, catalog_list, layers, planner, site_card  # noqa: E402
 from src.panels.common import (  # noqa: E402
-    CUSTOM, OVERLAYS, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, open_panel, rail_active, select_custom,
-    select_site)
+    CUSTOM, MOON_VIEW, OVERLAYS, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, catalog_time, open_panel,
+    rail_active, select_custom, select_site)
 from src.sites import LUNAR_SITES  # noqa: E402
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
@@ -74,15 +74,28 @@ CSS = f"""<style>
 
 
 def on_view_site():
-    clicked = st.session_state["moon_view"].get("site")
+    clicked = st.session_state[MOON_VIEW].get("site")
     if clicked in LUNAR_SITES:
         select_site(clicked)
 
 
 def on_view_point():
-    point = st.session_state["moon_view"].get("point")  # sent after the user confirms "Analyze this point?"
+    point = st.session_state[MOON_VIEW].get("point")  # sent after the user confirms "Analyze this point?"
     if point:
         select_custom(point["lat"], point["lon"])
+
+
+def on_view_instant():
+    """Registering a callback is what keeps the time bar's "instant" in st.session_state[MOON_VIEW]; the panels
+    read it while they render (selected_instant in src/panels/common.py)."""
+
+
+def explorer_time():
+    """The Explorer's time bar: every Catalog Site over 2027–2028, from the instant the bar last sent."""
+    try:
+        return dict(catalog_time(), instant=(st.session_state.get(MOON_VIEW) or {}).get("instant"))
+    except Exception:  # pre-computed data missing: the view opens without a time bar
+        return None
 
 
 def view_request(selected, custom):
@@ -129,10 +142,10 @@ view_slot = st.container(key="view")  # filled after the panel, whose render() c
 with st.container(key="panel"):
     view_data = PANELS[panel]() or {}
 
-with view_slot:  # the view needs no Horizons data, so it opens even if Horizons is down
+with view_slot:  # pre-computed data only, so the view opens even if Horizons is down
     # A panel's render() can override any of these, e.g. the Site Planner's view, Surface Asset and time bar data.
-    moon_view(LUNAR_SITES, selected, key="moon_view", **{"on_site": on_view_site, "on_point": on_view_point,
-                                                         "on_cell": planner.on_map_cell, "view": view,
-                                                         "view_id": view_id, "custom": custom,
-                                                         "overlays": st.session_state.get(OVERLAYS, ()),
-                                                         **view_data})
+    moon_view(LUNAR_SITES, selected, key=MOON_VIEW, **{"on_site": on_view_site, "on_point": on_view_point,
+                                                       "on_cell": planner.on_map_cell, "on_instant": on_view_instant,
+                                                       "view": view, "view_id": view_id, "custom": custom,
+                                                       "time": explorer_time(),
+                                                       "overlays": st.session_state.get(OVERLAYS, ()), **view_data})

@@ -6,10 +6,13 @@
 .moon-view[data-view="map"] [data-for="globe"], .moon-view[data-view="globe"] [data-for="map"] { display: none; }
 .overlay { position: absolute; pointer-events: none; text-shadow: 0 1px 3px #000; }
 /* Centered in the part of the view the app's panel leaves uncovered (--panel-right is set by view.js). */
-.hint, .status { left: calc(var(--panel-right, 0px) + (100% - var(--panel-right, 0px)) / 2);
-  transform: translateX(-50%); text-align: center; white-space: nowrap; }
+.hint, .status, .time-bar { left: calc(var(--panel-right, 0px) + (100% - var(--panel-right, 0px)) / 2);
+  transform: translateX(-50%); }
+.hint, .status { text-align: center; white-space: nowrap; }
 .hint { bottom: 34px; font-size: 0.85rem; opacity: 0.75; }  /* one line above the credit */
 .status { bottom: 58px; font-size: 0.8rem; opacity: 0.85; }
+.has-time .hint { bottom: 112px; }  /* above the time bar */
+.has-time .status { bottom: 136px; }
 .layers { top: 14px; right: 14px; pointer-events: auto; display: flex; gap: 4px; }
 .choices { display: flex; gap: 4px; }
 .layers button { background: rgba(20, 22, 30, 0.75); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.25);
@@ -19,11 +22,53 @@
 .credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
 /* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
 .moon-view:fullscreen { height: 100vh; }
-.info { display: none; bottom: 40px; left: 18px; max-width: min(460px, 60%); background: rgba(10, 12, 18, 0.72);
+.info { display: none; top: 14px; left: 18px; max-width: min(460px, 60%); background: rgba(10, 12, 18, 0.72);
   border: 1px solid rgba(255,255,255,0.15); border-radius: 0.5rem; padding: 10px 14px; text-shadow: none; }
 .moon-view:fullscreen .info.has-site { display: block; }
 .info-name { font-weight: 600; font-size: 1.05rem; }
 .info-text { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; line-height: 1.35; }
+
+/* Time bar (time_bar.js). */
+.time-bar { bottom: 30px; width: min(640px, calc(100% - var(--panel-right, 0px) - 140px)); box-sizing: border-box;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 10px; padding: 8px 12px;
+  pointer-events: auto; text-shadow: none; background: rgba(14, 17, 23, 0.88);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; }
+.time-bar[hidden] { display: none; }
+.time-bar .play { width: 32px; height: 32px; padding: 0; border: none; border-radius: 50%; background: #e66b27;
+  color: #fff; display: grid; place-items: center; cursor: pointer; }
+.time-bar .play svg { width: 16px; height: 16px; fill: currentColor; }
+.time-bar .play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.time-slider { width: 100%; margin: 0; accent-color: #e66b27; cursor: pointer; }
+.time-label { font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.time-readout { grid-column: 2 / -1; min-height: 1.2em; font-size: 0.78rem; opacity: 0.9; }
+
+/* Site markers (markerHtml and paintMarker in view.js), on the map and on the globe. Leaflet and globe.gl position
+   the marker element absolutely, so it anchors the layers inside it. */
+.site-marker svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; stroke-width: 2; }
+.site-marker .shape { fill: #4ba3d3; stroke: #0b0d12; }
+.site-marker .lit { display: none; fill: #ffc83d; stroke: #0b0d12; }  /* clipped from the top by paintMarker */
+.site-marker .cross { fill: none; }
+.site-marker.timed .shape { fill: #262a35; stroke: #d4d9e2; }  /* the unlit part: night */
+.site-marker.timed .lit { display: block; }
+.site-marker.selected .shape, .site-marker.selected .lit { stroke: #fff; stroke-width: 2.5; }
+.site-marker.selected:not(.timed) .shape { fill: #e66b27; }
+.site-marker.selected::before { content: ""; position: absolute; inset: -6px; border: 2px solid #e66b27;
+  border-radius: 50%; }
+.site-marker .earth { display: none; position: absolute; top: -5px; right: -6px; width: 9px; height: 9px;
+  box-sizing: border-box; border: 2px solid #aab4c3; border-radius: 50%; background: rgba(10, 12, 18, 0.85); }
+.site-marker.timed .earth { display: block; }
+.site-marker.timed.earth-up .earth { background: #4ba3d3; border-color: #fff; }  /* filled: Earth in view */
+.site-marker:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 3px; }
+.polar-map .site-marker.static { cursor: default; }  /* the Custom Site and the Surface Asset are not chosen */
+/* On the globe a marker is an HTML element over the canvas; its name shows on hover, on focus or when selected. */
+.globe-marker { width: 18px; height: 18px; cursor: pointer; pointer-events: auto; }
+.globe-marker.selected { width: 26px; height: 26px; }
+.globe-marker.behind { visibility: hidden; }
+.marker-name { display: none; position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  padding: 2px 8px; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; background: rgba(10, 12, 18, 0.85);
+  color: #fff; font: 600 12px sans-serif; white-space: nowrap; pointer-events: none; }
+.globe-marker:hover .marker-name, .globe-marker:focus-visible .marker-name, .globe-marker.selected .marker-name {
+  display: block; }
 
 /* globe.gl's hover label. Its library puts this CSS in the page's <head>, which does not reach the component's
    shadow root; without it the label sits in the page flow and flashes at the top instead of following the mouse. */
@@ -40,9 +85,6 @@
 .polar-map .leaflet-bar a:hover, .polar-map .leaflet-bar a:focus { background: #2b2f3b; color: #fff; }
 .polar-map .leaflet-control-scale-line { background: rgba(10, 12, 18, 0.6); color: #e8e8e8; border-color: #e8e8e8;
   text-shadow: none; }
-.site-marker svg { display: block; overflow: visible; fill: #4ba3d3; stroke: #0b0d12; stroke-width: 2; }
-.site-marker.selected svg { fill: #e66b27; stroke: #fff; stroke-width: 2.5; }
-.site-marker:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 3px; }
 .polar-map .leaflet-tooltip.site-label { background: rgba(10, 12, 18, 0.85); color: #fff; border: 1px solid
   rgba(255,255,255,0.25); box-shadow: none; font: 600 12px sans-serif; padding: 2px 8px; }
 .polar-map .leaflet-tooltip-top.site-label::before { border-top-color: rgba(10, 12, 18, 0.85); }
