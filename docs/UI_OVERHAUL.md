@@ -46,8 +46,8 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
     highlighted. The map centers on it.
   - The Explorer's `time` is 183 KB on every rerun. The view decodes it only when it changes, and no lag was
     visible locally.
-  - **For B3:** the bar now spans the Site Planner window, so the Planner's own Instant slider can go. Read the
-    bar's instant with `selected_instant()`.
+  - **For B3 (done):** the bar now spans the Site Planner window, so the Planner's own Instant slider can go. Read
+    the bar's instant with `selected_instant()`.
 - **A1 result:** Leaflet and Proj4Leaflet work inside the component's shadow DOM, so `isolate_styles` stays on. The
   Moon Trek NAC tiles line up with the sites (Shackleton Rim S1 sits on the crater rim), and clicks on a site or on
   the map reach Python. Notes for A2:
@@ -60,8 +60,9 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   A2 replaces it.
 - **Done: B3.** The Site Planner has the four steps and the Asset Height presets. A panel's `render()` can return
   keyword arguments for `moon_view`, so `app.py` now fills the view after the panel. The Site Planner returns
-  `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. It keeps its own
-  Instant slider until A3 covers the Planner window.
+  `mode="planner"`, the Surface Asset position as `asset`, and its window's states as `time`. Its results follow
+  the Moon View time bar's instant (`selected_instant`), as the Site Card does; the panel's own Instant slider is
+  gone.
 - **Done: C4** (removed with B7 in PR #33). `python -m scripts.render_overlays` writes the Sunlight overlay for A8, and since A8 also the Earth one:
   - `static/overlays/sun_85s.png` is 1264 × 1264 px at 240 m per pixel, about 1 MB.
   - `sun_85s.json` holds its bounds, ±151740 m in the same polar stereographic CRS as the Moon Trek tiles.

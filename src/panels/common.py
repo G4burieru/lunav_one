@@ -144,11 +144,13 @@ def analysis_zones():
 
 
 def selected_instant(df):
-    """The time bar's instant (UTC, naive like df["time"]), or the start of `df` until the time bar sets one."""
+    """The time bar's instant (UTC, naive like df["time"]), or the start of `df` until the time bar sets one inside
+    its window: an instant from another window (the Explorer's two years, before a Site Planner window) restarts it."""
     value = (st.session_state.get(MOON_VIEW) or {}).get("instant")
-    at = pd.Timestamp(value) if value else df["time"].iloc[0]
-    at = at.tz_convert("UTC").tz_localize(None) if at.tzinfo else at
-    return min(max(at.floor("h"), df["time"].iloc[0]), df["time"].iloc[-1])
+    start, end = df["time"].iloc[0], df["time"].iloc[-1]
+    at = pd.Timestamp(value) if value else start
+    at = (at.tz_convert("UTC").tz_localize(None) if at.tzinfo else at).floor("h")
+    return at if start <= at <= end else start
 
 
 def header():

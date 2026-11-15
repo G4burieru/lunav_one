@@ -47,3 +47,14 @@ def test_every_place_is_a_catalog_site_with_sourced_images():
         for url, caption, page in photos:
             assert url.startswith("https://") and page.startswith("https://") and caption
             assert "(" not in page  # a parenthesis would end the caption's markdown link early
+
+
+def test_selected_instant_follows_the_bar_inside_the_window_and_restarts_it_outside(monkeypatch):
+    import streamlit as st
+    from src.panels.common import MOON_VIEW, selected_instant
+    df = pd.DataFrame({"time": pd.date_range("2027-01-01", periods=72, freq="h")})
+    for instant, expected in [(None, "2027-01-01 00:00"),  # the bar has not sent one yet
+                              ("2027-01-02T05:40:00Z", "2027-01-02 05:00"),  # inside: its hour
+                              ("2027-06-15T12:00:00Z", "2027-01-01 00:00")]:  # another window's: the start
+        monkeypatch.setattr(st, "session_state", {MOON_VIEW: {"instant": instant}})
+        assert selected_instant(df) == pd.Timestamp(expected)

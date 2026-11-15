@@ -1,7 +1,5 @@
 """Site Planner panel: place a Surface Asset and evaluate its sunlight and Earth visibility (docs/UI_OVERHAUL.md,
 task B3). Owner: Gabriel."""
-import datetime
-
 import streamlit as st
 
 from src import catalog
@@ -11,7 +9,7 @@ from src.conditions import cell_corners, live_neighborhood_horizons, live_neighb
 from src.metrics import earth_visible_hours, hours_until_earthset, hours_until_sunset, sunlight_hours
 from src.panels import texts
 from src.panels.common import (CACHE_START, CUSTOM_SITE, DATE_HELP, MOON_VIEW, data_note, format_countdown,
-                               get_neighborhood, icon, load, site_label, time_payload)
+                               get_neighborhood, icon, load, selected_instant, site_label, time_payload)
 from src.sites import LUNAR_SITES
 
 HEIGHTS = {"Rover or lander · 2 m": catalog.ASSET_HEIGHT_M, "Mast · 10 m": 10.0, "Other height": None}
@@ -133,10 +131,8 @@ def neighborhood(key, lat, lon, height, date, days, mask):
 
 
 def results(df, mask, days):
-    # shortcut: keeps its own Instant slider until the Moon View time bar (task A3) covers the Planner window.
-    times = list(df["time"].dt.to_pydatetime())
-    at = st.slider("Instant (UTC)", times[0], times[-1], times[0], datetime.timedelta(hours=1),
-                   format="YYYY-MM-DD HH:mm", key="planner_at")
+    """The Surface Asset at the Moon View time bar's instant, and over the whole window. Returns the instant."""
+    at = selected_instant(df)
     row = df[df["time"] == at].iloc[0]
     sunset, earthset = hours_until_sunset(df, at), hours_until_earthset(df, at, mask)
     sun_hours, earth_hours = sunlight_hours(df), earth_visible_hours(df, mask)
@@ -156,12 +152,15 @@ def results(df, mask, days):
            else f"the Sun sets in {format_countdown(sunset, '')}")
     earth = ("Earth is out of view" if earthset == 0 else "Earth stays in view to the end of the window"
              if earthset is None else f"Earth sets in {format_countdown(earthset, '')}")
-    st.markdown(f"From the selected instant, {sun} and {earth}. Over the {days} days, the Sun shines "
+    st.markdown(f"At **{at:%Y-%m-%d %H:%M} UTC**, {sun} and {earth}. Over the {days} days, the Sun shines "
                 f"{100 * sun_hours / len(df):.0f}% of the time and Earth is in view "
                 f"{100 * earth_hours / len(df):.0f}% of the time.")
+    st.caption("The countdowns follow the time bar at the bottom of the view: move it, type a date or play it, "
+               "then release or pause.")
     data_note(df)
     st.plotly_chart(plot_sun_elevation(df, at), width="stretch", key="planner_sun")
     st.plotly_chart(plot_earth_visibility(df, at, mask), width="stretch", key="planner_earth")
+    return at
 
 
 def render():
@@ -188,5 +187,5 @@ def render():
     df = load(lat, lon, date, days, height, catalog_site=key != CUSTOM_SITE)
     if df is None:
         return view
-    results(df, mask, days)
-    return {**view, "time": time_payload({"asset": df}, elevation_mask=mask)}
+    at = results(df, mask, days)  # the time bar starts there when its window changes
+    return {**view, "time": time_payload({"asset": df}, instant=f"{at:%Y-%m-%dT%H:%M:%SZ}", elevation_mask=mask)}

@@ -58,19 +58,22 @@ Asset Height**. Rankings compare only the eight Catalog Sites and the selected m
 they do not rank landing safety. The selected-instant line and 28-day Sun & Earth charts
 describe a shorter interval; the Seasons chart groups results by month.
 
-**Read the Moon View.** Drag the UTC time bar or use Play/Pause to explore hourly
-states. Marker fill follows the visible fraction of the Sun's disk; the small
-upper-right dot is filled when Earth meets the visibility criterion and hollow
-when it does not. Shape identifies the location type: diamond (studied point),
-circle (region center), square (historical landing), triangle (approximate reference).
-A Custom Site is a ticked ring; a Surface Asset is a cross in a circle. These symbols
-do not classify landing safety, power output or radio-link performance.
+**Read the Moon View.** Drag the UTC time bar, type a date or use Play/Pause (1 hour
+to 3 days per second) to explore hourly states. Every Catalog Site is a circle; the
+panels name its location type. The badge beside it shows a Sun that fills from the
+bottom with the visible fraction of the Sun's disk, and an Earth that is blue when
+Earth meets the visibility criterion and gray, crossed out, when it does not.
+A Custom Site is a ticked ring; a Surface Asset is a cross in a circle. On the south
+polar map, dashed rings show where a clicked point's analysis comes from: pre-computed
+within about 2 km of a Catalog Site, live terrain inside 80°S, the Ideal Horizon
+outside. These symbols do not classify landing safety, power output or radio-link
+performance.
 
 Markers update while time moves. Release the slider or pause to update the Site
 Card's instant and charts; its two-year averages stay fixed. In Site Planner the
-Moon View bar follows the Analysis Window, but the panel's countdowns still use
-its own Instant slider. Initial globe rotation stops at the first interaction
-and is disabled when the system requests reduced motion.
+bar covers the Analysis Window and drives the countdowns and charts the same way.
+Initial globe rotation stops at the first interaction and is disabled when the
+system requests reduced motion.
 
 - **Sunlight** is the mean **Illumination Fraction**: the portion of the Sun's disk above
   the **Terrain Horizon**, averaged over time. Partial views count proportionally. It
