@@ -87,3 +87,13 @@ def test_leibnitz_overview_does_not_equate_old_and_revised_regions():
     assert 'associated region also appears' not in text
     assert all(source in text for source in [ARTEMIS_2022_SOURCE, ARTEMIS_2024_SOURCE,
                                             'https://svs.gsfc.nasa.gov/5074/'])
+
+
+def test_catalog_summaries_follow_sites_added_while_running(monkeypatch):
+    """A cache filled before a site was added must not serve the old catalog (the Name sort hit a missing key)."""
+    from src.panels import common
+    first = dict(list(common.LUNAR_SITES.items())[:2])
+    monkeypatch.setattr(common, "LUNAR_SITES", first)
+    assert set(common.catalog_summaries().index) == set(first)
+    monkeypatch.undo()
+    assert set(common.catalog_summaries().index) == set(common.LUNAR_SITES)

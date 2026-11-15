@@ -21,9 +21,9 @@ def decode(value):
 
 @pytest.fixture(autouse=True)
 def clear_time_cache():
-    common.catalog_time.clear()
+    common._catalog_time.clear()
     yield
-    common.catalog_time.clear()
+    common._catalog_time.clear()
 
 
 def test_explorer_has_real_states_for_all_seventeen_sites():

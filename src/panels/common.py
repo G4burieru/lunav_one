@@ -106,11 +106,17 @@ def two_years(lat, lon, catalog_site=True):
     return load(lat, lon, CACHE_START, EXPLORER_DAYS, catalog_site=catalog_site)
 
 
-@st.cache_data(show_spinner=False)
 def catalog_summaries():
     """The Site Card grid (src.metrics.site_summary) of every Catalog Site over 2027–2028, one row per key."""
+    return _catalog_summaries(LUNAR_SITES, catalog.read_manifest())
+
+
+# Caches over the whole catalog take the sites and the manifest as their key: a server running since before a site
+# was added or pre-computed would otherwise keep serving the old catalog (and the Name sort would hit a missing key).
+@st.cache_data(show_spinner=False)
+def _catalog_summaries(sites, manifest):
     return pd.DataFrame({key: site_summary(get_data(site["lat"], site["lon"], str(CACHE_START), EXPLORER_DAYS))
-                         for key, site in LUNAR_SITES.items()}).T
+                         for key, site in sites.items()}).T
 
 
 def rank(column, value, lower_is_better=False):
@@ -139,12 +145,16 @@ def time_payload(dfs, instant=None, elevation_mask=0.0):
                        for key, df in dfs.items()}}
 
 
-@st.cache_data(show_spinner=False)
 def catalog_time(date=CACHE_START, days=EXPLORER_DAYS, elevation_mask=0.0):
     """Catalog marker states at 2 m, on the requested hourly axis and Earth Elevation Mask."""
+    return _catalog_time(LUNAR_SITES, catalog.read_manifest(), date, days, elevation_mask)
+
+
+@st.cache_data(show_spinner=False)
+def _catalog_time(sites, manifest, date, days, elevation_mask):
     axis = pd.Series(pd.date_range(date, periods=days * 24, freq="h"))
     frames = {}
-    for key, site in LUNAR_SITES.items():
+    for key, site in sites.items():
         try:
             df = get_data(site["lat"], site["lon"], str(date), days)
         except Exception:  # an unavailable location keeps its marker, without invented states
@@ -183,7 +193,6 @@ def analysis_zones():
     return _analysis_zones(LUNAR_SITES, catalog.read_manifest())
 
 
-# The sites and the manifest are the cache key, so a site added or pre-computed while the app runs gets its ring.
 @st.cache_data(show_spinner=False)
 def _analysis_zones(sites, manifest):
     precomputed = [key for key, site in sites.items()  # the sites whose data _catalog_match can use
