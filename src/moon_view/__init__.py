@@ -31,7 +31,8 @@ _HTML = """
   <div class="overlay status" data-for="globe"></div>
   <div class="overlay status" data-for="map"></div>
   <div class="overlay credit" data-for="globe">Imagery: LRO WAC · Elevation: LOLA · NASA Moon Trek</div>
-  <div class="overlay credit" data-for="map">Photos: LROC NAC and WAC · Relief: LOLA · NASA Moon Trek</div>
+  <div class="overlay credit" data-for="map">Photos: LROC NAC and WAC · Relief: LOLA · NASA Moon Trek
+    <span class="layers-credit">· Layers: NASA PGDA</span></div>
 </div>
 """
 

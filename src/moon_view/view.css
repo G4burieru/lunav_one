@@ -20,6 +20,7 @@
 .layers button.active { background: #e66b27; border-color: #e66b27; color: #fff; }
 .layers button.fullscreen { margin-left: 8px; }
 .credit { bottom: 14px; right: 18px; font-size: 0.7rem; opacity: 0.6; }
+.moon-view:not(.has-layers) .layers-credit { display: none; }  /* credited while a layer is shown */
 /* Full screen: the view covers the monitor and the app's panel is hidden, so show the selected site here. */
 .moon-view:fullscreen { height: 100vh; }
 .info { display: none; top: 14px; left: 18px; max-width: min(460px, 60%); background: rgba(10, 12, 18, 0.72);
