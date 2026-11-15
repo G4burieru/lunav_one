@@ -118,7 +118,10 @@ function addFullscreenButton(state) {
   const root = state.root, isFullscreen = () => root.getRootNode().fullscreenElement === root;
   const button = document.createElement("button");
   button.className = "fullscreen";
-  const label = () => { button.textContent = isFullscreen() ? "✕ Exit full screen" : "⛶ Full screen"; };
+  const label = () => {
+    button.textContent = isFullscreen() ? "✕ Exit full screen" : "⛶ Full screen";
+    button.classList.toggle("active", isFullscreen());
+  };
   button.onclick = () => (isFullscreen() ? document.exitFullscreen() : root.requestFullscreen()).catch(() => {});
   state.onFullscreenChange = label;
   document.addEventListener("fullscreenchange", label);
