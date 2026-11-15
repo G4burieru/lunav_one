@@ -34,16 +34,22 @@ precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the 
   - `app.py` passes `catalog_time()` with the last instant in the Explorer. A panel that returns its own `time`
     replaces it: the Site Planner does, and so does a Custom Site's Site Card, which adds the Custom Site's states
     under `"custom"`.
-  - The bar sends `instant` when it is released or paused. It reaches `st.session_state["moon_view"]` only because
-    `app.py` registers `on_instant`: components v2 keep only the state keys that have a callback.
-  - Playback runs at 72 hours per second over 2027–2028 (a lunar day in about ten seconds) and covers a Site
-    Planner window in about 40 seconds.
-  - Markers are the same SVG on the globe, where they are now HTML elements, and on the map. The shape is the
-    coordinate kind. The fill rises with the Illumination Fraction, and the dot at the top right is filled while
-    Earth is visible. The selected site or the Custom Site has an orange ring and its name. A click on a marker
-    never reaches the Moon below it, so it does not open the "Analyze this point?" balloon.
+  - The bar sends `instant` when it is released, when playback pauses, and when a typed date is entered. It reaches
+    `st.session_state["moon_view"]` only because `app.py` registers `on_instant`: components v2 keep only the state
+    keys that have a callback.
+  - Playback speed is chosen with buttons: 1 h/s, 6 h/s (the default), 1 day/s and 3 days/s. The choice is kept
+    across reruns and windows. The instant can also be typed in UTC (`YYYY-MM-DD HH:00`, then Enter); an
+    unreadable date is outlined in red and put back on Escape or when the field is left.
+  - Markers are the same SVG on the globe, where they are HTML elements, and on the map. Catalog Sites are circles,
+    and the panels name their coordinate kind. With time data, a badge beside each marker shows the bar's hour: a
+    Sun that fills from the bottom with the Illumination Fraction, and an Earth that is blue while in view and gray,
+    crossed out, below the horizon. The selected site or the Custom Site has an orange ring and its name. A click
+    on a marker never reaches the Moon below it, so it does not open the "Analyze this point?" balloon.
   - In the Site Planner, the Surface Asset (a cross in a circle) carries the `asset` states and is the only marker
-    highlighted. The map centers on it.
+    highlighted. The map frames the Site Neighborhood when there is one, and otherwise centers on the Surface Asset.
+  - The map's zoom buttons and both scale bars (the map's and the globe's) move up above the time bar when the bar
+    would cover them. This happens beside the wide panel on screens under about 1800 px (`liftMapControls` in
+    `view.js`).
   - The Explorer's `time` is 183 KB on every rerun. The view decodes it only when it changes, and no lag was
     visible locally.
   - **For B3 (done):** the bar now spans the Site Planner window, so the Planner's own Instant slider can go. Read

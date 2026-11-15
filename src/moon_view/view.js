@@ -82,14 +82,30 @@ function panelRight(root) {
 
 function layoutViews(state) {
   state.root.style.setProperty("--panel-right", `${panelRight(state.root)}px`);
+  liftMapControls(state);
   Object.values(VIEWS).forEach(view => view.exists(state) && view.layout(state));
 }
 
+// The polar map's zoom buttons and scale bar, and the globe's scale bar, stand in a column at the bottom right,
+// CONTROLS_PX wide with a scale bar at its widest. When the bottom stack (status, hints and time bar) reaches under
+// that column, as it does beside the wide panel on screens under about 1800 px, they move up above the stack
+// (--controls-lift in view.css).
+const CONTROLS_PX = 190;
+function liftMapControls(state) {
+  const root = state.root, box = root.getBoundingClientRect();
+  const stack = root.querySelector(".bottom").getBoundingClientRect();
+  const lift = stack.right > box.right - CONTROLS_PX ? Math.ceil(box.bottom - stack.top) + 8 : 0;
+  root.style.setProperty("--controls-lift", `${lift}px`);
+}
+
 // Lay the views out again whenever the view or the panel changes size. Streamlit renders the panel after the view,
-// so it may not exist yet on the first run.
+// so it may not exist yet on the first run. The bottom stack grows on its own (a status appears, the time bar's
+// readout wraps), and then only the map's controls need to move.
 function watchLayout(state) {
   state.observer = new ResizeObserver(() => layoutViews(state));
   state.observer.observe(state.root);
+  state.stackObserver = new ResizeObserver(() => liftMapControls(state));
+  state.stackObserver.observe(state.root.querySelector(".bottom"));
   state.findPanel = (tries = 25) => {
     const panel = document.querySelector(".st-key-panel");
     if (panel && panel !== state.panel) { state.panel = panel; state.observer.observe(panel); }
@@ -282,6 +298,7 @@ export default function (component) {
   render(state);
   return () => {
     state.observer.disconnect();
+    state.stackObserver.disconnect();
     clearTimeout(state.nudgeTimer);
     if (state.onFullscreenChange) document.removeEventListener("fullscreenchange", state.onFullscreenChange);
     Object.values(VIEWS).forEach(view => view.exists(state) && view.destroy(state));
