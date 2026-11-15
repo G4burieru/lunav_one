@@ -12,8 +12,9 @@ from src.metrics import hourly_states, site_summary
 from src.sites import LUNAR_SITES
 from src.terrain import SOUTH_POLE_DEM_LIMIT
 
-get_data = st.cache_data(show_spinner=False)(get_conditions)
-get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
+# Bounded: each Custom Site's two years take about 1.1 MB, kept for every session until the app restarts.
+get_data = st.cache_data(show_spinner=False, max_entries=64)(get_conditions)
+get_neighborhood = st.cache_data(show_spinner=False, max_entries=64)(neighborhood_summary)
 
 # Session state: the open panel, the selected Catalog Site key, and the Custom Site ({"lat", "lon"}) if any.
 PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
@@ -133,14 +134,13 @@ def catalog_time():
                          for key, site in LUNAR_SITES.items()})
 
 
+@st.cache_data(show_spinner=False)
 def analysis_zones():
     """Where get_conditions takes a clicked point's data from, for the Moon View's dashed rings (`zones`): the
     pre-computed Site Neighborhood of a Catalog Site within reach, else live terrain inside the south pole DEMs."""
-    manifest = catalog.read_manifest()
-    current = [key for key, site in LUNAR_SITES.items()  # as catalog.load_site checks, without loading the data
-               if (entry := manifest.get(key)) and (entry["lat"], entry["lon"]) == (site["lat"], site["lon"])
-               and (catalog.DATA_DIR / f"{catalog.slug(key)}_terrain.npz").exists()]
-    return {"terrain_lat": SOUTH_POLE_DEM_LIMIT, "precomputed_m": PRECOMPUTED_REACH_M, "precomputed": current}
+    precomputed = [key for key, site in LUNAR_SITES.items()  # the sites whose data _catalog_match can use
+                   if (data := catalog.load_site(key, site)) is not None and data[1] is not None]
+    return {"terrain_lat": SOUTH_POLE_DEM_LIMIT, "precomputed_m": PRECOMPUTED_REACH_M, "precomputed": precomputed}
 
 
 def selected_instant(df):
@@ -173,8 +173,10 @@ def format_countdown(hours, below_label):
         return "No set in window"
     if hours == 0:
         return below_label
-    days, rest = divmod(hours, 24)
-    return f"{int(days)} d {rest:.0f} h" if days else f"{hours:.1f} h"
+    if round(hours * 60) < 60:
+        return f"{max(1, round(hours * 60))} min"
+    days, rest = divmod(round(hours), 24)  # rounded first, so 95.6 h is "4 d 0 h", not "3 d 24 h"
+    return f"{days} d {rest} h" if days else f"{hours:.1f} h"
 
 
 def load(lat, lon, date, days, asset_height=catalog.ASSET_HEIGHT_M, catalog_site=True):

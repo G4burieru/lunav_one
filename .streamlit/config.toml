@@ -3,4 +3,4 @@ base = "dark"
 primaryColor = "#f5a623"
 
 [server]
-enableStaticServing = true  # static/: interface icons and map overlays
+enableStaticServing = true  # static/: interface icons

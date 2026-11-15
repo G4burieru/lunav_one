@@ -37,6 +37,24 @@ def test_choosing_a_site_switches_the_view():
     assert not at.exception
 
 
+def test_leaving_the_planner_keeps_its_view():
+    at = AppTest.from_file("../app.py", default_timeout=120).run()
+    at.button(key="rail_planner").click().run()  # opens on a polar Catalog Site, on the south polar map
+    at.button(key="rail_catalog").click().run()
+    assert at.session_state[VIEW_CHOICE] == VIEWS[1]
+    assert not at.exception
+
+
+def test_custom_site_card_renders_offline():
+    """A Custom Site within a Catalog Site's Site Neighborhood uses its pre-computed data, so no network."""
+    at = AppTest.from_file("../app.py", default_timeout=120).run()
+    at.session_state["custom"] = {"lat": -89.4398, "lon": -137.17}  # as a confirmed click on the Moon View sets it
+    at.session_state["panel"] = "site"
+    at.run()
+    assert not at.exception
+    assert any("would rank" in m.value for m in at.markdown)
+
+
 def test_a_second_click_on_the_rail_icon_hides_the_panel():
     at = AppTest.from_file("../app.py", default_timeout=120).run()
     at.button(key="rail_catalog").click().run()

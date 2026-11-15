@@ -32,6 +32,7 @@ from src.panels.common import (  # noqa: E402
     CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, analysis_zones, catalog_time, open_panel,
     rail_active, select_custom, select_site)
 from src.sites import LUNAR_SITES  # noqa: E402
+from src.terrain import SOUTH_POLE_DEM_LIMIT  # noqa: E402
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
@@ -43,7 +44,6 @@ RAIL_WIDTH = "76px"
 PANEL_LEFT = f"calc({RAIL_WIDTH} + 38px)"  # 14 px margins around the rail, 10 px gap
 PANEL_WIDTH = {"catalog": "380px", "about": "380px", "site": "min(46vw, 760px)",
                "planner": "min(46vw, 760px)"}
-POLAR_LAT = -80.0  # choosing a site south of this opens the south polar map; other sites open the globe
 
 # The view is pinned behind everything and the rail and the panel float over it. The rest of the page ignores the
 # pointer so drags and clicks reach the view. `st-key-<key>` classes come from st.container(key=).
@@ -114,7 +114,7 @@ def view_request(selected, custom):
         ss["view_site"] = target
         if target:
             lat = LUNAR_SITES[selected]["lat"] if selected else custom["lat"]
-            ss[VIEW_CHOICE] = VIEWS[1] if lat <= POLAR_LAT else VIEWS[0]
+            ss[VIEW_CHOICE] = VIEWS[1] if lat <= SOUTH_POLE_DEM_LIMIT else VIEWS[0]
             ss["view_id"] += 1  # even to the view already shown: the user may have switched away from it
     return ("map" if ss[VIEW_CHOICE] == VIEWS[1] else "globe"), ss["view_id"]
 
