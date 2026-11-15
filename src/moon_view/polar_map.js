@@ -40,30 +40,6 @@ const polarMap = (() => {
     return L.latLngBounds([corner.lat, corner.lng], [corner.lat, corner.lng + 180]);
   }
 
-  // Layers (task A8): the NASA PGDA average Sun and Earth visibility maps, rendered by scripts/render_overlays.py into
-  // static/overlays/. Each map is three discs, to 65°S, 75°S and 85°S, coarse to fine, stacked so the finer one
-  // hides the coarser: the layer reaches 65°S and is sharpest near the pole. The pane, not the images, is
-  // translucent, so the stack does not show through itself. Panes sit above the photos (tiles: 200) and under the
-  // Site Neighborhood cells (overlays: 400) and the markers (600).
-  const LAYER_EXTENTS = [["65s", 770400], ["75s", 457440], ["85s", 151740]];  // [file suffix, disc radius in m]
-  function drawLayers(state, data) {
-    const m = state.map, map = m.leaflet, wanted = new Set(data.overlays || []);
-    m.layers = m.layers || {};
-    state.root.classList.toggle("has-layers", wanted.size > 0);
-    ["sun", "earth"].forEach((name, i) => {
-      if (wanted.has(name) && !m.layers[name]) {
-        const pane = `layer-${name}`;
-        if (!map.getPane(pane)) Object.assign(map.createPane(pane).style, { zIndex: 350 + i, opacity: 0.75 });
-        m.layers[name] = L.layerGroup(LAYER_EXTENTS.map(([extent, reach]) => L.Proj.imageOverlay(
-          `app/static/overlays/${name}_${extent}.png`, L.bounds([-reach, -reach], [reach, reach]), { pane })))
-          .addTo(map);
-      } else if (!wanted.has(name) && m.layers[name]) {
-        m.layers[name].remove();
-        delete m.layers[name];
-      }
-    });
-  }
-
   // Center `site`, or the pole for the overview, in the part of the map that the panel leaves uncovered.
   // A site with `reach` (meters) is framed so that far around it fits; other sites use SITE_ZOOM.
   function centerOn(state, site, animate) {
@@ -237,7 +213,6 @@ const polarMap = (() => {
     const m = state.map;
     drawSites(state, data);
     drawNeighborhood(state, data);
-    drawLayers(state, data);
     paint(state);
     if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
     const focus = focusOf(data), key = focus ? `${focus.key}:${focus.lat},${focus.lon}` : "";

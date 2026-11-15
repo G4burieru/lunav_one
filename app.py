@@ -27,21 +27,21 @@ if _imported_src().get("stamp") != _stamp:
     _imported_src()["stamp"] = _stamp
 
 from src.moon_view import moon_view  # noqa: E402 (imports after the check above)
-from src.panels import about, catalog_list, layers, planner, site_card  # noqa: E402
+from src.panels import about, catalog_list, planner, site_card  # noqa: E402
 from src.panels.common import (  # noqa: E402
-    CUSTOM, MOON_VIEW, OVERLAYS, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, catalog_time, open_panel,
+    CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, catalog_time, open_panel,
     rail_active, select_custom, select_site)
 from src.sites import LUNAR_SITES  # noqa: E402
 
 st.set_page_config(page_title="Lunar Landing Site Navigator", page_icon="static/icons/favicon.svg", layout="wide")
 
 PANELS = {"catalog": catalog_list.render, "site": site_card.render, "planner": planner.render,
-          "layers": layers.render, "about": about.render}
+          "about": about.render}
 RAIL = [("catalog", "Catalog", ":material/public:"), ("planner", "Plan", ":material/edit_location_alt:"),
-        ("layers", "Layers", ":material/layers:"), ("about", "About", ":material/info:")]
+        ("about", "About", ":material/info:")]
 RAIL_WIDTH = "76px"
 PANEL_LEFT = f"calc({RAIL_WIDTH} + 38px)"  # 14 px margins around the rail, 10 px gap
-PANEL_WIDTH = {"catalog": "380px", "layers": "380px", "about": "380px", "site": "min(46vw, 760px)",
+PANEL_WIDTH = {"catalog": "380px", "about": "380px", "site": "min(46vw, 760px)",
                "planner": "min(46vw, 760px)"}
 POLAR_LAT = -80.0  # choosing a site south of this opens the south polar map; other sites open the globe
 
@@ -149,5 +149,4 @@ with view_slot:  # pre-computed data only, so the view opens even if Horizons is
     moon_view(LUNAR_SITES, selected, key=MOON_VIEW, **{"on_site": on_view_site, "on_point": on_view_point,
                                                        "on_cell": planner.on_map_cell, "on_instant": on_view_instant,
                                                        "view": view, "view_id": view_id, "custom": custom,
-                                                       "time": explorer_time(),
-                                                       "overlays": st.session_state.get(OVERLAYS, ()), **view_data})
+                                                       "time": explorer_time(), **view_data})
