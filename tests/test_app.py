@@ -14,6 +14,9 @@ def test_every_panel_renders():
     at.selectbox(key="search").set_value("Haworth").run()  # search -> Site Card
     assert not at.exception
     assert at.session_state["selected"] == "Haworth"
+    at.button(key="card_back").click().run()
+    at.button(key="explorer_pick_Apollo 11 (Tranquility Base)").click().run()  # a Site Card with photos
+    assert not at.exception
     for panel in ("planner", "about", "catalog"):
         at.button(key=f"rail_{panel}").click().run()
         assert not at.exception, panel
@@ -21,12 +24,12 @@ def test_every_panel_renders():
 
 
 def test_choosing_a_site_switches_the_view():
-    """Polar sites open on the south polar map and other sites on the globe; the catalog keeps the view."""
+    """Polar sites open on the south polar map and other sites on the globe; other panels keep the view."""
     at = AppTest.from_file("../app.py", default_timeout=120).run()
     assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[0], 1)
     at.button(key="explorer_pick_Connecting Ridge C1").click().run()
     assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[1], 2)
-    at.button(key="rail_about").click().run()  # a panel without the switch
+    at.button(key="rail_about").click().run()
     at.button(key="rail_catalog").click().run()
     assert (at.session_state[VIEW_CHOICE], at.session_state["view_id"]) == (VIEWS[1], 2)
     at.button(key="explorer_pick_Apollo 11 (Tranquility Base)").click().run()

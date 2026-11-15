@@ -7,9 +7,10 @@ import pandas as pd
 import streamlit as st
 
 from src import catalog
-from src.conditions import get_conditions, neighborhood_summary
+from src.conditions import PRECOMPUTED_REACH_M, get_conditions, neighborhood_summary
 from src.metrics import hourly_states, site_summary
 from src.sites import LUNAR_SITES
+from src.terrain import SOUTH_POLE_DEM_LIMIT
 
 get_data = st.cache_data(show_spinner=False)(get_conditions)
 get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
@@ -18,14 +19,13 @@ get_neighborhood = st.cache_data(show_spinner=False)(neighborhood_summary)
 PANEL, SELECTED, CUSTOM = "panel", "selected", "custom"
 PANEL_OPEN = "panel_open"  # False while the panel is hidden (a second click on its rail icon)
 MOON_VIEW = "moon_view"  # the Moon View's key in app.py; its "instant" comes from the time bar
-VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")
-VIEW_ICONS = {"Globe": "moon", "South pole map": "pole-map"}
+VIEW_CHOICE, VIEWS = "view_choice", ("Globe", "South pole map")  # the view Python last asked the Moon View for
 CUSTOM_SITE = "Custom Site"
-KIND_LABELS = {
-    "studied_point": "◆ Studied point",
-    "region_center": "● Region center",
-    "actual_landing": "■ Historical landing",
-    "approximate_reference": "▲ Approximate reference",
+KIND_LABELS = {  # every Catalog Site is a circle on the Moon View, so the kind is named only here
+    "studied_point": "Studied point",
+    "region_center": "Region center",
+    "actual_landing": "Historical landing",
+    "approximate_reference": "Approximate reference",
 }
 CACHE_START = datetime.date.fromisoformat(catalog.START)
 CACHE_END = datetime.date.fromisoformat(catalog.END)  # exclusive
@@ -133,6 +133,16 @@ def catalog_time():
                          for key, site in LUNAR_SITES.items()})
 
 
+def analysis_zones():
+    """Where get_conditions takes a clicked point's data from, for the Moon View's dashed rings (`zones`): the
+    pre-computed Site Neighborhood of a Catalog Site within reach, else live terrain inside the south pole DEMs."""
+    manifest = catalog.read_manifest()
+    current = [key for key, site in LUNAR_SITES.items()  # as catalog.load_site checks, without loading the data
+               if (entry := manifest.get(key)) and (entry["lat"], entry["lon"]) == (site["lat"], site["lon"])
+               and (catalog.DATA_DIR / f"{catalog.slug(key)}_terrain.npz").exists()]
+    return {"terrain_lat": SOUTH_POLE_DEM_LIMIT, "precomputed_m": PRECOMPUTED_REACH_M, "precomputed": current}
+
+
 def selected_instant(df):
     """The time bar's instant (UTC, naive like df["time"]), or the start of `df` until the time bar sets one."""
     value = (st.session_state.get(MOON_VIEW) or {}).get("instant")
@@ -142,12 +152,9 @@ def selected_instant(df):
 
 
 def header():
-    """App title and the globe/map switch, at the top of the Explorer panels."""
+    """App title, at the top of the Explorer panels. The globe/map switch is in the Moon View itself."""
     st.markdown(f"### {icon('moon')} Lunar Landing Site Navigator")
     st.caption("Solar power and direct-to-Earth communication for lunar south pole landings · NASA Space Apps 2026")
-    # No default: view_request() in app.py always sets the value first, and a default too makes Streamlit warn.
-    st.segmented_control("View", VIEWS, key=VIEW_CHOICE, label_visibility="collapsed",
-                         format_func=lambda view: f"{icon(VIEW_ICONS[view])} {view}")
 
 
 def site_label(key):

@@ -17,7 +17,7 @@ table is replaced by sortable catalog cards and metric-specific ranks.
 | Capability | Current branch |
 |---|---|
 | Moon View | Interactive 3D globe and south polar map with real NASA imagery |
-| Base layers | Globe imagery/elevation; polar Photos (LROC NAC/WAC) and Relief (LOLA) |
+| Base layers | Photos (LROC WAC; NAC near the pole) and Relief (LOLA) on both the globe and the polar map; a button at the top right switches between them |
 | Explorer catalog | Name/coordinate search, type labels, sorting and compact cards |
 | Site Card | 2027–2028 averages, Longest Night, Longest Earth Absence, metric ranks, source context |
 | Site Card tabs | Overview, Sun & Earth (28-day charts), Seasons (monthly summaries) |
@@ -40,13 +40,16 @@ has been sent, the first sample is used. In Site Planner the Moon View time bar
 covers its Analysis Window; the results panel still has its own Instant slider.
 That panel's countdowns are not yet driven by the Moon View bar.
 
-Marker **shape** identifies the coordinate type: diamond for a studied point,
-circle for a regional center, square for a historical landing, and triangle for
-an approximate reference. Custom Sites use a ticked ring; a Surface Asset uses
-a cross in a circle. With time data, **fill level** represents the visible solar
-disk fraction, while the **small upper-right dot** is filled for Earth Visibility
-and hollow when Earth does not meet the visibility criterion. These are modeled
-states, not power generation or communications status. The globe's initial
+Every Catalog Site is a circle; the panels name its coordinate type. Custom
+Sites use a ticked ring; a Surface Asset uses a cross in a circle. With time
+data, a badge beside each marker shows a **Sun** that fills from the bottom with
+the visible solar disk fraction, and an **Earth** that is blue while visible and
+gray, crossed out, when Earth does not meet the visibility criterion. These are
+modeled states, not power generation or communications status. The time bar
+plays at 1 hour to 3 days per second, and a UTC date can be typed into it. On
+the south polar map, dashed rings show where a clicked point's analysis comes
+from: pre-computed within about 2 km of a Catalog Site, live terrain inside
+80°S, and a smooth horizon outside it. The globe's initial
 rotation stops at the first interaction and is disabled for reduced-motion users.
 
 The glossary defines **Catalog Site** as a curated site with pre-computed data.
@@ -130,8 +133,7 @@ lunav_one/
 │   ├── test_metrics.py
 │   ├── test_catalog.py
 │   ├── test_app.py              # Panel smoke tests
-│   ├── test_panels.py           # Search, formatting and state contracts
-│   └── test_overlays.py
+│   └── test_panels.py           # Search, formatting and state contracts
 └── docs/
     ├── TEAM_PLAN.md             # Ownership and workflow
     ├── UI_OVERHAUL.md           # Interface plan and integration tasks

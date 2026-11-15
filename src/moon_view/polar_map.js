@@ -15,7 +15,7 @@ const polarMap = (() => {
   // Base layers, coarse to fine: [Moon Trek layer, highest tile level, meters from the pole to the edge of its data].
   const BASES = {
     Photos: [
-      ["LRO_WAC_Mosaic_SPole60_100mp", 4, MAP_M],  // LROC WAC mosaic, to 60°S
+      ["LRO_WAC_Mosaic_SPole60_100mp", 4, MAP_M],  // LROC WAC mosaic, to 60°S; Moon Trek serves it to level 4 only
       ["LRO_NAC_AvgMosaic_SPole855_1mp", 11, 136526],  // LROC NAC average mosaic, about 4 m per pixel to 85.5°S
     ],
     Relief: [
@@ -96,7 +96,7 @@ const polarMap = (() => {
     m.signature = signature;
     m.sites.clearLayers();
     m.markers = items.map(item => {
-      const size = item.selected ? 26 : 18, choosable = !isPicked(item);
+      const size = item.selected ? 30 : 22, choosable = !isPicked(item);
       const marker = L.marker([item.lat, item.lon], {  // interactive, so that a click never reaches the map below
         icon: L.divIcon({ className: `site-marker${item.selected ? " selected" : ""}${choosable ? "" : " static"}`,
                           iconSize: [size, size], html: markerHtml(item.kind) }),
@@ -120,6 +120,29 @@ const polarMap = (() => {
     });
   }
 
+  // The limits of analysisSource (view.js), dashed: the south pole terrain data's edge, and the pre-computed Site
+  // Neighborhood around each Catalog Site. Drawn once, as rings in map meters: Proj4Leaflet measures an L.circle
+  // with the Earth's radius.
+  function drawZones(state, data) {
+    const m = state.map, z = data.zones;
+    if (m.zones || !z) return;
+    const crs = m.leaflet.options.crs;
+    const ring = (lat, lon, radius, color) => {  // dashed, over a dark halo that keeps it visible on bright terrain
+      const center = crs.project(L.latLng(lat, lon));
+      const points = Array.from({ length: 180 }, (_, i) => crs.unproject(
+        center.add([radius * Math.cos(i * Math.PI / 90), radius * Math.sin(i * Math.PI / 90)])));
+      const line = { fill: false, interactive: false };
+      return L.layerGroup([L.polygon(points, { ...line, color: "#000", weight: 4, opacity: 0.45 }),
+                           L.polygon(points, { ...line, color, weight: 2, dashArray: "7 6" })]);
+    };
+    const edge = crs.project(L.latLng(z.terrain_lat, 0));  // a parallel is a circle around the pole here
+    m.zones = L.layerGroup([
+      ring(-90, 0, Math.hypot(edge.x, edge.y), "#4fd1e8"),
+      ...data.sites.filter(s => z.precomputed.includes(s.key) && s.lat <= MAP_LAT)
+        .map(s => ring(s.lat, s.lon, z.precomputed_m, "#7fd18b")),
+    ]).addTo(m.leaflet);
+  }
+
   function paint(state) {
     (state.map.markers || []).forEach(({ marker, key }) => paintMarker(marker.getElement(), timeBar.stateOf(state, key)));
   }
@@ -140,6 +163,12 @@ const polarMap = (() => {
       zoomControl: false, attributionControl: false,  // credits are in the view's own overlay
     });
     L.control.zoom({ position: "bottomright" }).addTo(map);
+    // A flight (centerOn's flyTo) cut short by a drag never fires zoomend, so the vector layers (the dashed rings,
+    // the Site Neighborhood) keep the scale of the zoom where it stopped until the next zoom. Redraw them when a move
+    // ends at a zoom they were not drawn for.
+    let drawnZoom = map.getZoom();
+    map.on("zoomend viewreset", () => { drawnZoom = map.getZoom(); });
+    map.on("moveend", () => { if (map.getZoom() !== drawnZoom) map.fire("viewreset"); });
     L.control.scale({ position: "bottomright", imperial: false, maxWidth: 160 }).addTo(map);
 
     // Skip tiles outside a layer's data square, where Moon Trek answers 404.
@@ -160,7 +189,8 @@ const polarMap = (() => {
       bases: Object.fromEntries(Object.entries(BASES).map(([name, layers]) => [name, L.layerGroup(layers.map(tiles))])),
     };
 
-    map.on("click", e => askToAnalyze(state, e.latlng));  // marker clicks do not reach the map
+    // Marker clicks do not reach the map. Beyond MAP_LAT is off the map's imagery, so nothing to analyze there.
+    map.on("click", e => deselect(state) || e.latlng.lat > MAP_LAT || askToAnalyze(state, e.latlng));
     const buttons = state.root.querySelector('.choices[data-for="map"]');
     Object.keys(BASES).forEach(name => {
       const b = document.createElement("button");
@@ -213,6 +243,7 @@ const polarMap = (() => {
     const m = state.map;
     drawSites(state, data);
     drawNeighborhood(state, data);
+    drawZones(state, data);
     paint(state);
     if (!active) { m.shown = false; m.leaflet.closePopup(); return; }
     const focus = focusOf(data), key = focus ? `${focus.key}:${focus.lat},${focus.lon}` : "";

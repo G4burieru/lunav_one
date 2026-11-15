@@ -29,7 +29,7 @@ if _imported_src().get("stamp") != _stamp:
 from src.moon_view import moon_view  # noqa: E402 (imports after the check above)
 from src.panels import about, catalog_list, planner, site_card  # noqa: E402
 from src.panels.common import (  # noqa: E402
-    CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, catalog_time, open_panel,
+    CUSTOM, MOON_VIEW, PANEL, PANEL_OPEN, SELECTED, VIEW_CHOICE, VIEWS, analysis_zones, catalog_time, open_panel,
     rail_active, select_custom, select_site)
 from src.sites import LUNAR_SITES  # noqa: E402
 
@@ -77,8 +77,8 @@ CSS = f"""<style>
 
 def on_view_site():
     clicked = st.session_state[MOON_VIEW].get("site")
-    if clicked in LUNAR_SITES:
-        select_site(clicked)
+    if clicked in LUNAR_SITES or clicked == "":  # "": a click beside the sites clears the selection
+        select_site(clicked or None)
 
 
 def on_view_point():
@@ -103,25 +103,19 @@ def explorer_time():
 def view_request(selected, custom):
     """The view to show ("globe" or "map") and a view_id that changes whenever the Moon View should switch to it.
 
-    The switch at the top of the Explorer panels picks the view. Choosing a site, or a Custom Site, moves the switch
-    to the view that shows it: the south polar map for polar sites, the globe for the others.
+    Choosing a site, or a Custom Site, switches to the view that shows it: the south polar map for polar sites, the
+    globe for the others. In between, the Moon View's own globe/map button switches it without telling Python.
     """
     ss = st.session_state
-    switch = False
+    if "view_id" not in ss:
+        ss[VIEW_CHOICE], ss["view_id"] = VIEWS[0], 1
     target = selected or (custom and (custom["lat"], custom["lon"]))
     if ss.get("view_site") != target:
         ss["view_site"] = target
         if target:
             lat = LUNAR_SITES[selected]["lat"] if selected else custom["lat"]
             ss[VIEW_CHOICE] = VIEWS[1] if lat <= POLAR_LAT else VIEWS[0]
-            switch = True  # even to the view already chosen: the user may have moved away from the site
-    if ss.get(VIEW_CHOICE) is None:  # unselected, or dropped while a panel without the switch was open
-        ss[VIEW_CHOICE] = ss.get("view_shown", VIEWS[0])
-    if ss.get("view_shown") != ss[VIEW_CHOICE]:
-        ss["view_shown"] = ss[VIEW_CHOICE]
-        switch = True
-    if switch:
-        ss["view_id"] = ss.get("view_id", 0) + 1
+            ss["view_id"] += 1  # even to the view already shown: the user may have switched away from it
     return ("map" if ss[VIEW_CHOICE] == VIEWS[1] else "globe"), ss["view_id"]
 
 
@@ -139,7 +133,7 @@ with st.container(key="rail"):
                   type="primary" if panel_open and rail_active(name) else "secondary", width="stretch",
                   help=f"Hide the {label} panel" if panel_open and rail_active(name) else None)
 
-view, view_id = view_request(selected, custom)  # before the panel, whose globe/map switch it may move
+view, view_id = view_request(selected, custom)
 view_slot = st.container(key="view")  # filled after the panel, whose render() can return what the view shows
 with st.container(key="panel"):
     view_data = PANELS[panel]() or {}
@@ -149,4 +143,4 @@ with view_slot:  # pre-computed data only, so the view opens even if Horizons is
     moon_view(LUNAR_SITES, selected, key=MOON_VIEW, **{"on_site": on_view_site, "on_point": on_view_point,
                                                        "on_cell": planner.on_map_cell, "on_instant": on_view_instant,
                                                        "view": view, "view_id": view_id, "custom": custom,
-                                                       "time": explorer_time(), **view_data})
+                                                       "time": explorer_time(), "zones": analysis_zones(), **view_data})
