@@ -146,7 +146,8 @@ endpoint returned `ok`; AppTest exercised the main panels and Custom Site flows.
 Both working-tree and staged `git diff --check` checks passed. No scientific
 calculations, JavaScript or pre-computed files were changed. This integration
 is complete and published; it no longer needs a merge commit or push. The final
-review below describes subsequent, uncommitted test/documentation corrections.
+review below describes subsequent test/documentation corrections, committed and
+published as `c8b769f`.
 
 
 ## Final review: CI timeout
@@ -225,9 +226,12 @@ Leibnitz correction and both video scripts' separate purposes were preserved.
 The official narration remains 55 words; its eventual exported duration must
 still be measured, and both videos remain unpublished with no invented URLs.
 
-Remote-reference inspection found main still at `1e1d7c1`, included in branch
-HEAD `7373541` (zero main commits missing). The current fixes remain local and
-uncommitted. The hosted Actions run has not been rerun by this review; the next
-remote run must confirm the result on GitHub's runner. Browser rehearsal of the
-hosted build and measurement of the recorded video remain manual publication
-checks, not scientific certification. No other technical blocker was found.
+Remote-reference inspection confirmed main at `1e1d7c1`, fully included in
+`devel_renata` at `c8b769f` (zero main commits missing). The branch matches
+`origin/devel_renata`. The timeout and Pandas 3 corrections were committed and
+published on GitHub in `c8b769f` — fix: keep name validation tests offline and
+support Pandas 3 time axes. The results above describe local validation in the
+two recorded environments; a passing GitHub Actions result for `c8b769f` has not
+been confirmed. Browser rehearsal of the hosted build and measurement of the
+recorded video remain manual publication checks, not scientific certification.
+No other technical blocker was found.
