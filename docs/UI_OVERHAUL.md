@@ -1,5 +1,12 @@
 # UI Overhaul Plan
 
+> Historical planning record. The hackathon prototype is complete; proposals,
+> interim status and deadlines below are not the current product specification.
+> See the [README](../README.md) and [technical guide](technical_guide.md) for the
+> final interface and scope. The sole presentation deliverable is the
+> [official video of at most 30 seconds](pitch/demo_30s.md).
+
+
 Replace the two-page interface with one Google Earth-style screen that is easy to read for the public and still
 precise for mission planners. Terms follow [`GLOSSARY.md`](../GLOSSARY.md); the architecture is recorded in
 [ADR 0003](adr/0003-one-screen-moon-view.md).
@@ -353,7 +360,7 @@ C1, C3 and C4 need nothing and can start right away, even before Step 0.
 | ID | Pri | Task | Size | Needs |
 |---|---|---|---|---|
 | D1 | P1 | `src/panels/texts.py`: the two-sentence intro; About (what the app is, how to read each number, sources and credits, limitations); one sentence per number (sunlight, Earth visibility, Longest Night, Longest Earth Absence, countdowns, Asset Height presets, Elevation Mask); layer legends, including the Sunlight caveat. | 2 | T0b (drafting can start now) |
-| D2 | P1 | Rewrite `docs/pitch/demo_script.md` for the new screen. | 1.5 | this plan; final pass after the cut |
+| D2 | P1 | Official short video script: [`docs/pitch/demo_30s.md`](pitch/demo_30s.md); the original task is superseded. | 1.5 | this plan; final pass after the cut |
 | D3 | P1 | Update `README.md` and `docs/pitch/submission_draft.md`: the schematic south pole map and the comparison table are gone, and the new features need describing. | 1 | after the cut |
 
 ## Schedule

@@ -51,7 +51,7 @@ NO_TERRAIN = (
 ABOUT_INTRO = """
 Lunav One helps you explore sunlight and Earth Visibility near the lunar south pole.
 **Explorer** opens documented Catalog Sites; **Site Planner** evaluates a Surface Asset
-at a chosen location, height and Analysis Window. This is an educational prototype.
+at a chosen location, height and Analysis Window. This is the completed educational prototype for NASA Space Apps Challenge 2026.
 """
 
 # The About panel shows each section in its own expander, closed, in this order.
@@ -86,8 +86,11 @@ Within 2027–2028, Catalog Site badges use their 2 m reference height and the
 Planner's Elevation Mask; the Surface Asset uses its chosen height. Outside that
 coverage only the asset's computed states are supplied; other markers have no
 badge rather than displaying states from another period.
-Initial globe rotation stops at the first interaction and is disabled when the
-system requests reduced motion.
+The globe starts rotating unless reduced motion is requested. A globe interaction
+or site selection stops it. Rotate restarts the spin; a second click stops it.
+Adjacent relief, base-layer and zoom buttons do not by themselves stop rotation.
+The optional 3D relief ×5 exaggerates vertical terrain for illustration, not true
+vertical scale; it does not change the scientific calculations or Asset Height.
 """,
     "What the numbers mean": """
 - **Sunlight** is the mean **Illumination Fraction**: the portion of the Sun's disk above

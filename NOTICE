@@ -1,0 +1,17 @@
+Lunav One — Lunar Landing Site Navigator
+Copyright 2026 Lunav One contributors
+
+Original code and documentation by the Lunav One team:
+João Gabriel Santos, Igor Wanderley and Renata Andrade.
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+Repository: https://github.com/G4burieru/lunav_one
+
+NASA/JPL ephemerides, LOLA elevation products, Moon Trek imagery, LROC and
+Clementine images, scientific publications and external software remain
+subject to their own terms and attribution requirements. The project license
+neither claims ownership of nor relicenses those third-party materials.
+See THIRD_PARTY_NOTICES.md for source and credit information.
+
+NASA, JPL, ASU and other source names identify provenance; they do not imply
+endorsement, sponsorship or operational certification of this project.

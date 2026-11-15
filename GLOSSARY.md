@@ -1,7 +1,8 @@
 # Lunar Landing Site Navigator
 
-Evaluates candidate lunar landing sites and dates by how much sunlight (power) and Earth visibility
-(direct-to-Earth communication) a surface asset would have.
+Describes sunlight and geometric Earth Visibility at lunar locations and dates for a Surface Asset.
+The completed educational prototype does not calculate electrical power or certify landing safety
+or operational communications.
 
 ## Language
 
@@ -41,7 +42,9 @@ Earth visibility it gets.
 _Avoid_: Landing site card, info box, popup
 
 **Site Neighborhood**:
-The area around a catalog site whose terrain horizons are pre-computed for the Site Planner.
+A sampled area around a location used by the Site Planner. Catalog neighborhoods have pre-computed
+Terrain Horizons at 2 m Asset Height; supported Custom Sites and other heights can request live
+polar calculations.
 _Avoid_: Grid, surroundings
 
 ### Horizon and visibility

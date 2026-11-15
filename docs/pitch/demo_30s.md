@@ -1,9 +1,9 @@
 # Official Demo — 30 seconds maximum
 
 This video is the team’s sole official demonstration for the NASA Space Apps
-Challenge submission. No slide presentation is planned. It is separate from the [Extended Demo](demo_script.md), which is complementary
-material. Aim for a **29–29.5 second final export**, including titles and the
-ending, rather than using the entire limit.
+Challenge submission and the same public demonstration linked from the GitHub
+README. It is the only video deliverable. Aim for a **29–29.5 second final
+export**, including titles and the ending, rather than using the entire limit.
 
 Team: **Lunav One**. Members: **João Gabriel Santos**, **Igor Wanderley** and
 **Renata Andrade**. Display all three full names during the opening five seconds;
@@ -45,9 +45,16 @@ closing message. Do not speed up the voice to rescue a take that runs long.
 - Solar fill represents the visible fraction of the Sun's disk; blue Earth means
   geometric Earth Visibility, gray/crossed Earth means the criterion is not met.
   These are not electrical power or a guaranteed radio link.
-- The short take omits the Site Planner, neighborhood calculation and scientific
-  comparison details; those belong in the Extended Demo. Do not attempt all 17
-  sites in this video.
+- Keep the short take focused on the globe, one Catalog Site and temporal badges.
+  Site Planner, neighborhood calculations and detailed scientific comparisons
+  remain documented in the project; do not attempt all features or all 17 sites.
+- For an optional opening relief shot, preload the elevation image and enable
+  **3D relief ×5** before recording. Identify it on screen as “Illustrative
+  terrain, vertical relief ×5”; it is not the Moon's true vertical scale.
+  Do not add narration or a separate scene for this effect.
+- Use Rotate to prepare or stop the opening spin; a globe interaction or site
+  selection stops it, while the adjacent zoom/relief controls do not. A second
+  Rotate click stops an active spin. Do not demonstrate every control in the take.
 - Keep captions short and synchronized. Use direct cuts or very brief dissolves
   inside the allocated intervals, without adding transition time.
 - Check the complete exported file with a media player's duration display. Keep
