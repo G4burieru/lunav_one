@@ -1,5 +1,7 @@
 # Lunav One — Lunar Landing Site Navigator
 
+![Lunav One — Moon animation](media/moon.gif)
+
 **Explore how lunar terrain and time shape sunlight and Earth visibility.**
 
 Lunav One is a completed educational and exploratory prototype built for the
