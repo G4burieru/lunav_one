@@ -14,7 +14,9 @@ understand what the results mean.
 
 ## Official Demo
 
-[**Watch the official demo on YouTube**](https://youtu.be/ASh9yAMIm1U)
+<a href="https://youtu.be/ASh9yAMIm1U" target="_blank">
+  <img src="https://img.youtube.com/vi/ASh9yAMIm1U/hqdefault.jpg" alt="Watch the Lunav One official demo on YouTube" width="600" />
+</a>
 
 See Lunav One in action: explore the Moon, select a location and follow changing
 Sun and Earth indicators with the interactive timeline.
